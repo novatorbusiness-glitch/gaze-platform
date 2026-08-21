@@ -27,6 +27,28 @@ export function initTelegram(): { user: typeof WebApp.initDataUnsafe.user; color
 
 export type HapticStyle = 'light' | 'medium' | 'heavy'
 
+/** telegram_id текущего пользователя (вне Telegram — null) */
+export function getTelegramUserId(): number | null {
+  try {
+    return WebApp.initDataUnsafe?.user?.id ?? null
+  } catch {
+    return null
+  }
+}
+
+/** Имя пользователя из Telegram (для создания записи мастера) */
+export function getTelegramUserName(): string | null {
+  try {
+    const user = WebApp.initDataUnsafe?.user
+    if (!user) return null
+    const first = user.first_name ?? ''
+    const last = user.last_name ?? ''
+    return (first + ' ' + last).trim() || null
+  } catch {
+    return null
+  }
+}
+
 /** Тактильная отдача (ТЗ: haptic feedback на тапах) */
 export function haptic(style: HapticStyle = 'light'): void {
   try {
