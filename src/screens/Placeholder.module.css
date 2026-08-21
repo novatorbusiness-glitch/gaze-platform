@@ -11,6 +11,14 @@
   color: var(--app-text);
 }
 
+/* Заголовок + бейдж DEMO в одну строку */
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
 .card {
   display: flex;
   flex-direction: column;

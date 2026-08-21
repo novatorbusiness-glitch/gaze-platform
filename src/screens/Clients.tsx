@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Plus, Search } from 'lucide-react'
+import Badge from '../components/Badge'
 import Button from '../components/Button'
 import Card from '../components/Card'
 import ClientRow from '../components/ClientRow'
@@ -7,13 +8,12 @@ import ErrorState from '../components/ErrorState'
 import SkeletonLoader from '../components/SkeletonLoader'
 import { useAsync } from '../hooks/useAsync'
 import { fetchClients } from '../lib/api'
+import { demoClients } from '../lib/dev-data'
 import { haptic } from '../lib/telegram'
 import { cx, daysSince, formatDate, formatMoney } from '../lib/utils'
-import { useAppStore } from '../store/useAppStore'
+import { useAppStore, type ClientFilter } from '../store/useAppStore'
 import { useMasterStore } from '../store/useMasterStore'
 import styles from './Clients.module.css'
-
-type ClientFilter = 'all' | 'active' | 'stale'
 
 const FILTERS: Array<{ id: ClientFilter; label: string }> = [
   { id: 'all', label: 'Все' },
@@ -23,10 +23,13 @@ const FILTERS: Array<{ id: ClientFilter; label: string }> = [
 
 export default function Clients() {
   const openClient = useAppStore((s) => s.openClient)
+  const pendingClientsFilter = useAppStore((s) => s.pendingClientsFilter)
+  const consumeClientsFilter = useAppStore((s) => s.consumeClientsFilter)
 
   const master = useMasterStore((s) => s.master)
   const masterStatus = useMasterStore((s) => s.status)
   const masterError = useMasterStore((s) => s.error)
+  const isDemo = useMasterStore((s) => s.isDemo)
   const retryMaster = useMasterStore((s) => s.init)
 
   const masterId = master?.id ?? null
@@ -36,12 +39,24 @@ export default function Clients() {
   const [debounced, setDebounced] = useState('')
   const [filter, setFilter] = useState<ClientFilter>('all')
 
+  // Внешний фильтр (например, «Посмотреть список» из карточки-рекомендации в Аналитике)
+  useEffect(() => {
+    if (pendingClientsFilter) {
+      setFilter(pendingClientsFilter)
+      consumeClientsFilter()
+    }
+  }, [pendingClientsFilter, consumeClientsFilter])
+
   const state = useAsync(
     () => (masterId ? fetchClients(masterId) : Promise.resolve([])),
     [masterId, attempt],
   )
 
-  const clients = useMemo(() => state.data ?? [], [state.data])
+  // В демо-режиме при падении запроса отдаём демо-клиентов (RLS-ошибку не показываем)
+  const clients = useMemo(
+    () => (isDemo && state.status === 'error' ? demoClients : state.data ?? []),
+    [state.data, state.status, isDemo],
+  )
 
   // Поиск с debounce 200ms (ТЗ, экран Clients)
   useEffect(() => {
@@ -97,8 +112,8 @@ export default function Clients() {
     )
   }
 
-  /* Ошибка */
-  if (error) {
+  /* Ошибка. В демо-режиме не показываем (демо-клиенты уже отданы) */
+  if (error && !isDemo) {
     return (
       <div className={styles.screen}>
         <h1 className={styles.title}>Мои клиенты</h1>
@@ -125,9 +140,12 @@ export default function Clients() {
 
   return (
     <div className={styles.screen}>
-      <h1 className={styles.title}>
-        Мои клиенты · <span className={styles.count}>{clients.length} чел.</span>
-      </h1>
+      <div className={styles.titleRow}>
+        <h1 className={styles.title}>
+          Мои клиенты · <span className={styles.count}>{clients.length} чел.</span>
+        </h1>
+        {isDemo && <Badge variant="demo">DEMO</Badge>}
+      </div>
 
       {/* Поиск с иконкой лупы */}
       <label className={styles.search}>

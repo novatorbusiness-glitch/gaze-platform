@@ -26,10 +26,12 @@ export default function ClientProfile({ clientId }: ClientProfileProps) {
   const selectedClientId = useAppStore((s) => s.selectedClientId)
   const goBack = useAppStore((s) => s.goBack)
   const openAddProcedure = useAppStore((s) => s.openAddProcedure)
+  const navigate = useAppStore((s) => s.navigate)
 
   const master = useMasterStore((s) => s.master)
   const masterStatus = useMasterStore((s) => s.status)
   const masterError = useMasterStore((s) => s.error)
+  const isDemo = useMasterStore((s) => s.isDemo)
   const retryMaster = useMasterStore((s) => s.init)
 
   const id = clientId ?? selectedClientId ?? ''
@@ -99,8 +101,8 @@ export default function ClientProfile({ clientId }: ClientProfileProps) {
     )
   }
 
-  /* Ошибка */
-  if (error) {
+  /* Ошибка. В демо-режиме не показываем (демо-данные уже отданы) */
+  if (error && !isDemo) {
     return (
       <div className={styles.screen}>
         <header className={styles.header}>
@@ -302,7 +304,15 @@ export default function ClientProfile({ clientId }: ClientProfileProps) {
           <Plus size={18} strokeWidth={2} />
           Записать процедуру
         </Button>
-        <Button size="lg" variant="ghost" className={styles.actionBtn} onClick={() => haptic('light')}>
+        <Button
+          size="lg"
+          variant="ghost"
+          className={styles.actionBtn}
+          onClick={() => {
+            haptic('light')
+            navigate('chat')
+          }}
+        >
           <Send size={16} strokeWidth={2} />
           Написать
         </Button>

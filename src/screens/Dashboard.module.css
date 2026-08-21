@@ -95,6 +95,40 @@
   margin-top: 4px;
 }
 
+/* Строка бейджей в шапке (GAZE PLATFORM + DEMO) */
+.badgeRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+/* Карточка напоминания (демо-режим) */
+.reminderCard {
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.reminderTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.reminderName {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--app-text);
+}
+
+.reminderText {
+  font-size: 13px;
+  color: var(--app-text-2);
+}
+
 /* Пустое состояние */
 .emptyCard {
   display: flex;

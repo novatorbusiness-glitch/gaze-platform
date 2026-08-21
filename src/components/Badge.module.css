@@ -32,3 +32,10 @@
   background: var(--app-cta);
   color: #ffffff;
 }
+
+/* Демо-режим: полупрозрачный жёлтый #FFD000 */
+.demo {
+  background: rgba(255, 208, 0, 0.16);
+  color: #ffd000;
+  border: 1px solid rgba(255, 208, 0, 0.38);
+}

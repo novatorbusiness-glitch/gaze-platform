@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { friendlyError } from '../lib/api'
 
 export interface AsyncState<T> {
   status: 'loading' | 'ready' | 'error'
@@ -9,6 +10,8 @@ export interface AsyncState<T> {
 /**
  * Мини-хук для асинхронной загрузки данных (loading / ready / error).
  * Перезапускается при изменении deps; защита от гонок через cancelled-флаг.
+ * Ошибки переводятся в человекочитаемый вид через friendlyError
+ * (PostgrestError — это объект без toString, String(err) дал бы «[object Object]»).
  */
 export function useAsync<T>(fn: () => Promise<T>, deps: readonly unknown[]): AsyncState<T> {
   const [state, setState] = useState<AsyncState<T>>({ status: 'loading', data: null, error: null })
@@ -23,7 +26,7 @@ export function useAsync<T>(fn: () => Promise<T>, deps: readonly unknown[]): Asy
       },
       (err: unknown) => {
         if (!cancelled) {
-          setState({ status: 'error', data: null, error: err instanceof Error ? err.message : String(err) })
+          setState({ status: 'error', data: null, error: friendlyError(err) })
         }
       },
     )

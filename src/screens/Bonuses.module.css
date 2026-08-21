@@ -1,0 +1,307 @@
+.screen {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.title {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 20px;
+  color: var(--app-text);
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.sectionTitle {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--app-text);
+  margin-top: 4px;
+}
+
+/* Подсказка сверху */
+.hintCard {
+  background: linear-gradient(180deg, rgba(224, 199, 192, 0.18), rgba(249, 248, 246, 0));
+  border-color: rgba(224, 199, 192, 0.5);
+}
+
+.hintText {
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--app-text-2);
+}
+
+/* Мини-статистика бонусов */
+.statsCard {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 14px 16px;
+}
+
+.statsNum {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 28px;
+  line-height: 1;
+  color: var(--app-cta);
+}
+
+.statsText {
+  font-size: 13px;
+  color: var(--app-text-2);
+}
+
+/* Рекомендации */
+.recList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.recCard {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border-color: rgba(224, 199, 192, 0.6);
+  box-shadow: 0 0 0 1px rgba(224, 199, 192, 0.35), 0 6px 24px rgba(224, 199, 192, 0.35);
+  transition:
+    opacity 0.3s ease-out,
+    transform 0.3s ease-out,
+    max-height 0.3s ease-out,
+    padding 0.3s ease-out,
+    margin 0.3s ease-out;
+  overflow: hidden;
+}
+
+/* Сворачивание с checkmark */
+.recApplied {
+  opacity: 0.55;
+  transform: scale(0.97);
+  border-color: var(--app-success);
+  box-shadow: 0 0 0 1px rgba(139, 168, 136, 0.35);
+}
+
+.recHead {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.recIcon {
+  font-size: 18px;
+  line-height: 1.3;
+  flex-shrink: 0;
+}
+
+.recBody {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.recName {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--app-text);
+}
+
+.recReason {
+  font-size: 13px;
+  color: var(--app-text-2);
+  line-height: 1.45;
+}
+
+.recDone {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--app-success);
+  animation: fade-in-up 0.25s ease-out both;
+}
+
+/* Активные бонусы */
+.activeList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.activeRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+}
+
+.activeInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.activeName {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--app-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.activeMeta {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--app-text-2);
+}
+
+/* Пустое состояние */
+.emptyCard {
+  padding: 20px;
+  text-align: center;
+  border: 1px dashed var(--app-border);
+}
+
+.emptyText {
+  font-size: 13px;
+  color: var(--app-text-2);
+}
+
+/* ---- Bottom-sheet: форма создания бонуса ---- */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(42, 37, 33, 0.45);
+  backdrop-filter: blur(2px);
+  z-index: 100;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  animation: fade-in 0.2s ease-out both;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.sheet {
+  width: 100%;
+  max-width: 480px;
+  background: var(--app-surface);
+  border-radius: 20px 20px 0 0;
+  padding: 20px 16px calc(20px + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  animation: sheet-up 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+  box-shadow: 0 -8px 40px rgba(42, 37, 33, 0.2);
+}
+
+@keyframes sheet-up {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+.sheetHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sheetTitle {
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--app-text);
+}
+
+.sheetClose {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  color: var(--app-text-2);
+  background: var(--app-bg);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.fieldLabel {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--app-text-2);
+}
+
+.input,
+.select {
+  border: 1px solid var(--app-border);
+  border-radius: 12px;
+  background: var(--app-surface);
+  padding: 12px 14px;
+  font-size: 14px;
+  color: var(--app-text);
+  outline: none;
+  transition: border-color 0.18s ease-out;
+  width: 100%;
+}
+
+.input:focus,
+.select:focus {
+  border-color: var(--app-accent);
+}
+
+/* Выбор типа бонуса — pill-кнопки */
+.kindRow {
+  display: flex;
+  gap: 8px;
+}
+
+.kindBtn {
+  flex: 1;
+  padding: 10px 0;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--app-border);
+  background: var(--app-surface);
+  color: var(--app-text-2);
+  font-size: 12px;
+  font-weight: 600;
+  font-family: var(--font-mono);
+  letter-spacing: 0.04em;
+  transition:
+    background 0.15s ease-out,
+    color 0.15s ease-out;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.kindActive {
+  background: var(--app-cta);
+  border-color: var(--app-cta);
+  color: #ffffff;
+}

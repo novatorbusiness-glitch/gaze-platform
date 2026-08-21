@@ -6,9 +6,11 @@ import ErrorState from '../components/ErrorState'
 import SkeletonLoader from '../components/SkeletonLoader'
 import { useAsync } from '../hooks/useAsync'
 import { fetchArticles } from '../lib/api'
+import { demoArticles } from '../lib/dev-data'
 import type { Article, ArticleCategory } from '../lib/mock'
 import { haptic } from '../lib/telegram'
 import { cx, formatDate } from '../lib/utils'
+import { useMasterStore } from '../store/useMasterStore'
 import styles from './Knowledge.module.css'
 
 type CategoryFilter = 'all' | ArticleCategory
@@ -33,9 +35,12 @@ export default function Knowledge() {
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [attempt, setAttempt] = useState(0)
 
+  const isDemo = useMasterStore((s) => s.isDemo)
+
   const state = useAsync(() => fetchArticles(), [attempt])
 
-  const articles = state.data ?? []
+  // В демо-режиме при падении запроса отдаём демо-статьи (RLS-ошибку не показываем)
+  const articles = isDemo && state.status === 'error' ? demoArticles : state.data ?? []
 
   const filtered: Article[] =
     filter === 'all' ? articles : articles.filter((a) => a.category === filter)
@@ -64,8 +69,8 @@ export default function Knowledge() {
     )
   }
 
-  /* Ошибка */
-  if (state.status === 'error') {
+  /* Ошибка. В демо-режиме не показываем (демо-статьи уже отданы) */
+  if (state.status === 'error' && !isDemo) {
     return (
       <div className={styles.screen}>
         <h1 className={styles.title}>База знаний</h1>
@@ -89,7 +94,10 @@ export default function Knowledge() {
 
   return (
     <div className={styles.screen}>
-      <h1 className={styles.title}>База знаний</h1>
+      <div className={styles.titleRow}>
+        <h1 className={styles.title}>База знаний</h1>
+        {isDemo && <Badge variant="demo">DEMO</Badge>}
+      </div>
 
       {/* Категории: pill-табы */}
       <div className={styles.filters}>

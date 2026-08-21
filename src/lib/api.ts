@@ -8,6 +8,13 @@
  */
 import type { Article, Client, Master, Procedure } from './mock'
 import {
+  demoArticles,
+  demoBonuses,
+  demoClients,
+  demoMaster,
+  demoProcedures,
+} from './dev-data'
+import {
   isSupabaseReady,
   supabase,
   type ArticleRow,
@@ -36,12 +43,16 @@ export interface Bonus {
 export interface DashboardData {
   clients: Client[]
   procedures: Procedure[]
+  /** true, когда вернулись демо-данные (dev-фолбэк вместо RLS) */
+  isDemo?: boolean
 }
 
 export interface ClientProfileData {
   client: Client | null
   history: Procedure[]
   bonuses: Bonus[]
+  /** true, когда вернулись демо-данные (dev-фолбэк вместо RLS) */
+  isDemo?: boolean
 }
 
 export interface MasterResolution {
@@ -49,6 +60,8 @@ export interface MasterResolution {
   telegramId: number | null
   /** true, если работаем вне Telegram (dev-режим: браузер) */
   isDev: boolean
+  /** true, когда мастер определён из демо-данных (RLS без auth, этап 3) */
+  isDemo: boolean
   error: string | null
 }
 
@@ -159,6 +172,45 @@ export function friendlyError(err: unknown): string {
 }
 
 /* ------------------------------------------------------------------ */
+/* Демо-режим (dev-фолбэк, до этапа 3: Supabase Auth)                   */
+/* ------------------------------------------------------------------ */
+
+/**
+ * true, когда приложение работает на демо-данных (RLS без auth).
+ * Устанавливается при первом падении с ошибкой доступа и далее все
+ * чтения отдают данные из src/lib/dev-data.ts.
+ */
+let demoMode = false
+
+/** Текущий режим: true — отдаём демо-данные */
+export function isDemoMode(): boolean {
+  return demoMode
+}
+
+/** Ошибка доступа/RLS: 42501 (insufficient_privilege) или текст политики */
+function isAccessError(err: unknown): boolean {
+  const isObj = typeof err === 'object' && err !== null
+  const code = isObj && 'code' in err ? String((err as { code: unknown }).code) : ''
+  const message =
+    err instanceof Error
+      ? err.message
+      : isObj && 'message' in err
+        ? String((err as { message: unknown }).message)
+        : ''
+  return (
+    code === '42501' ||
+    code === '403' ||
+    /row-level security|violates row-level|permission denied|duplicate key/i.test(message)
+  )
+}
+
+/** Демо-дашборд: клиенты + процедуры с флагом isDemo */
+function demoDashboard(): DashboardData {
+  demoMode = true
+  return { clients: [...demoClients], procedures: [...demoProcedures], isDemo: true }
+}
+
+/* ------------------------------------------------------------------ */
 /* Мастер: определение по telegram_id                                  */
 /* ------------------------------------------------------------------ */
 
@@ -171,25 +223,30 @@ let cachedResolution: MasterResolution | null = null
 /**
  * Определяет текущего мастера по telegram_id (WebApp.initDataUnsafe.user.id).
  * Мастера нет в БД — создаём upsert-ом по telegram_id.
- * При RLS без auth вставка упадёт → возвращаем error (этап 3: Supabase Auth).
+ * При RLS без auth (этап 3: Supabase Auth) вставка падает — вместо ошибки
+ * возвращаем ДЕМО-мастера (dev-фолбэк), чтобы мини-апп оставался рабочим.
  */
 export async function resolveMaster(force = false): Promise<MasterResolution> {
   if (cachedResolution && !force) return cachedResolution
-
-  if (!isSupabaseReady) {
-    return {
-      master: null,
-      telegramId: null,
-      isDev: false,
-      error: 'Supabase не настроен. Проверь VITE_SUPABASE_URL и VITE_SUPABASE_ANON_KEY в .env',
-    }
-  }
 
   const tgId = getTelegramUserId()
   const isDev = tgId === null
   const telegramId = tgId ?? DEV_TELEGRAM_ID
   const tgName = getTelegramUserName()
   const name = tgName ?? (isDev ? DEV_NAME : 'Мастер GAZE')
+
+  if (!isSupabaseReady) {
+    // Supabase не настроен — сразу демо-данные (dev-фолбэк)
+    demoMode = true
+    cachedResolution = {
+      master: demoMaster,
+      telegramId,
+      isDev,
+      isDemo: true,
+      error: null,
+    }
+    return cachedResolution
+  }
 
   try {
     const { data, error } = await supabase
@@ -201,7 +258,7 @@ export async function resolveMaster(force = false): Promise<MasterResolution> {
     if (error) throw error
 
     if (data) {
-      cachedResolution = { master: mapMaster(data), telegramId, isDev, error: null }
+      cachedResolution = { master: mapMaster(data), telegramId, isDev, isDemo: false, error: null }
       return cachedResolution
     }
 
@@ -214,14 +271,26 @@ export async function resolveMaster(force = false): Promise<MasterResolution> {
 
     if (insertError) throw insertError
     if (!inserted) {
-      return { master: null, telegramId, isDev, error: 'Не удалось создать запись мастера.' }
+      return { master: null, telegramId, isDev, isDemo: false, error: 'Не удалось создать запись мастера.' }
     }
 
-    cachedResolution = { master: mapMaster(inserted), telegramId, isDev, error: null }
+    cachedResolution = { master: mapMaster(inserted), telegramId, isDev, isDemo: false, error: null }
     return cachedResolution
   } catch (err) {
-    // RLS без Supabase Auth блокирует upsert анониму — ожидаемо на этапе 2
-    return { master: null, telegramId, isDev, error: friendlyError(err) }
+    // RLS без Supabase Auth блокирует чтение/upsert анониму — ожидаемо на этапе 2.
+    // Вместо ошибки отдаём демо-мастера (временное решение до этапа 3).
+    if (isAccessError(err)) {
+      demoMode = true
+      cachedResolution = {
+        master: demoMaster,
+        telegramId,
+        isDev,
+        isDemo: true,
+        error: null,
+      }
+      return cachedResolution
+    }
+    return { master: null, telegramId, isDev, isDemo: false, error: friendlyError(err) }
   }
 }
 
@@ -230,69 +299,124 @@ export async function resolveMaster(force = false): Promise<MasterResolution> {
 /* ------------------------------------------------------------------ */
 
 export async function fetchDashboard(masterId: string): Promise<DashboardData> {
-  const [clientsRes, proceduresRes] = await Promise.all([
-    supabase
-      .from('clients')
-      .select('*')
-      .eq('master_id', masterId)
-      .order('last_visit', { ascending: false }),
-    supabase
-      .from('procedures')
-      .select('*')
-      .eq('master_id', masterId)
-      .order('created_at', { ascending: false }),
-  ])
+  try {
+    const [clientsRes, proceduresRes] = await Promise.all([
+      supabase
+        .from('clients')
+        .select('*')
+        .eq('master_id', masterId)
+        .order('last_visit', { ascending: false }),
+      supabase
+        .from('procedures')
+        .select('*')
+        .eq('master_id', masterId)
+        .order('created_at', { ascending: false }),
+    ])
 
-  if (clientsRes.error) throw clientsRes.error
-  if (proceduresRes.error) throw proceduresRes.error
+    if (clientsRes.error) throw clientsRes.error
+    if (proceduresRes.error) throw proceduresRes.error
 
-  return {
-    clients: (clientsRes.data ?? []).map(mapClient),
-    procedures: (proceduresRes.data ?? []).map(mapProcedure),
+    const clients = (clientsRes.data ?? []).map(mapClient)
+    const procedures = (proceduresRes.data ?? []).map(mapProcedure)
+
+    // Уже в демо-режиме, а данных нет — наполняем демо-данными
+    if (demoMode && clients.length === 0 && procedures.length === 0) return demoDashboard()
+
+    return { clients, procedures }
+  } catch (err) {
+    // RLS без auth (этап 2) — dev-фолбэк на демо-данные
+    if (isAccessError(err)) return demoDashboard()
+    throw err
   }
 }
 
 export async function fetchClients(masterId: string): Promise<Client[]> {
-  const { data, error } = await supabase
-    .from('clients')
-    .select('*')
-    .eq('master_id', masterId)
-    .order('last_visit', { ascending: false })
+  try {
+    const { data, error } = await supabase
+      .from('clients')
+      .select('*')
+      .eq('master_id', masterId)
+      .order('last_visit', { ascending: false })
 
-  if (error) throw error
-  return (data ?? []).map(mapClient)
+    if (error) throw error
+
+    const clients = (data ?? []).map(mapClient)
+    if (demoMode && clients.length === 0) return [...demoClients]
+    return clients
+  } catch (err) {
+    if (isAccessError(err)) {
+      demoMode = true
+      return [...demoClients]
+    }
+    throw err
+  }
 }
 
 export async function fetchClient(clientId: string): Promise<Client | null> {
-  const { data, error } = await supabase
-    .from('clients')
-    .select('*')
-    .eq('id', clientId)
-    .maybeSingle()
+  try {
+    const { data, error } = await supabase
+      .from('clients')
+      .select('*')
+      .eq('id', clientId)
+      .maybeSingle()
 
-  if (error) throw error
-  return data ? mapClient(data) : null
+    if (error) throw error
+
+    // RLS без auth вернула пусто (200, отфильтровано auth.uid()=null) — ищем в демо
+    if (!data && demoMode) return demoClients.find((c) => c.id === clientId) ?? null
+    return data ? mapClient(data) : null
+  } catch (err) {
+    if (isAccessError(err)) {
+      demoMode = true
+      return demoClients.find((c) => c.id === clientId) ?? null
+    }
+    throw err
+  }
 }
 
 export async function fetchClientProcedures(clientId: string): Promise<Procedure[]> {
-  const { data, error } = await supabase
-    .from('procedures')
-    .select('*')
-    .eq('client_id', clientId)
-    .order('created_at', { ascending: false })
+  try {
+    const { data, error } = await supabase
+      .from('procedures')
+      .select('*')
+      .eq('client_id', clientId)
+      .order('created_at', { ascending: false })
 
-  if (error) throw error
-  return (data ?? []).map(mapProcedure)
+    if (error) throw error
+
+    const procedures = (data ?? []).map(mapProcedure)
+    if (demoMode && procedures.length === 0) {
+      return demoProcedures.filter((p) => p.client_id === clientId)
+    }
+    return procedures
+  } catch (err) {
+    if (isAccessError(err)) {
+      demoMode = true
+      return demoProcedures.filter((p) => p.client_id === clientId)
+    }
+    throw err
+  }
 }
 
 export async function fetchBonuses(masterId: string): Promise<Bonus[]> {
-  const { data, error } = await supabase
-    .from('bonuses')
-    .select('*')
-    .eq('master_id', masterId)
+  try {
+    const { data, error } = await supabase
+      .from('bonuses')
+      .select('*')
+      .eq('master_id', masterId)
 
-  if (error) throw error
-  return (data ?? []).map(mapBonus)
+    if (error) throw error
+
+    const bonuses = (data ?? []).map(mapBonus)
+    if (demoMode && bonuses.length === 0) return [...demoBonuses]
+    return bonuses
+  } catch (err) {
+    if (isAccessError(err)) {
+      demoMode = true
+      return [...demoBonuses]
+    }
+    throw err
+  }
 }
 
 export async function fetchClientProfile(clientId: string, masterId: string): Promise<ClientProfileData> {
@@ -305,13 +429,24 @@ export async function fetchClientProfile(clientId: string, masterId: string): Pr
 }
 
 export async function fetchArticles(): Promise<Article[]> {
-  const { data, error } = await supabase
-    .from('articles')
-    .select('*')
-    .order('created_at', { ascending: false })
+  try {
+    const { data, error } = await supabase
+      .from('articles')
+      .select('*')
+      .order('created_at', { ascending: false })
 
-  if (error) throw error
-  return (data ?? []).map(mapArticle)
+    if (error) throw error
+
+    const articles = (data ?? []).map(mapArticle)
+    if (demoMode && articles.length === 0) return [...demoArticles]
+    return articles
+  } catch (err) {
+    if (isAccessError(err)) {
+      demoMode = true
+      return [...demoArticles]
+    }
+    throw err
+  }
 }
 
 /* ------------------------------------------------------------------ */

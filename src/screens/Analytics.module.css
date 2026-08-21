@@ -1,0 +1,347 @@
+.screen {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.title {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 20px;
+  color: var(--app-text);
+}
+
+/* Заголовок + бейдж DEMO в одну строку */
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* Pill-табы периода: Неделя · Месяц · Квартал */
+.filters {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+
+.filterBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--app-border);
+  background: var(--app-surface);
+  color: var(--app-text-2);
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  transition:
+    transform 0.15s ease-out,
+    background 0.15s ease-out,
+    color 0.15s ease-out;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.filterBtn:active {
+  transform: scale(0.97);
+}
+
+.filterActive {
+  background: var(--app-cta);
+  border-color: var(--app-cta);
+  color: #ffffff;
+}
+
+/* ---- Карточка-рекомендация 💡 (Conceptual Card с glow) ---- */
+.insightCard {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border-color: rgba(224, 199, 192, 0.6);
+  box-shadow:
+    0 0 0 1px rgba(224, 199, 192, 0.35),
+    0 8px 32px rgba(224, 199, 192, 0.4);
+  animation: insight-bounce 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes insight-bounce {
+  0% {
+    opacity: 0;
+    transform: scale(0.96) translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.insightHead {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.insightIcon {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.insightText {
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--app-text);
+}
+
+.insightNum {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--app-cta);
+}
+
+/* ---- Метрики 2×2 grid ---- */
+.metrics {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.metricCard {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 16px;
+  min-width: 0;
+}
+
+.metricLabel {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--app-text-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.metricValue {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 20px;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  color: var(--app-text);
+  white-space: nowrap;
+}
+
+/* ---- Индикаторы тренда ---- */
+.trend {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 11px;
+  margin-top: 2px;
+}
+
+.trendArrow {
+  font-size: 13px;
+  line-height: 1;
+}
+
+.trendUp {
+  color: var(--app-success);
+}
+
+.trendDown {
+  color: var(--app-warning);
+}
+
+.trendFlat {
+  color: var(--app-text-3);
+}
+
+.trendDelta {
+  letter-spacing: 0.02em;
+}
+
+/* ---- Bar chart «Доход по дням» (div-based) ---- */
+.chartCard,
+.servicesCard {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.sectionTitle {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--app-text);
+}
+
+.chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  height: 132px;
+  padding-top: 22px; /* место под tooltip */
+  position: relative;
+}
+
+.barCol {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  height: 100%;
+}
+
+.barArea {
+  position: relative;
+  flex: 1;
+  width: 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.barTrack {
+  width: 100%;
+  max-width: 26px;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+  background: linear-gradient(180deg, rgba(107, 94, 83, 0.05), rgba(107, 94, 83, 0.03));
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.bar {
+  width: 100%;
+  background: var(--app-accent);
+  border-radius: 6px 6px 2px 2px;
+  min-height: 2px;
+  animation: bar-grow 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+  transform-origin: bottom;
+  transition: background 0.2s ease-out;
+}
+
+.barToday {
+  background: var(--app-cta);
+}
+
+@keyframes bar-grow {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+
+.barLabel {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--app-text-3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+/* Tooltip с точной цифрой при тапе на столбец */
+.tooltip {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--app-cta);
+  color: #ffffff;
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: 8px;
+  white-space: nowrap;
+  z-index: 10;
+  animation: fade-in-up 0.18s ease-out both;
+}
+
+.tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 4px solid transparent;
+  border-top-color: var(--app-cta);
+}
+
+/* ---- Топ услуг — горизонтальные бары ---- */
+.services {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.service {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.serviceTop {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.serviceName {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--app-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.serviceSum {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--app-text-2);
+  white-space: nowrap;
+}
+
+.serviceTrack {
+  height: 8px;
+  border-radius: 100px;
+  background: rgba(107, 94, 83, 0.08);
+  overflow: hidden;
+}
+
+.serviceFill {
+  height: 100%;
+  border-radius: 100px;
+  background: linear-gradient(90deg, var(--app-accent), var(--app-cta));
+  animation: fill-grow 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+  transform-origin: left;
+}
+
+@keyframes fill-grow {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}

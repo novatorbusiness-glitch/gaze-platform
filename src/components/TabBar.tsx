@@ -1,4 +1,4 @@
-import { BarChart3, BookOpen, Home, User, Users, type LucideIcon } from 'lucide-react'
+import { BarChart3, BookOpen, Gift, Home, User, Users, type LucideIcon } from 'lucide-react'
 import { cx } from '../lib/utils'
 import { haptic } from '../lib/telegram'
 import { useAppStore, type Screen } from '../store/useAppStore'
@@ -15,10 +15,11 @@ const TABS: Tab[] = [
   { id: 'clients', label: 'Клиенты', icon: Users },
   { id: 'analytics', label: 'Аналитика', icon: BarChart3 },
   { id: 'knowledge', label: 'Знания', icon: BookOpen },
+  { id: 'bonuses', label: 'Бонусы', icon: Gift },
   { id: 'profile', label: 'Профиль', icon: User },
 ]
 
-/** Tab-bar: fixed bottom, 5 вкладок, иконки + текст, active = --app-cta + точка (ТЗ, Часть 1) */
+/** Tab-bar: fixed bottom, вкладки с иконками, активная = --app-cta + точка (ТЗ, Часть 1) */
 export default function TabBar() {
   const screen = useAppStore((s) => s.screen)
   const navigate = useAppStore((s) => s.navigate)

@@ -1,0 +1,317 @@
+.screen {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.title {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 20px;
+  color: var(--app-text);
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* Табы: Наставник · Сообщество */
+.tabs {
+  display: flex;
+  gap: 8px;
+}
+
+.tab {
+  flex: 1;
+  padding: 10px 0;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--app-border);
+  background: var(--app-surface);
+  color: var(--app-text-2);
+  font-size: 13px;
+  font-weight: 600;
+  transition:
+    background 0.15s ease-out,
+    color 0.15s ease-out;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.tabActive {
+  background: var(--app-cta);
+  border-color: var(--app-cta);
+  color: #ffffff;
+}
+
+/* ---- Таб: Наставник ---- */
+.mentorWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.mentorHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--app-shadow);
+}
+
+.mentorInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.mentorName {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--app-text);
+}
+
+.mentorRole {
+  font-size: 12px;
+  color: var(--app-text-2);
+}
+
+/* Лента сообщений */
+.thread {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.bubbleRow {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.bubbleRowMine {
+  justify-content: flex-end;
+}
+
+.bubble {
+  max-width: 82%;
+  padding: 10px 14px;
+  border-radius: 16px;
+  position: relative;
+  animation: fade-in-up 0.25s ease-out both;
+}
+
+.bubbleOther {
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  border-bottom-left-radius: 4px;
+  color: var(--app-text);
+}
+
+.bubbleMine {
+  background: var(--app-cta);
+  color: #ffffff;
+  border-bottom-right-radius: 4px;
+}
+
+.bubbleText {
+  font-size: 14px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.bubbleTime {
+  display: block;
+  margin-top: 4px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--app-text-3);
+  text-align: right;
+}
+
+.bubbleTimeMine {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+/* Typing indicator — три точки с пульсацией */
+.typing {
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px 2px;
+}
+
+.typingDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--app-text-3);
+  animation: typing-pulse 1.1s ease-in-out infinite;
+}
+
+.typingDot:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.typingDot:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+@keyframes typing-pulse {
+  0%,
+  60%,
+  100% {
+    opacity: 0.35;
+    transform: translateY(0);
+  }
+  30% {
+    opacity: 1;
+    transform: translateY(-3px);
+  }
+}
+
+/* ---- Таб: Сообщество ---- */
+.communityList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.communityItem {
+  display: flex;
+  gap: 10px;
+  padding: 12px 14px;
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--app-shadow);
+  animation: fade-in-up 0.3s ease-out both;
+}
+
+.communityBody {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  flex: 1;
+}
+
+.communityHead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.communityAuthor {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--app-text);
+}
+
+.communityTextRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.pinIcon {
+  color: var(--app-cta);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.communityText {
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--app-text);
+}
+
+.communityTime {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--app-text-3);
+}
+
+/* Пустое состояние сообщества */
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 44px 20px;
+  text-align: center;
+  border: 1px dashed var(--app-border);
+  border-radius: var(--radius-card);
+}
+
+.emptyIcon {
+  font-size: 30px;
+}
+
+.emptyTitle {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--app-text);
+}
+
+.emptyText {
+  font-size: 13px;
+  color: var(--app-text-2);
+  line-height: 1.5;
+}
+
+/* ---- Инпут внизу (sticky над tab-bar) ---- */
+.inputBar {
+  position: sticky;
+  bottom: calc(76px + env(safe-area-inset-bottom));
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  border-radius: var(--radius-pill);
+  padding: 6px 6px 6px 16px;
+  box-shadow: 0 4px 20px rgba(107, 94, 83, 0.14);
+  z-index: 30;
+}
+
+.input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 14px;
+  min-width: 0;
+}
+
+.input::placeholder {
+  color: var(--app-text-3);
+}
+
+.sendBtn {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--app-cta);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    transform 0.15s ease-out,
+    opacity 0.15s ease-out;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.sendBtn:active {
+  transform: scale(0.92);
+}
+
+.sendBtn:disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}

@@ -18,6 +18,12 @@ export interface Master {
   referral_code: string
   referred_by: string | null
   created_at: string
+  /** Dev/demo: город мастера (этапа 3 нет — поля нет в схеме БД) */
+  city?: string
+  /** Dev/demo: рейтинг 0–5 */
+  rating?: number
+  /** Dev/demo: всего клиентов у мастера */
+  clients_count?: number
 }
 
 export interface Client {
@@ -54,6 +60,8 @@ export interface Article {
   cover_url: string | null
   is_premium: boolean
   created_at: string
+  /** Dev/demo: сколько мастеров прочитали */
+  readers?: number
 }
 
 /* ---------------------------------------------------------------- */

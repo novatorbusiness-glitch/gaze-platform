@@ -5,6 +5,8 @@ import { useAppStore } from './store/useAppStore'
 import { useMasterStore } from './store/useMasterStore'
 import AddProcedure from './screens/AddProcedure'
 import Analytics from './screens/Analytics'
+import Bonuses from './screens/Bonuses'
+import Chat from './screens/Chat'
 import Clients from './screens/Clients'
 import ClientProfile from './screens/ClientProfile'
 import Dashboard from './screens/Dashboard'
@@ -35,6 +37,8 @@ export default function App() {
         {screen === 'addProcedure' && <AddProcedure />}
         {screen === 'analytics' && <Analytics />}
         {screen === 'knowledge' && <Knowledge />}
+        {screen === 'bonuses' && <Bonuses />}
+        {screen === 'chat' && <Chat />}
         {screen === 'profile' && <Profile />}
       </main>
       <TabBar />

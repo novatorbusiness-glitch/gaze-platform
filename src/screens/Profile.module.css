@@ -1,0 +1,293 @@
+.screen {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.title {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 20px;
+  color: var(--app-text);
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* ---- Идентичность: аватар + имя + специализации ---- */
+.identity {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 18px 16px 10px;
+}
+
+/* Тонкое кольцо --app-accent вокруг аватара */
+.avatarWrap {
+  padding: 3px;
+  border-radius: 50%;
+  border: 1.5px solid var(--app-accent);
+  line-height: 0;
+}
+
+.name {
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--app-text);
+  margin-top: 4px;
+}
+
+.specialties {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+/* ---- Карточка подписки ---- */
+.subCard {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.subHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.subStatus {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--app-text);
+}
+
+/* Зелёный dot «Активна» */
+.subDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--app-success);
+  box-shadow: 0 0 0 3px rgba(139, 168, 136, 0.2);
+}
+
+.subBody {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.subTariff {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--app-text);
+}
+
+.subPrice {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 28px;
+  letter-spacing: -0.02em;
+}
+
+.subLabel {
+  font-size: 12px;
+  color: var(--app-text-2);
+}
+
+/* Прогресс-бар дней */
+.subProgress {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.subProgressTrack {
+  height: 8px;
+  border-radius: 100px;
+  background: rgba(107, 94, 83, 0.1);
+  overflow: hidden;
+}
+
+.subProgressFill {
+  height: 100%;
+  border-radius: 100px;
+  background: linear-gradient(90deg, var(--app-accent), var(--app-success));
+  transition: width 0.6s ease-out;
+}
+
+.subProgressText {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--app-text-2);
+}
+
+/* ---- Реферальная программа ---- */
+.refCard {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.refHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.refTitle {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--app-text);
+}
+
+.refCodeRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 14px;
+  background: var(--app-bg);
+  border: 1px solid var(--app-border);
+  border-radius: 12px;
+}
+
+/* Код — JetBrains Mono, крупно */
+.refCode {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 20px;
+  letter-spacing: 0.04em;
+  color: var(--app-cta);
+}
+
+.refCopyBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: var(--radius-pill);
+  background: var(--app-cta);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 600;
+  transition: transform 0.15s ease-out;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.refCopyBtn:active {
+  transform: scale(0.94);
+}
+
+/* Статистика: приглашено / заработано / ставка */
+.refStats {
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+}
+
+.refStat {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.refStatValue {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--app-text);
+  white-space: nowrap;
+}
+
+.refStatLabel {
+  font-size: 11px;
+  color: var(--app-text-2);
+  line-height: 1.35;
+}
+
+.refDivider {
+  width: 1px;
+  background: var(--app-border);
+}
+
+.refLink {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--app-text-3);
+  word-break: break-all;
+  text-align: center;
+}
+
+/* ---- Настройки: список-меню с тонкими разделителями ---- */
+.settingsCard {
+  padding: 6px 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.settingsRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  width: 100%;
+  text-align: left;
+  border-bottom: 1px solid var(--app-border);
+  color: var(--app-text);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.settingsRow:last-child {
+  border-bottom: none;
+}
+
+.settingsRow:active {
+  background: rgba(107, 94, 83, 0.04);
+}
+
+.settingsIcon {
+  display: flex;
+  color: var(--app-cta);
+  flex-shrink: 0;
+}
+
+.settingsLabel {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.settingsChevron {
+  color: var(--app-text-3);
+}
+
+/* Выйти — приглушённый красноватый текст */
+.logout {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px;
+  color: var(--app-danger);
+  font-size: 14px;
+  font-weight: 500;
+  -webkit-tap-highlight-color: transparent;
+}

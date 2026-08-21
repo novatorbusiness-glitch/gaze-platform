@@ -7,6 +7,8 @@ type MasterStatus = 'idle' | 'loading' | 'ready' | 'error'
 interface MasterState {
   master: Master | null
   isDev: boolean
+  /** true — приложение работает на демо-данных (RLS без auth, этап 3) */
+  isDemo: boolean
   status: MasterStatus
   error: string | null
   /** Определяет мастера по telegram_id (upsert). force — повтор после ошибки. */
@@ -18,6 +20,7 @@ let started = false
 export const useMasterStore = create<MasterState>((set) => ({
   master: null,
   isDev: false,
+  isDemo: false,
   status: 'idle',
   error: null,
 
@@ -29,9 +32,21 @@ export const useMasterStore = create<MasterState>((set) => ({
     const res = await resolveMaster(force)
 
     if (res.master) {
-      set({ master: res.master, isDev: res.isDev, status: 'ready', error: null })
+      set({
+        master: res.master,
+        isDev: res.isDev,
+        isDemo: res.isDemo,
+        status: 'ready',
+        error: null,
+      })
     } else {
-      set({ master: null, isDev: res.isDev, status: 'error', error: res.error ?? 'Не удалось определить мастера' })
+      set({
+        master: null,
+        isDev: res.isDev,
+        isDemo: res.isDemo,
+        status: 'error',
+        error: res.error ?? 'Не удалось определить мастера',
+      })
     }
   },
 }))

@@ -10,6 +10,7 @@ import SkeletonLoader from '../components/SkeletonLoader'
 import { useAsync } from '../hooks/useAsync'
 import { useCountUp } from '../hooks/useCountUp'
 import { fetchDashboard } from '../lib/api'
+import { demoReminders, demoAnalytics, demoClients, demoMaster, demoProcedures, type ReminderStatus } from '../lib/dev-data'
 import type { Procedure } from '../lib/mock'
 import { haptic } from '../lib/telegram'
 import { formatDate, formatMoney, greeting } from '../lib/utils'
@@ -18,6 +19,12 @@ import { useMasterStore } from '../store/useMasterStore'
 import styles from './Dashboard.module.css'
 
 const UNREAD_MESSAGES = 3
+
+const REMINDER_STATUS_LABEL: Record<ReminderStatus, string> = {
+  confirmed: 'Подтверждено',
+  pending: 'Ожидает',
+  new: 'Новое',
+}
 
 /** Доход за текущий месяц (из процедур) */
 function monthIncome(procedures: Procedure[]): number {
@@ -42,6 +49,7 @@ export default function Dashboard() {
   const master = useMasterStore((s) => s.master)
   const masterStatus = useMasterStore((s) => s.status)
   const masterError = useMasterStore((s) => s.error)
+  const isDemo = useMasterStore((s) => s.isDemo)
   const retryMaster = useMasterStore((s) => s.init)
 
   const masterId = master?.id ?? null
@@ -52,14 +60,21 @@ export default function Dashboard() {
     [masterId, attempt],
   )
 
-  const clients = dash.data?.clients ?? []
-  const procedures = dash.data?.procedures ?? []
+  // В демо-режиме метрики берём из demoAnalytics (точно по спецификации),
+  // а списки — из демо-массива, если запрос к Supabase упал (RLS/сеть)
+  const clients =
+    isDemo && dash.status === 'error' ? demoClients : dash.data?.clients ?? []
+  const procedures =
+    isDemo && dash.status === 'error' ? demoProcedures : dash.data?.procedures ?? []
 
-  const income = useCountUp(monthIncome(procedures))
-  const avg = useCountUp(averageCheck(procedures))
-  const totalClients = clients.length
+  const income = useCountUp(isDemo ? demoAnalytics.incomeMonth : monthIncome(procedures))
+  const avg = useCountUp(isDemo ? demoAnalytics.avgCheck : averageCheck(procedures))
+  const totalClients = isDemo ? (demoMaster.clients_count ?? clients.length) : clients.length
+
+  const demoBadge = isDemo ? <Badge variant="demo">DEMO</Badge> : null
 
   const loading = masterStatus === 'loading' || (masterStatus === 'ready' && dash.status === 'loading')
+  // В демо-режиме ошибку RLS не показываем: демо-данные уже успешно отданы
   const error = masterStatus === 'error' ? masterError : dash.status === 'error' ? dash.error : null
 
   const clientById = new Map(clients.map((c) => [c.id, c]))
@@ -127,13 +142,17 @@ export default function Dashboard() {
     )
   }
 
-  /* Ошибка (RLS / сеть / Supabase не настроен) */
-  if (error) {
+  /* Ошибка (RLS / сеть / Supabase не настроен). В демо-режиме не показываем:
+     демо-данные уже успешно отданы, RLS-ошибку скрываем до этапа 3 */
+  if (error && !isDemo) {
     return (
       <div className={styles.screen}>
         <header className={styles.header}>
           <h1 className={styles.title}>{greeting()}, {master?.name ?? 'мастер'} 👋</h1>
-          <Badge>GAZE PLATFORM</Badge>
+          <div className={styles.badgeRow}>
+            <Badge>GAZE PLATFORM</Badge>
+            {demoBadge}
+          </div>
         </header>
         <ErrorState message={error} onRetry={retry} />
       </div>
@@ -148,7 +167,10 @@ export default function Dashboard() {
           <h1 className={styles.title}>
             {greeting()}, {master?.name ?? 'мастер'} 👋
           </h1>
-          <Badge>GAZE PLATFORM</Badge>
+          <div className={styles.badgeRow}>
+            <Badge>GAZE PLATFORM</Badge>
+            {demoBadge}
+          </div>
         </header>
 
         <Card className={styles.emptyCard}>
@@ -169,7 +191,10 @@ export default function Dashboard() {
         <h1 className={styles.title}>
           {greeting()}, {master?.name ?? 'мастер'} 👋
         </h1>
-        <Badge>GAZE PLATFORM</Badge>
+        <div className={styles.badgeRow}>
+          <Badge>GAZE PLATFORM</Badge>
+          {demoBadge}
+        </div>
       </header>
 
       {/* Три метрики — горизонтальный скролл */}
@@ -190,12 +215,48 @@ export default function Dashboard() {
             </button>
           )
         })}
-        <button className={styles.quickBtn} onClick={() => haptic('light')}>
+        <button
+          className={styles.quickBtn}
+          onClick={() => {
+            haptic('light')
+            navigate('chat')
+          }}
+        >
           <MessageCircle size={20} strokeWidth={1.5} className={styles.quickIcon} />
           <span>Сообщения</span>
           {UNREAD_MESSAGES > 0 && <span className={styles.unread}>{UNREAD_MESSAGES}</span>}
         </button>
       </div>
+
+      {/* Напоминания (демо-режим: RLS без auth, этап 3) */}
+      {isDemo && (
+        <>
+          <h2 className={styles.sectionTitle}>Напоминания</h2>
+          <div className="stagger">
+            {demoReminders.map((reminder) => (
+              <Card key={reminder.id} className={styles.reminderCard}>
+                <div className={styles.reminderTop}>
+                  <span className={styles.reminderName}>{reminder.clientName}</span>
+                  <Badge
+                    variant={
+                      reminder.status === 'confirmed'
+                        ? 'success'
+                        : reminder.status === 'pending'
+                          ? 'warning'
+                          : 'demo'
+                    }
+                  >
+                    {REMINDER_STATUS_LABEL[reminder.status]}
+                  </Badge>
+                </div>
+                <p className={styles.reminderText}>
+                  {reminder.service} · {reminder.when}
+                </p>
+              </Card>
+            ))}
+          </div>
+        </>
+      )}
 
       {/* Недавние визиты */}
       <h2 className={styles.sectionTitle}>Недавние визиты</h2>
