@@ -1,0 +1,12 @@
+.app {
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100dvh;
+  padding: 16px 16px 104px;
+  position: relative;
+}
+
+/* На профиле клиента tab-bar скрыт — нижний отступ не нужен */
+.app--no-tabbar {
+  padding-bottom: 20px;
+}

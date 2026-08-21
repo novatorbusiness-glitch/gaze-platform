@@ -1,0 +1,32 @@
+.metric {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 148px;
+  padding: 16px;
+  flex-shrink: 0;
+}
+
+.label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--app-text-2);
+}
+
+/* Цифры/метрики: JetBrains Mono 700, 24–36px */
+.lg {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 36px;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: var(--app-text);
+}
+
+.md {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 24px;
+  line-height: 1.2;
+  color: var(--app-text);
+}

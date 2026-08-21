@@ -1,0 +1,135 @@
+import { useEffect, useMemo, useState } from 'react'
+import { Plus, Search } from 'lucide-react'
+import Button from '../components/Button'
+import Card from '../components/Card'
+import ClientRow from '../components/ClientRow'
+import { clients } from '../lib/mock'
+import { haptic } from '../lib/telegram'
+import { cx, daysSince, formatDate, formatMoney } from '../lib/utils'
+import { useAppStore } from '../store/useAppStore'
+import styles from './Clients.module.css'
+
+type ClientFilter = 'all' | 'active' | 'stale'
+
+const FILTERS: Array<{ id: ClientFilter; label: string }> = [
+  { id: 'all', label: 'Все' },
+  { id: 'active', label: 'Активные' },
+  { id: 'stale', label: 'Давно не был' },
+]
+
+export default function Clients() {
+  const openClient = useAppStore((s) => s.openClient)
+
+  const [query, setQuery] = useState('')
+  const [debounced, setDebounced] = useState('')
+  const [filter, setFilter] = useState<ClientFilter>('all')
+
+  // Поиск с debounce 200ms (ТЗ, экран Clients)
+  useEffect(() => {
+    const timer = setTimeout(() => setDebounced(query.trim().toLowerCase()), 200)
+    return () => clearTimeout(timer)
+  }, [query])
+
+  const hasStale = useMemo(() => clients.some((c) => daysSince(c.last_visit) >= 30), [])
+
+  const filtered = useMemo(() => {
+    return clients
+      .filter((c) => {
+        if (!debounced) return true
+        return (
+          c.name.toLowerCase().includes(debounced) || c.phone.replace(/[\s-]/g, '').includes(debounced)
+        )
+      })
+      .filter((c) => {
+        if (filter === 'active') return daysSince(c.last_visit) < 30
+        if (filter === 'stale') return daysSince(c.last_visit) >= 30
+        return true
+      })
+      .sort((a, b) => b.last_visit.localeCompare(a.last_visit))
+  }, [debounced, filter])
+
+  /* Пустое состояние (новый мастер) */
+  if (clients.length === 0) {
+    return (
+      <div className={styles.screen}>
+        <h1 className={styles.title}>Мои клиенты</h1>
+        <Card className={styles.emptyCard}>
+          <p className={styles.emptyTitle}>Пока нет клиентов.</p>
+          <p className={styles.emptyText}>Добавь первого — и платформа начнёт считать за тебя.</p>
+          <Button fullWidth size="lg" onClick={() => haptic('medium')}>
+            + Добавить клиента
+          </Button>
+        </Card>
+      </div>
+    )
+  }
+
+  return (
+    <div className={styles.screen}>
+      <h1 className={styles.title}>
+        Мои клиенты · <span className={styles.count}>{clients.length} чел.</span>
+      </h1>
+
+      {/* Поиск с иконкой лупы */}
+      <label className={styles.search}>
+        <Search size={18} strokeWidth={1.5} className={styles.searchIcon} />
+        <input
+          className={styles.searchInput}
+          type="text"
+          placeholder="Найти по имени или телефону..."
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+        />
+      </label>
+
+      {/* Сортировка: pill-табы */}
+      <div className={styles.filters}>
+        {FILTERS.map((f) => (
+          <button
+            key={f.id}
+            className={cx(styles.filterBtn, filter === f.id && styles.filterActive)}
+            onClick={() => {
+              haptic('light')
+              setFilter(f.id)
+            }}
+          >
+            {f.label}
+            {f.id === 'stale' && hasStale && <span className={styles.staleDot} />}
+          </button>
+        ))}
+      </div>
+
+      {/* Список клиентов */}
+      {filtered.length > 0 ? (
+        <div className={cx('stagger', styles.list)}>
+          {filtered.map((client, index) => (
+            <ClientRow
+              key={client.id}
+              name={client.name}
+              date={`Последний визит: ${formatDate(client.last_visit)}`}
+              amount={client.total_spent}
+              subtitle={formatMoney(client.total_spent)}
+              altAvatar={index % 2 === 1}
+              onClick={() => openClient(client.id)}
+            />
+          ))}
+        </div>
+      ) : (
+        <Card className={styles.emptySearch}>
+          <p className={styles.emptyText}>
+            Никого не нашли по запросу «{query.trim()}». Проверь имя или номер телефона.
+          </p>
+        </Card>
+      )}
+
+      {/* FAB: круг --app-cta, белая иконка + */}
+      <button
+        className={styles.fab}
+        aria-label="Добавить клиента"
+        onClick={() => haptic('medium')}
+      >
+        <Plus size={26} strokeWidth={2} />
+      </button>
+    </div>
+  )
+}

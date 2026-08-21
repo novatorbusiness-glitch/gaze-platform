@@ -1,0 +1,55 @@
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: var(--radius-btn);
+  font-weight: 600;
+  font-family: var(--font-sans);
+  transition:
+    transform 0.15s ease-out,
+    opacity 0.15s ease-out;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.btn:active {
+  transform: scale(0.97);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* Primary: background --app-cta, белый текст */
+.primary {
+  background: var(--app-cta);
+  color: #ffffff;
+}
+
+.primary:active {
+  opacity: 0.92;
+}
+
+/* Ghost: рамка --app-cta, цвет --app-cta */
+.ghost {
+  background: transparent;
+  border: 1px solid var(--app-cta);
+  color: var(--app-cta);
+}
+
+/* Размеры */
+.md {
+  padding: 12px 20px;
+  font-size: 14px;
+}
+
+.lg {
+  padding: 14px;
+  font-size: 15px;
+}
+
+.fullWidth {
+  width: 100%;
+}

@@ -1,0 +1,35 @@
+.screen {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.title {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 20px;
+  color: var(--app-text);
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 24px 20px;
+  border: 1px dashed var(--app-border);
+  text-align: center;
+}
+
+.text {
+  font-size: 14px;
+  color: var(--app-text-2);
+  line-height: 1.5;
+}
+
+.tag {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--app-text-3);
+}

@@ -1,0 +1,30 @@
+/* ============================================================
+   GAZE PLATFORM — ДИЗАЙН-ТОКЕНЫ (ТЗ, Часть 1)
+   Тёплый минимализм: Notion × Kinfolk × Linear
+   ============================================================ */
+
+:root {
+  /* Палитра */
+  --app-bg: #f9f8f6;               /* cream — основной фон */
+  --app-surface: #ffffff;          /* карточки, модалки */
+  --app-text: #2a2521;             /* основной текст */
+  --app-text-2: #6b5e53;           /* вторичный текст */
+  --app-text-3: rgba(107, 94, 83, 0.5); /* третичный */
+  --app-accent: #e0c7c0;           /* blush — акценты, индикаторы, badges */
+  --app-cta: #6b5e53;              /* warm — кнопки, активные элементы */
+  --app-success: #8ba888;          /* зелёный приглушённый */
+  --app-warning: #d4a574;          /* тёплый оранж */
+  --app-danger: #c96a5d;           /* мягкий красный для удаления */
+
+  --app-border: rgba(107, 94, 83, 0.12);
+  --app-shadow: 0 2px 8px rgba(107, 94, 83, 0.06);
+
+  /* Типографика */
+  --font-sans: 'Montserrat', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', monospace;
+
+  /* Радиусы */
+  --radius-card: 16px;
+  --radius-btn: 12px;
+  --radius-pill: 100px;
+}

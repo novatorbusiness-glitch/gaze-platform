@@ -1,0 +1,158 @@
+.screen {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.title {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 20px;
+  color: var(--app-text);
+}
+
+.count {
+  color: var(--app-text-2);
+  font-weight: 500;
+}
+
+/* Поиск */
+.search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  border-radius: 14px;
+  padding: 0 14px;
+  box-shadow: var(--app-shadow);
+  transition: border-color 0.18s ease-out;
+}
+
+.search:focus-within {
+  border-color: var(--app-accent);
+}
+
+.searchIcon {
+  color: var(--app-text-3);
+  flex-shrink: 0;
+}
+
+.searchInput {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  padding: 13px 0;
+  font-size: 14px;
+  min-width: 0;
+}
+
+.searchInput::placeholder {
+  color: var(--app-text-3);
+}
+
+/* Pill-табы сортировки */
+.filters {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+
+.filterBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--app-border);
+  background: var(--app-surface);
+  color: var(--app-text-2);
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  transition:
+    transform 0.15s ease-out,
+    background 0.15s ease-out,
+    color 0.15s ease-out;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.filterBtn:active {
+  transform: scale(0.97);
+}
+
+.filterActive {
+  background: var(--app-cta);
+  border-color: var(--app-cta);
+  color: #ffffff;
+}
+
+/* Красная точка на «Давно не был», если есть клиенты 30+ дней */
+.staleDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #c96a5d;
+}
+
+.filterActive .staleDot {
+  background: #ffffff;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* FAB */
+.fab {
+  position: fixed;
+  right: max(20px, calc((100vw - 480px) / 2 + 20px));
+  bottom: calc(96px + env(safe-area-inset-bottom));
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--app-cta);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 20px rgba(107, 94, 83, 0.28);
+  transition: transform 0.15s ease-out;
+  -webkit-tap-highlight-color: transparent;
+  z-index: 40;
+}
+
+.fab:active {
+  transform: scale(0.92);
+}
+
+/* Пустые состояния */
+.emptyCard {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 28px 20px;
+  text-align: center;
+  border: 1px dashed var(--app-border);
+}
+
+.emptyTitle {
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--app-text);
+}
+
+.emptyText {
+  font-size: 14px;
+  color: var(--app-text-2);
+  line-height: 1.5;
+}
+
+.emptySearch {
+  text-align: center;
+  padding: 20px;
+}

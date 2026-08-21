@@ -1,0 +1,46 @@
+.block {
+  background: var(--app-accent);
+  opacity: 0.15;
+  border-radius: 8px;
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes skeleton-shimmer {
+  0% {
+    opacity: 0.1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+  100% {
+    opacity: 0.1;
+  }
+}
+
+.text {
+  height: 12px;
+  width: 100%;
+  border-radius: 4px;
+}
+
+.title {
+  height: 18px;
+  width: 60%;
+  border-radius: 6px;
+}
+
+.avatar {
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+}
+
+.card {
+  height: 96px;
+  border-radius: var(--radius-card);
+}
+
+.button {
+  height: 44px;
+  border-radius: var(--radius-btn);
+}

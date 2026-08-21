@@ -1,0 +1,20 @@
+.card {
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  border-radius: var(--radius-card);
+  padding: 16px;
+  box-shadow: var(--app-shadow);
+}
+
+.elevated {
+  box-shadow: 0 4px 16px rgba(107, 94, 83, 0.08);
+}
+
+.clickable {
+  cursor: pointer;
+  transition: transform 0.15s ease-out;
+}
+
+.clickable:active {
+  transform: scale(0.97);
+}

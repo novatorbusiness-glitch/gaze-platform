@@ -1,0 +1,57 @@
+.field {
+  display: block;
+  position: relative;
+  padding-top: 18px;
+}
+
+.label {
+  position: absolute;
+  left: 0;
+  top: 26px;
+  color: var(--app-text-3);
+  font-size: 14px;
+  transition:
+    top 0.18s ease-out,
+    font-size 0.18s ease-out,
+    color 0.18s ease-out;
+  pointer-events: none;
+}
+
+.input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--app-border);
+  padding: 6px 0 10px;
+  font-size: 15px;
+  outline: none;
+  transition: border-color 0.18s ease-out;
+  border-radius: 0;
+}
+
+.input:focus {
+  border-bottom-color: var(--app-accent);
+}
+
+/* Floating label: поднимается при фокусе или заполненном значении */
+.input:focus ~ .label,
+.input:not(:placeholder-shown) ~ .label {
+  top: 2px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--app-text-2);
+  font-family: var(--font-mono);
+}
+
+.mono {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 22px;
+}
+
+.textarea {
+  resize: none;
+  line-height: 1.5;
+}
