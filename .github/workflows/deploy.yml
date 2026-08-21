@@ -25,6 +25,17 @@ jobs:
           node-version: 20
           cache: npm
 
+      # .env не хранится в репозитории — собираем его из GitHub Secrets
+      # (владелец добавляет VITE_SUPABASE_URL и VITE_SUPABASE_ANON_KEY в
+      # Settings → Secrets and variables → Actions репозитория).
+      - name: Create .env from secrets
+        run: |
+          echo "VITE_SUPABASE_URL=${{ secrets.VITE_SUPABASE_URL }}" >> .env
+          echo "VITE_SUPABASE_ANON_KEY=${{ secrets.VITE_SUPABASE_ANON_KEY }}" >> .env
+          # Опционально: юзернейм бота для кнопки поддержки (если секрет не
+          # задан — запишется пустая строка, сборка не сломается)
+          echo "VITE_BOT_USERNAME=${{ secrets.VITE_BOT_USERNAME }}" >> .env
+
       - name: Install dependencies
         run: npm ci
 
