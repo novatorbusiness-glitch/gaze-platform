@@ -291,6 +291,53 @@
   gap: 10px;
 }
 
+/* Список бонусов из таблицы bonuses */
+.bonusList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.bonusItem {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: var(--app-bg);
+  border-radius: 12px;
+  padding: 10px 12px;
+}
+
+.bonusItemTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.bonusType {
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--app-text);
+}
+
+.bonusValueTag {
+  margin-left: 6px;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  color: var(--app-cta);
+}
+
+.bonusDesc {
+  font-size: 12px;
+  color: var(--app-text-2);
+  line-height: 1.45;
+}
+
+.bonusExpires {
+  font-size: 11px;
+  color: var(--app-text-3);
+}
+
 .bonusBtn {
   padding: 10px 8px;
   font-size: 13px;

@@ -1,0 +1,111 @@
+.screen {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* Шапка */
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 0;
+}
+
+.backBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  color: var(--app-text);
+  box-shadow: var(--app-shadow);
+  transition: transform 0.15s ease-out;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.backBtn:active {
+  transform: scale(0.92);
+}
+
+.headerTitle {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 20px;
+  color: var(--app-text);
+}
+
+/* Форма */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--app-text-2);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.select {
+  width: 100%;
+  padding: 13px 14px;
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  border-radius: 12px;
+  font-size: 14px;
+  color: var(--app-text);
+  box-shadow: var(--app-shadow);
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.select:focus {
+  outline: none;
+  border-color: var(--app-accent);
+}
+
+.select:disabled {
+  opacity: 0.6;
+}
+
+.clientHint {
+  font-size: 13px;
+  color: var(--app-text-2);
+  margin-top: -10px;
+}
+
+.errorBox {
+  border: 1px dashed var(--app-border);
+  padding: 14px 16px;
+}
+
+.errorText {
+  font-size: 13px;
+  color: var(--app-text-2);
+  line-height: 1.5;
+}
+
+.savedBtn {
+  background: var(--app-success);
+  border-color: var(--app-success);
+}
+
+.hint {
+  font-size: 12px;
+  color: var(--app-text-3);
+  text-align: center;
+  line-height: 1.5;
+}

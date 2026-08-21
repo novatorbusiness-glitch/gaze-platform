@@ -3,10 +3,14 @@ import { Plus, Search } from 'lucide-react'
 import Button from '../components/Button'
 import Card from '../components/Card'
 import ClientRow from '../components/ClientRow'
-import { clients } from '../lib/mock'
+import ErrorState from '../components/ErrorState'
+import SkeletonLoader from '../components/SkeletonLoader'
+import { useAsync } from '../hooks/useAsync'
+import { fetchClients } from '../lib/api'
 import { haptic } from '../lib/telegram'
 import { cx, daysSince, formatDate, formatMoney } from '../lib/utils'
 import { useAppStore } from '../store/useAppStore'
+import { useMasterStore } from '../store/useMasterStore'
 import styles from './Clients.module.css'
 
 type ClientFilter = 'all' | 'active' | 'stale'
@@ -20,9 +24,24 @@ const FILTERS: Array<{ id: ClientFilter; label: string }> = [
 export default function Clients() {
   const openClient = useAppStore((s) => s.openClient)
 
+  const master = useMasterStore((s) => s.master)
+  const masterStatus = useMasterStore((s) => s.status)
+  const masterError = useMasterStore((s) => s.error)
+  const retryMaster = useMasterStore((s) => s.init)
+
+  const masterId = master?.id ?? null
+  const [attempt, setAttempt] = useState(0)
+
   const [query, setQuery] = useState('')
   const [debounced, setDebounced] = useState('')
   const [filter, setFilter] = useState<ClientFilter>('all')
+
+  const state = useAsync(
+    () => (masterId ? fetchClients(masterId) : Promise.resolve([])),
+    [masterId, attempt],
+  )
+
+  const clients = useMemo(() => state.data ?? [], [state.data])
 
   // Поиск с debounce 200ms (ТЗ, экран Clients)
   useEffect(() => {
@@ -30,7 +49,7 @@ export default function Clients() {
     return () => clearTimeout(timer)
   }, [query])
 
-  const hasStale = useMemo(() => clients.some((c) => daysSince(c.last_visit) >= 30), [])
+  const hasStale = useMemo(() => clients.some((c) => daysSince(c.last_visit) >= 30), [clients])
 
   const filtered = useMemo(() => {
     return clients
@@ -46,7 +65,47 @@ export default function Clients() {
         return true
       })
       .sort((a, b) => b.last_visit.localeCompare(a.last_visit))
-  }, [debounced, filter])
+  }, [clients, debounced, filter])
+
+  const loading = masterStatus === 'loading' || (masterStatus === 'ready' && state.status === 'loading')
+  const error = masterStatus === 'error' ? masterError : state.status === 'error' ? state.error : null
+
+  const retry = () => {
+    if (masterStatus === 'error') {
+      retryMaster(true)
+    } else {
+      setAttempt((a) => a + 1)
+    }
+  }
+
+  /* Загрузка */
+  if (loading) {
+    return (
+      <div className={styles.screen}>
+        <SkeletonLoader shape="title" width={200} height={28} />
+        <SkeletonLoader shape="card" height={48} />
+        <div className={styles.filters}>
+          <SkeletonLoader shape="button" width={70} height={36} />
+          <SkeletonLoader shape="button" width={90} height={36} />
+          <SkeletonLoader shape="button" width={110} height={36} />
+        </div>
+        <SkeletonLoader shape="card" height={64} />
+        <SkeletonLoader shape="card" height={64} />
+        <SkeletonLoader shape="card" height={64} />
+        <SkeletonLoader shape="card" height={64} />
+      </div>
+    )
+  }
+
+  /* Ошибка */
+  if (error) {
+    return (
+      <div className={styles.screen}>
+        <h1 className={styles.title}>Мои клиенты</h1>
+        <ErrorState message={error} onRetry={retry} />
+      </div>
+    )
+  }
 
   /* Пустое состояние (новый мастер) */
   if (clients.length === 0) {

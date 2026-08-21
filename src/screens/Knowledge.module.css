@@ -1,0 +1,133 @@
+.screen {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.title {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 20px;
+  color: var(--app-text);
+}
+
+/* Pill-табы категорий */
+.filters {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+
+.filterBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--app-border);
+  background: var(--app-surface);
+  color: var(--app-text-2);
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  transition:
+    transform 0.15s ease-out,
+    background 0.15s ease-out,
+    color 0.15s ease-out;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.filterBtn:active {
+  transform: scale(0.97);
+}
+
+.filterActive {
+  background: var(--app-cta);
+  border-color: var(--app-cta);
+  color: #ffffff;
+}
+
+/* Статьи */
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.article {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.article:active {
+  transform: scale(0.99);
+}
+
+.articleTop {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.articleTitle {
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--app-text);
+  line-height: 1.4;
+}
+
+.articleContent {
+  font-size: 13px;
+  color: var(--app-text-2);
+  line-height: 1.6;
+  white-space: pre-line;
+}
+
+.articleBottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.articleDate {
+  font-size: 12px;
+  color: var(--app-text-3);
+}
+
+.articleToggle {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--app-cta);
+}
+
+.articleToggleOpen {
+  color: var(--app-text-3);
+}
+
+/* Пустые состояния */
+.emptyCard {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 28px 20px;
+  text-align: center;
+  border: 1px dashed var(--app-border);
+}
+
+.emptyTitle {
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--app-text);
+}
+
+.emptyText {
+  font-size: 14px;
+  color: var(--app-text-2);
+  line-height: 1.5;
+}
