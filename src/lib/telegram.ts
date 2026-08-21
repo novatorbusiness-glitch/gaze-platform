@@ -3,13 +3,58 @@
  */
 import WebApp from '@twa-dev/sdk'
 
-export function initTelegram(): { user: typeof WebApp.initDataUnsafe.user; colorScheme: 'light'; platform: string } {
-  WebApp.ready()
-  WebApp.expand() // Раскрыть на весь экран
+export interface TelegramInitResult {
+  user: {
+    id: number
+    first_name?: string
+    last_name?: string
+    username?: string
+  } | null
+  colorScheme: 'light'
+  platform: string
+  /** true, если окружение Telegram WebView доступно и SDK отвечает */
+  isTelegram: boolean
+}
 
-  // Тема — берём из Telegram, но перезаписываем на GAZE
-  document.documentElement.style.setProperty('--tg-theme-bg-color', '#F9F8F6')
-  document.documentElement.style.setProperty('--tg-theme-text-color', '#2A2521')
+/** Безопасное чтение user из initDataUnsafe (вне Telegram — null) */
+function getWebAppUser(): TelegramInitResult['user'] {
+  try {
+    return WebApp.initDataUnsafe?.user ?? null
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Инициализация Telegram Web App.
+ * ПОЛНОСТЬЮ безопасна: вне Telegram WebView (обычный браузер, превью,
+ * динамический импорт бандла) методы SDK могут бросать — всё в try/catch,
+ * приложение рендерится в любом случае.
+ */
+export function initTelegram(): TelegramInitResult {
+  const isTelegram =
+    typeof WebApp !== 'undefined' && typeof WebApp.ready === 'function'
+
+  if (isTelegram) {
+    try {
+      WebApp.ready()
+    } catch {
+      /* вне Telegram WebView SDK может кидать — деградируем молча */
+    }
+    try {
+      WebApp.expand() // Раскрыть на весь экран
+    } catch {
+      /* ignore */
+    }
+  }
+
+  // Тема — ставим всегда, независимо от Telegram (фирменные цвета GAZE)
+  try {
+    document.documentElement.style.setProperty('--tg-theme-bg-color', '#F9F8F6')
+    document.documentElement.style.setProperty('--tg-theme-text-color', '#2A2521')
+  } catch {
+    /* ignore */
+  }
 
   try {
     WebApp.setHeaderColor('#F9F8F6')
@@ -18,10 +63,18 @@ export function initTelegram(): { user: typeof WebApp.initDataUnsafe.user; color
     /* доступно не на всех платформах */
   }
 
+  let platform = 'unknown'
+  try {
+    platform = WebApp.platform || 'unknown'
+  } catch {
+    /* ignore */
+  }
+
   return {
-    user: WebApp.initDataUnsafe.user,
+    user: getWebAppUser(),
     colorScheme: 'light', // Всегда light для GAZE
-    platform: WebApp.platform,
+    platform,
+    isTelegram,
   }
 }
 

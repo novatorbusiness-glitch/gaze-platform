@@ -141,8 +141,15 @@ function mapBonus(row: BonusRow): Bonus {
 
 /** Перевод ошибок Supabase/RLS в человекочитаемые сообщения */
 export function friendlyError(err: unknown): string {
-  const message = err instanceof Error ? err.message : String(err)
-  if (/row-level security|violates row-level|permission denied|duplicate key/i.test(message)) {
+  // PostgrestError — обычный объект { message, code, details, hint }, НЕ instanceof Error,
+  // поэтому String(err) даёт "[object Object]". Достаём .message и .code явно.
+  const isObj = typeof err === 'object' && err !== null
+  const raw = err instanceof Error ? err.message : isObj && 'message' in err ? String((err as { message: unknown }).message) : ''
+  const code = isObj && 'code' in err ? String((err as { code: unknown }).code) : ''
+  const message = raw || String(err)
+
+  // 42501 = insufficient_privilege (RLS без auth, этап 3)
+  if (code === '42501' || /row-level security|violates row-level|permission denied|duplicate key/i.test(message)) {
     return 'Нет доступа к данным (RLS). Вход через Supabase Auth подключим на этапе 3 — сейчас данные читаются только под своим master_id.'
   }
   if (/fetch|network|Failed to fetch|ERR_/i.test(message)) {
