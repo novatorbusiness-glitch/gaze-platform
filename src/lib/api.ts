@@ -161,8 +161,10 @@ export function friendlyError(err: unknown): string {
   const code = isObj && 'code' in err ? String((err as { code: unknown }).code) : ''
   const message = raw || String(err)
 
-  // 42501 = insufficient_privilege (RLS без auth, этап 3)
-  if (code === '42501' || /row-level security|violates row-level|permission denied|duplicate key/i.test(message)) {
+  // Любая ошибка Supabase/PostgREST (у неё есть .code: 42501 RLS, PGRST301/401
+  // invalid key, 406 PGRST116, 22P02, 42P10 …) — до этапа 3 (Auth) приложение
+  // работает в демо-режиме, данные из БД недоступны.
+  if (code.length > 0 || /row-level security|violates row-level|permission denied|duplicate key/i.test(message)) {
     return 'Нет доступа к данным (RLS). Вход через Supabase Auth подключим на этапе 3 — сейчас данные читаются только под своим master_id.'
   }
   if (/fetch|network|Failed to fetch|ERR_/i.test(message)) {
@@ -187,7 +189,12 @@ export function isDemoMode(): boolean {
   return demoMode
 }
 
-/** Ошибка доступа/RLS: 42501 (insufficient_privilege) или текст политики */
+/**
+ * Ошибка доступа/RLS: ЛЮБАЯ ошибка Supabase/PostgREST (у неё есть .code) —
+ * 42501 (RLS), 401/PGRST301 (invalid api key), 406 (PGRST116), 22P02 (uuid),
+ * 42P10 (upsert без unique-constraint) и т.п. Плюс текстовые маркеры RLS.
+ * До этапа 3 (Supabase Auth) любой сбой чтения/записи = переход в демо-режим.
+ */
 function isAccessError(err: unknown): boolean {
   const isObj = typeof err === 'object' && err !== null
   const code = isObj && 'code' in err ? String((err as { code: unknown }).code) : ''
@@ -198,9 +205,8 @@ function isAccessError(err: unknown): boolean {
         ? String((err as { message: unknown }).message)
         : ''
   return (
-    code === '42501' ||
-    code === '403' ||
-    /row-level security|violates row-level|permission denied|duplicate key/i.test(message)
+    code.length > 0 ||
+    /row-level security|violates row-level|permission denied|duplicate key|fetch|network|Failed to fetch|ERR_/i.test(message)
   )
 }
 
