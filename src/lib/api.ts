@@ -73,6 +73,13 @@ export interface NewProcedureInput {
   notes?: string
 }
 
+export interface NewClientInput {
+  master_id: string
+  name: string
+  phone: string
+  notes?: string
+}
+
 /* ------------------------------------------------------------------ */
 /* Мапперы PostgREST → интерфейсы приложения                           */
 /* (decimal-поля PostgREST отдаёт строкой — приводим к number)        */
@@ -501,4 +508,58 @@ export async function addProcedure(input: NewProcedureInput): Promise<Procedure>
   if (updErr) throw updErr
 
   return mapProcedure(data)
+}
+
+/** Синтетический клиент для демо-режима (этап 3: запись в БД заменит фолбэк) */
+function demoClientFromInput(input: NewClientInput): Client {
+  const now = new Date()
+  return {
+    id: `demo-c-${now.getTime()}`,
+    master_id: input.master_id,
+    name: input.name,
+    phone: input.phone ?? '',
+    notes: input.notes ?? '',
+    last_visit: now.toISOString().slice(0, 10),
+    total_visits: 0,
+    total_spent: 0,
+    bonus_points: 0,
+    created_at: now.toISOString(),
+  }
+}
+
+/**
+ * Добавляет клиента. В демо-режиме (RLS без auth, этап 3) вставка падает —
+ * вместо ошибки показываем успех и возвращаем синтетического клиента,
+ * чтобы форма работала без сбоев.
+ */
+export async function addClient(input: NewClientInput): Promise<Client> {
+  if (!isSupabaseReady) {
+    demoMode = true
+    return demoClientFromInput(input)
+  }
+  try {
+    const { data, error } = await supabase
+      .from('clients')
+      .insert({
+        master_id: input.master_id,
+        name: input.name,
+        phone: input.phone ?? '',
+        notes: input.notes ?? null,
+        last_visit: new Date().toISOString().slice(0, 10),
+        total_visits: 0,
+        total_spent: 0,
+        bonus_points: 0,
+      })
+      .select()
+      .single()
+
+    if (error) throw error
+    return mapClient(data)
+  } catch (err) {
+    if (isAccessError(err)) {
+      demoMode = true
+      return demoClientFromInput(input)
+    }
+    throw err
+  }
 }

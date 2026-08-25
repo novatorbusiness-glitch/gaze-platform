@@ -3,6 +3,7 @@ import TabBar from './components/TabBar'
 import { cx } from './lib/utils'
 import { useAppStore } from './store/useAppStore'
 import { useMasterStore } from './store/useMasterStore'
+import AddClient from './screens/AddClient'
 import AddProcedure from './screens/AddProcedure'
 import Analytics from './screens/Analytics'
 import Bonuses from './screens/Bonuses'
@@ -26,7 +27,8 @@ export default function App() {
 
   const isClientProfile = screen === 'clientProfile'
   const isAddProcedure = screen === 'addProcedure'
-  const hideTabbar = isClientProfile || isAddProcedure
+  const isAddClient = screen === 'addClient'
+  const hideTabbar = isClientProfile || isAddProcedure || isAddClient
 
   return (
     <div className={cx('app', hideTabbar && 'app--no-tabbar')}>
@@ -35,6 +37,7 @@ export default function App() {
         {screen === 'clients' && <Clients />}
         {screen === 'clientProfile' && <ClientProfile />}
         {screen === 'addProcedure' && <AddProcedure />}
+        {screen === 'addClient' && <AddClient />}
         {screen === 'analytics' && <Analytics />}
         {screen === 'knowledge' && <Knowledge />}
         {screen === 'bonuses' && <Bonuses />}

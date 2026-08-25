@@ -10,6 +10,7 @@ export type Screen =
   | 'profile'
   | 'clientProfile'
   | 'addProcedure'
+  | 'addClient'
 
 /** Фильтр списка клиентов (ЭКРАН 2: Все · Активные · Давно не был) */
 export type ClientFilter = 'all' | 'active' | 'stale'
@@ -60,6 +61,10 @@ export const useAppStore = create<AppState>((set) => ({
       if (state.screen === 'addProcedure') {
         // Назад — на профиль клиента (selectedClientId сохраняем)
         return { screen: 'clientProfile', direction: 'back' }
+      }
+      if (state.screen === 'addClient') {
+        // Назад — на список клиентов
+        return { screen: 'clients', direction: 'back' }
       }
       return { screen: 'dashboard', direction: 'back' }
     }),

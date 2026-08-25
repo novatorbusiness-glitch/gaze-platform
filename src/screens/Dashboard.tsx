@@ -86,7 +86,7 @@ export default function Dashboard() {
       label: 'Добавить клиента',
       onClick: () => {
         haptic('light')
-        navigate('clients')
+        navigate('addClient')
       },
     },
     {
@@ -94,7 +94,7 @@ export default function Dashboard() {
       label: 'Записать процедуру',
       onClick: () => {
         haptic('light')
-        navigate('clients')
+        navigate('addProcedure')
       },
     },
     {
@@ -177,7 +177,14 @@ export default function Dashboard() {
           <p className={styles.emptyText}>
             Добавь первого клиента — и платформа начнёт работать на тебя
           </p>
-          <Button fullWidth size="lg" onClick={() => haptic('medium')}>
+          <Button
+            fullWidth
+            size="lg"
+            onClick={() => {
+              haptic('medium')
+              navigate('addClient')
+            }}
+          >
             + Первый клиент
           </Button>
         </Card>

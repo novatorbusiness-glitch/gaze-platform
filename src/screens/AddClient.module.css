@@ -1,0 +1,83 @@
+.screen {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* Шапка */
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 0;
+}
+
+.backBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  color: var(--app-text);
+  box-shadow: var(--app-shadow);
+  transition: transform 0.15s ease-out;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.backBtn:active {
+  transform: scale(0.92);
+}
+
+.headerTitle {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 20px;
+  color: var(--app-text);
+}
+
+/* Форма */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Успех сохранения (демо-режим) */
+.successBox {
+  border: 1px dashed var(--app-border);
+  padding: 14px 16px;
+  background: rgba(139, 168, 136, 0.08);
+}
+
+.successText {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--app-success);
+  text-align: center;
+}
+
+.errorBox {
+  border: 1px dashed var(--app-border);
+  padding: 14px 16px;
+}
+
+.errorText {
+  font-size: 13px;
+  color: var(--app-text-2);
+  line-height: 1.5;
+}
+
+.savedBtn {
+  background: var(--app-success);
+  border-color: var(--app-success);
+}
+
+.hint {
+  font-size: 12px;
+  color: var(--app-text-3);
+  text-align: center;
+  line-height: 1.5;
+}

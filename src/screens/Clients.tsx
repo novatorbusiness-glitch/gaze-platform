@@ -22,6 +22,7 @@ const FILTERS: Array<{ id: ClientFilter; label: string }> = [
 ]
 
 export default function Clients() {
+  const navigate = useAppStore((s) => s.navigate)
   const openClient = useAppStore((s) => s.openClient)
   const pendingClientsFilter = useAppStore((s) => s.pendingClientsFilter)
   const consumeClientsFilter = useAppStore((s) => s.consumeClientsFilter)
@@ -130,7 +131,14 @@ export default function Clients() {
         <Card className={styles.emptyCard}>
           <p className={styles.emptyTitle}>Пока нет клиентов.</p>
           <p className={styles.emptyText}>Добавь первого — и платформа начнёт считать за тебя.</p>
-          <Button fullWidth size="lg" onClick={() => haptic('medium')}>
+          <Button
+            fullWidth
+            size="lg"
+            onClick={() => {
+              haptic('medium')
+              navigate('addClient')
+            }}
+          >
             + Добавить клиента
           </Button>
         </Card>
@@ -203,7 +211,10 @@ export default function Clients() {
       <button
         className={styles.fab}
         aria-label="Добавить клиента"
-        onClick={() => haptic('medium')}
+        onClick={() => {
+          haptic('light')
+          navigate('addClient')
+        }}
       >
         <Plus size={26} strokeWidth={2} />
       </button>
