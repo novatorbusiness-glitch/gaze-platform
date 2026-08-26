@@ -16,6 +16,8 @@ export type Screen =
   | 'tips'
   | 'tipsPay'
   | 'expenses'
+  | 'community'
+  | 'communityProfile'
 
 /** Фильтр списка клиентов (ЭКРАН 2: Все · Активные · Давно не был) */
 export type ClientFilter = 'all' | 'active' | 'stale'
@@ -74,9 +76,13 @@ interface AppState {
 
   /** T16 — ЧАЕВЫЕ: выбранная сумма (для страницы оплаты по QR, демо) */
   tipsAmount: number
+  /** T20 — Сообщество: выбранный мастер для профиля (или 'me') */
+  communityMasterId: string | null
 
   navigate: (screen: Screen) => void
   openClient: (clientId: string) => void
+  /** T20 — Открыть профиль мастера в сообществе */
+  openCommunityProfile: (masterId: string) => void
   /** Открыть форму записи процедуры для клиента (или без клиента) */
   openAddProcedure: (clientId: string | null) => void
   /** T16 — Открыть экран «Чаевые» (QR) для клиента */
@@ -108,8 +114,12 @@ export const useAppStore = create<AppState>((set) => ({
   completedLessons: loadProgress(),
   assignments: loadAssignments(),
   tipsAmount: 100,
+  communityMasterId: null,
 
   navigate: (screen) => set({ screen, direction: 'forward' }),
+
+  openCommunityProfile: (masterId) =>
+    set({ screen: 'communityProfile', communityMasterId: masterId, direction: 'forward' }),
 
   openClient: (clientId) =>
     set({ screen: 'clientProfile', selectedClientId: clientId, direction: 'forward' }),

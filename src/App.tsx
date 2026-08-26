@@ -10,6 +10,8 @@ import Bonuses from './screens/Bonuses'
 import Chat from './screens/Chat'
 import Clients from './screens/Clients'
 import ClientProfile from './screens/ClientProfile'
+import Community from './screens/Community'
+import CommunityProfile from './screens/CommunityProfile'
 import Course from './screens/Course'
 import Dashboard from './screens/Dashboard'
 import Expenses from './screens/Expenses'
@@ -39,7 +41,9 @@ export default function App() {
   const isTips = screen === 'tips' || screen === 'tipsPay'
   // T17 — экран «Расходы» открывается поверх (из аналитики), без таббара
   const isExpenses = screen === 'expenses'
-  const hideTabbar = isClientProfile || isAddProcedure || isAddClient || isCourse || isLesson || isTips || isExpenses
+  // T20 — профиль мастера в сообществе открывается поверх, без таббара
+  const isCommunityProfile = screen === 'communityProfile'
+  const hideTabbar = isClientProfile || isAddProcedure || isAddClient || isCourse || isLesson || isTips || isExpenses || isCommunityProfile
 
   return (
     <div className={cx('app', hideTabbar && 'app--no-tabbar')}>
@@ -59,6 +63,8 @@ export default function App() {
         {screen === 'tips' && <Tips />}
         {screen === 'tipsPay' && <TipsPay />}
         {screen === 'expenses' && <Expenses />}
+        {screen === 'community' && <Community />}
+        {screen === 'communityProfile' && <CommunityProfile />}
       </main>
       <TabBar />
     </div>
