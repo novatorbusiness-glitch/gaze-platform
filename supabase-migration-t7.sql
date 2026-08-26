@@ -55,6 +55,15 @@ CREATE TABLE IF NOT EXISTS subscriptions (
 );
 CREATE INDEX IF NOT EXISTS idx_subscriptions_master ON subscriptions(master_id);
 
+-- 3.1) Включение RLS на персональных таблицах (обязательно до создания политик!).
+-- Без ENABLE ROW LEVEL SECURITY политики «own» молча не работают и любой
+-- аноним читает/пишет все строки. Идемпотентно — можно запускать повторно.
+ALTER TABLE masters ENABLE ROW LEVEL SECURITY;
+ALTER TABLE clients ENABLE ROW LEVEL SECURITY;
+ALTER TABLE procedures ENABLE ROW LEVEL SECURITY;
+ALTER TABLE bonuses ENABLE ROW LEVEL SECURITY;
+ALTER TABLE articles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE reminders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE subscriptions ENABLE ROW LEVEL SECURITY;
 
