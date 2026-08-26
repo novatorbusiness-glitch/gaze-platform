@@ -8,12 +8,17 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   mono?: boolean
 }
 
-/** Инпут с floating label: рамка снизу, focus → --app-accent (ТЗ, Часть 1) */
+/** Инпут с floating label: рамка снизу, focus → --app-accent (ТЗ, Часть 1).
+ *  ВАЖНО: <input> стоит В DOM ПЕРЕД <span class="label"> — floating-механика
+ *  в Input.module.css использует соседний селектор (`.input ~ .label`). */
 export function Input({ label, mono = false, className, ...rest }: InputProps) {
+  // Если передан настоящий placeholder («2500», «Например, Мария»…), подпись
+  // всегда держим сверху (styles.floating), чтобы она не пересекалась с подсказкой внутри поля.
+  const hasPlaceholder = typeof rest.placeholder === 'string' && rest.placeholder.trim() !== ''
   return (
-    <label className={cx(styles.field, className)}>
-      <span className={styles.label}>{label}</span>
+    <label className={cx(styles.field, hasPlaceholder && styles.floating, className)}>
       <input className={cx(styles.input, mono && styles.mono)} placeholder=" " {...rest} />
+      <span className={styles.label}>{label}</span>
     </label>
   )
 }
@@ -23,10 +28,11 @@ interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
 }
 
 export function Textarea({ label, className, ...rest }: TextareaProps) {
+  const hasPlaceholder = typeof rest.placeholder === 'string' && rest.placeholder.trim() !== ''
   return (
-    <label className={cx(styles.field, className)}>
-      <span className={styles.label}>{label}</span>
+    <label className={cx(styles.field, hasPlaceholder && styles.floating, className)}>
       <textarea className={cx(styles.input, styles.textarea)} placeholder=" " rows={3} {...rest} />
+      <span className={styles.label}>{label}</span>
     </label>
   )
 }

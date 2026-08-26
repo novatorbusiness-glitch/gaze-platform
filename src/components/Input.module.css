@@ -33,7 +33,11 @@
   border-bottom-color: var(--app-accent);
 }
 
-/* Floating label: поднимается при фокусе или заполненном значении */
+/* Floating label: поднимается при фокусе или заполненном значении.
+   <input> в DOM стоит ПЕРЕД <span.label>, поэтому соседний селектор ~ срабатывает.
+   .field.floating — у полей с настоящим placeholder подпись ВСЕГДА сверху,
+   чтобы не пересекаться с подсказкой внутри поля («2500», «Например, Мария»…). */
+.field.floating .label,
 .input:focus ~ .label,
 .input:not(:placeholder-shown) ~ .label {
   top: 2px;
