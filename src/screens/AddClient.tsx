@@ -1,36 +1,74 @@
 import { useState } from 'react'
-import { ArrowLeft, Check } from 'lucide-react'
+import { ArrowLeft, Check, Repeat } from 'lucide-react'
 import Button from '../components/Button'
 import Card from '../components/Card'
-import { Input } from '../components/Input'
-import { addClient, friendlyError } from '../lib/api'
+import { Input, Textarea } from '../components/Input'
+import { useAsync } from '../hooks/useAsync'
+import { addClient, fetchClients, friendlyError } from '../lib/api'
 import { markOnboardingStep } from '../lib/onboarding'
 import { haptic, hapticSuccess } from '../lib/telegram'
 import { useAppStore } from '../store/useAppStore'
 import { useMasterStore } from '../store/useMasterStore'
 import styles from './AddClient.module.css'
 
+/** Нормализация телефона: только цифры (для поиска без дублей) */
+function normalizePhone(p: string): string {
+  return p.replace(/\D/g, '')
+}
+
 export default function AddClient() {
   const goBack = useAppStore((s) => s.goBack)
   const navigate = useAppStore((s) => s.navigate)
+  const openAddProcedure = useAppStore((s) => s.openAddProcedure)
 
   const master = useMasterStore((s) => s.master)
 
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
+  // T15 — Ссылка (Telegram/соцсеть) и краткое описание — необязательные поля
+  const [link, setLink] = useState('')
+  const [description, setDescription] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [saved, setSaved] = useState(false)
 
-  const canSubmit = Boolean(name.trim() && master?.id && !submitting && !saved)
+  const masterId = master?.id ?? null
+
+  // Существующие клиенты — чтобы не создавать дубль при повторном визите
+  const clientsState = useAsync(
+    () => (masterId ? fetchClients(masterId) : Promise.resolve([])),
+    [masterId],
+  )
+  const clients = clientsState.data ?? []
+
+  // T15 — повторный визит: клиент уже есть, если совпало имя ИЛИ телефон
+  const trimmedName = name.trim().toLowerCase()
+  const normalizedPhone = normalizePhone(phone)
+  const duplicate =
+    trimmedName || normalizedPhone
+      ? (clients.find(
+          (c) =>
+            (normalizedPhone.length > 0 && normalizePhone(c.phone) === normalizedPhone) ||
+            (trimmedName.length > 0 && c.name.trim().toLowerCase() === trimmedName),
+        ) ?? null)
+      : null
+
+  const canSubmit = Boolean(name.trim() && masterId && !submitting && !saved && !duplicate)
 
   const onSubmit = async () => {
     if (!canSubmit || !master) return
     setSubmitting(true)
     setSubmitError(null)
     try {
-      // В демо-режиме (этап 3 без auth) addClient не падает: возвращает успех
-      await addClient({ master_id: master.id, name: name.trim(), phone: phone.trim() })
+      // В демо-режиме (этап 3 без auth) addClient не падает: возвращает успех.
+      // Ссылка и описание — необязательные, пустые не отправляем.
+      await addClient({
+        master_id: master.id,
+        name: name.trim(),
+        phone: phone.trim(),
+        link: link.trim() || undefined,
+        description: description.trim() || undefined,
+      })
       // T3 — шаг квеста «Добавь первого клиента» выполнен
       markOnboardingStep('client')
       hapticSuccess()
@@ -43,6 +81,13 @@ export default function AddClient() {
     } finally {
       setSubmitting(false)
     }
+  }
+
+  /** T15 — вместо создания дубля переходим к записи визита существующему клиенту */
+  const recordVisit = () => {
+    if (!duplicate) return
+    haptic('light')
+    openAddProcedure(duplicate.id)
   }
 
   return (
@@ -84,6 +129,47 @@ export default function AddClient() {
           placeholder="+7 900 000-00-00"
         />
 
+        {/* T15 — Ссылка (Telegram/соцсеть), необязательно */}
+        <Input
+          label="Ссылка (Telegram/соцсеть)"
+          value={link}
+          onChange={(e) => setLink(e.target.value)}
+          disabled={submitting || saved}
+          placeholder="@username или https://t.me/..."
+          autoCapitalize="none"
+          autoCorrect="off"
+        />
+
+        {/* T15 — Краткое описание, необязательно */}
+        <Textarea
+          label="Краткое описание (необязательно)"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          disabled={submitting || saved}
+          placeholder="Любит синий, чувствительная кожа…"
+        />
+
+        {/* T15 — Повторный визит: клиент уже есть — не создаём дубль */}
+        {duplicate && !saved && (
+          <Card className={styles.duplicateBox}>
+            <div className={styles.duplicateHead}>
+              <Repeat size={16} strokeWidth={2} className={styles.duplicateIcon} />
+              <p className={styles.duplicateTitle}>Клиент уже есть в базе</p>
+            </div>
+            <p className={styles.duplicateText}>
+              <strong>{duplicate.name}</strong> · {duplicate.phone}
+            </p>
+            {duplicate.description && <p className={styles.duplicateText2}>{duplicate.description}</p>}
+            <p className={styles.duplicateHint}>Не создавай дубль — запиши визит существующему клиенту.</p>
+            <Button size="lg" fullWidth onClick={recordVisit} className={styles.visitBtn}>
+              Записать визит
+            </Button>
+            <p className={styles.duplicateMeta}>
+              Это другой человек? Измени имя или телефон — и тогда можно добавить нового клиента.
+            </p>
+          </Card>
+        )}
+
         {/* Успех сохранения */}
         {saved && (
           <Card className={styles.successBox}>
@@ -116,7 +202,9 @@ export default function AddClient() {
           )}
         </Button>
 
-        <p className={styles.hint}>Имя — обязательно. Телефон поможет находить клиента по номеру.</p>
+        <p className={styles.hint}>
+          Имя — обязательно. Телефон и ссылка помогают находить клиента и не создавать дубли при повторном визите.
+        </p>
       </div>
     </div>
   )

@@ -32,6 +32,10 @@ export interface Client {
   name: string
   phone: string
   notes: string
+  /** T15 — Ссылка (Telegram/соцсеть): @username или https://t.me/... */
+  link?: string
+  /** T15 — Краткое описание клиента («Любит синий, чувствительная кожа…») */
+  description?: string
   last_visit: string // date
   total_visits: number
   total_spent: number
