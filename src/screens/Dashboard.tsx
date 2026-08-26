@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { BookOpen, Check, MessageCircle, PenLine, Send, UserPlus } from 'lucide-react'
+import { BookOpen, Check, Copy, MessageCircle, PenLine, Send, UserPlus } from 'lucide-react'
 import Badge from '../components/Badge'
 import Button from '../components/Button'
 import Card from '../components/Card'
@@ -28,7 +28,6 @@ import {
   markReminderSent,
   openTelegramLink,
   parseClientLink,
-  sendViaBot,
 } from '../lib/reminders'
 import { daysSince, formatDate, formatMoney, greeting, monthExpenses } from '../lib/utils'
 import { useAppStore } from '../store/useAppStore'
@@ -45,6 +44,11 @@ const REMINDER_STATUS_LABEL: Record<ReminderStatus, string> = {
 
 /** T2 — «Кого вернуть»: клиент остывает, если не был 30+ дней */
 const STALE_DAYS = 30
+
+/** T14 — текст напоминания для кнопок «Написать клиенту в Telegram» / «Скопировать» */
+function buildReminderText(name: string): string {
+  return `Здравствуйте, ${name}! Давно вас не видели — соскучились 💛 Хотите, подберу удобное время?`
+}
 
 /** Русская плюрализация: 1 клиент / 2 клиента / 5 клиентов */
 function pluralClients(n: number): string {
@@ -188,30 +192,33 @@ export default function Dashboard() {
     }
   }
 
+  const showToast = (msg: string) => {
+    setToast(msg)
+    if (toastTimer.current !== undefined) window.clearTimeout(toastTimer.current)
+    toastTimer.current = window.setTimeout(() => setToast(null), 2400)
+  }
+
   // T2 — «Отправить напоминание»: T14 — РЕАЛЬНАЯ доставка, а не тост в никуда.
-  // Есть Telegram-ссылка → пробуем бота (/api/send-reminder), иначе открываем
-  // deep-link t.me/<username>?text=… (Telegram подставит текст — остаётся нажать
-  // «Отправить»). Нет ссылки → копируем телефон. Ничего нет → подсказка.
+  // Есть Telegram-ссылка → текст напоминания сразу в буфер, в карточке появляются
+  // кнопки «Написать клиенту в Telegram» (deep-link t.me/<username>?text=… — Telegram
+  // сам подставит текст) и «Скопировать текст». Нет ссылки → «Скопировать телефон».
   const sendReminder = async (client: Client & { days?: number }) => {
     haptic('medium')
     const target = parseClientLink(client.link)
-    const reminderText = `Здравствуйте, ${client.name}! Давно вас не видели — соскучились 💛 Хотите, подберу удобное время?`
+    const reminderText = buildReminderText(client.name)
     if (target) {
-      await sendViaBot(target.username, reminderText) // без бэкенда — сразу deep-link
-      openTelegramLink(buildTgChatUrl(target.username, reminderText))
+      await copyText(reminderText)
       setReminded((prev) => new Set(prev).add(client.id))
       markReminderSent(client.id, 'return')
-      setToast(`Чат с ${target.display} открыт — текст уже в поле ввода`)
+      showToast(`Текст готов — нажмите «Написать в Telegram» (${target.display})`)
     } else if (client.phone) {
       await copyText(client.phone)
       setReminded((prev) => new Set(prev).add(client.id))
       markReminderSent(client.id, 'return')
-      setToast(`Телефон ${client.name} скопирован — напишите ей`)
+      showToast(`Телефон ${client.name} скопирован — напишите ей`)
     } else {
-      setToast(`У ${client.name} нет ссылки — добавьте в карточке`)
+      showToast(`У ${client.name} нет ссылки — добавьте в карточке`)
     }
-    if (toastTimer.current !== undefined) window.clearTimeout(toastTimer.current)
-    toastTimer.current = window.setTimeout(() => setToast(null), 2400)
   }
 
   // T3 — отметить шаг квеста сделанным и сохранить прогресс в localStorage
@@ -381,6 +388,7 @@ export default function Dashboard() {
           <div className="stagger">
             {visibleStale.map((client) => {
               const sent = reminded.has(client.id)
+              const target = parseClientLink(client.link)
               return (
                 <Card key={client.id} className={styles.staleCard}>
                   <div className={styles.staleInfo}>
@@ -408,6 +416,56 @@ export default function Dashboard() {
                       </>
                     )}
                   </Button>
+                  {/* T14 — после «Отправить»: реальное действие вместо пустого тоста */}
+                  {sent && (
+                    <div className={styles.staleActions}>
+                      {target ? (
+                        <>
+                          <Button
+                            fullWidth
+                            size="md"
+                            onClick={() =>
+                              openTelegramLink(
+                                buildTgChatUrl(target.username, buildReminderText(client.name)),
+                              )
+                            }
+                          >
+                            <Send size={14} strokeWidth={2} />
+                            Написать клиенту в Telegram
+                          </Button>
+                          <Button
+                            fullWidth
+                            size="md"
+                            variant="ghost"
+                            onClick={async () => {
+                              await copyText(buildReminderText(client.name))
+                              showToast('Текст скопирован ✓')
+                            }}
+                          >
+                            <Copy size={14} strokeWidth={2} />
+                            Скопировать текст
+                          </Button>
+                        </>
+                      ) : client.phone ? (
+                        <Button
+                          fullWidth
+                          size="md"
+                          variant="ghost"
+                          onClick={async () => {
+                            await copyText(client.phone)
+                            showToast('Телефон скопирован ✓')
+                          }}
+                        >
+                          <Copy size={14} strokeWidth={2} />
+                          Скопировать телефон
+                        </Button>
+                      ) : (
+                        <span className={styles.staleHint}>
+                          Нет ссылки и телефона — добавьте в карточке
+                        </span>
+                      )}
+                    </div>
+                  )}
                 </Card>
               )
             })}

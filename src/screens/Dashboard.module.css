@@ -193,6 +193,21 @@
   pointer-events: none;
 }
 
+/* T14 — после «Отправить напоминание»: реальные действия (чат / копия) */
+.staleActions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.staleHint {
+  text-align: center;
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: var(--app-text-2);
+  padding: 2px 0;
+}
+
 /* «Показать всех (N)» — pill-кнопка по центру */
 .expandBtn {
   align-self: center;
