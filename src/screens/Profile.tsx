@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { Bell, Building2, Camera, ChevronRight, Copy, ExternalLink, Info, LogOut, MessageCircle, Tag, User, X } from 'lucide-react'
+import { Bell, Building2, Camera, ChevronRight, Copy, ExternalLink, Gift, Info, LogOut, MessageCircle, Tag, User, X } from 'lucide-react'
 import Avatar from '../components/Avatar'
 import Badge from '../components/Badge'
 import Button from '../components/Button'
@@ -435,6 +435,11 @@ export default function Profile() {
           icon={<Building2 size={16} strokeWidth={1.75} />}
           label={getSalonSettings().enabled ? `Салон · ${getSalonSettings().percent}%` : 'Работаю в салоне'}
           onClick={openSalon}
+        />
+        <SettingsRow
+          icon={<Gift size={16} strokeWidth={1.75} />}
+          label="Бонусы и скидки"
+          onClick={() => navigate('bonuses')}
         />
         <SettingsRow
           icon={<MessageCircle size={16} strokeWidth={1.75} />}
