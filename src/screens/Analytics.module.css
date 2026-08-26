@@ -407,3 +407,72 @@
   color: var(--app-success);
   font-weight: 700;
 }
+
+/* ---- T16 — Чаевые через QR: демо-счётчик из localStorage gaze_tips ---- */
+.tipsCard {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border-color: var(--app-accent);
+  background: linear-gradient(160deg, #fdf7f1 0%, var(--app-surface) 80%);
+}
+
+.tipsHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.tipsHeadIcon {
+  margin-right: 2px;
+}
+
+.tipsValueRow {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.tipsPlus {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 24px;
+  color: var(--app-success);
+}
+
+.tipsValue {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 34px;
+  line-height: 1.1;
+  color: var(--app-text);
+}
+
+.tipsPeriod {
+  font-size: 13px;
+  color: var(--app-text-2);
+}
+
+.tipsMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+}
+
+.tipsMetaItem {
+  font-size: 12px;
+  color: var(--app-text-2);
+  font-weight: 500;
+}
+
+.tipsHint {
+  font-size: 12px;
+  color: var(--app-text-3);
+  line-height: 1.5;
+}
+
+.tipsMono {
+  font-family: var(--font-mono);
+}

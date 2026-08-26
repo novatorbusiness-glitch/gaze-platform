@@ -10,6 +10,7 @@ import {
   type TrendDir,
 } from '../lib/dev-data'
 import { haptic } from '../lib/telegram'
+import { getTipsStats } from '../lib/tips'
 import { cx, daysSince, formatMoney } from '../lib/utils'
 import { useAppStore } from '../store/useAppStore'
 import { useMasterStore } from '../store/useMasterStore'
@@ -90,6 +91,10 @@ export default function Analytics() {
   // T9.3 — юнит-экономика: маржа (прибыль / доход) и прибыль на клиента
   const unitMargin = period.income > 0 ? Math.round((period.profit / period.income) * 100) : 0
   const unitPerClient = period.clients > 0 ? Math.round(period.profit / period.clients) : 0
+
+  // T16 — чаевые через QR: статистика из localStorage gaze_tips (демо-счётчик)
+  const tips = useMemo(() => getTipsStats(), [])
+  const tipsAnimated = useCountUp(tips.monthSum)
 
   // Инсайт: сколько клиентов не были 30+ дней (считается из реального списка)
   const staleCount = useMemo(
@@ -190,6 +195,29 @@ export default function Analytics() {
             <span className={styles.unitValue}>{formatMoney(unitPerClient)}</span>
           </div>
         </div>
+      </Card>
+
+      {/* T16 — Чаевые через QR: демо-счётчик из localStorage gaze_tips */}
+      <Card className={styles.tipsCard}>
+        <div className={styles.tipsHead}>
+          <h2 className={styles.sectionTitle}>
+            <span className={styles.tipsHeadIcon}>💛</span> Чаевые
+          </h2>
+          <Badge variant="demo">ДЕМО</Badge>
+        </div>
+        <div className={styles.tipsValueRow}>
+          <span className={styles.tipsPlus}>+</span>
+          <span className={styles.tipsValue}>{formatMoney(tipsAnimated)}</span>
+          <span className={styles.tipsPeriod}>за месяц</span>
+        </div>
+        <div className={styles.tipsMeta}>
+          <span className={styles.tipsMetaItem}>{tips.monthCount} чаевых за месяц</span>
+          <span className={styles.tipsMetaItem}>всего {formatMoney(tips.totalSum)}</span>
+        </div>
+        <p className={styles.tipsHint}>
+          Показывай QR после визита — в карточке клиента есть кнопка «Чаевые». Счётчик живёт в localStorage
+          (<span className={styles.tipsMono}>gaze_tips</span>).
+        </p>
       </Card>
 
       {/* График: Доход по дням (div-based bar chart) */}

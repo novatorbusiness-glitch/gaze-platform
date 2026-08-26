@@ -15,6 +15,8 @@ import Dashboard from './screens/Dashboard'
 import Knowledge from './screens/Knowledge'
 import Lesson from './screens/Lesson'
 import Profile from './screens/Profile'
+import Tips from './screens/Tips'
+import TipsPay from './screens/TipsPay'
 import './App.css'
 
 export default function App() {
@@ -32,7 +34,9 @@ export default function App() {
   const isAddClient = screen === 'addClient'
   const isCourse = screen === 'course'
   const isLesson = screen === 'lesson'
-  const hideTabbar = isClientProfile || isAddProcedure || isAddClient || isCourse || isLesson
+  // T16 — экраны чаевых (QR и оплата) открываются поверх, без таббара
+  const isTips = screen === 'tips' || screen === 'tipsPay'
+  const hideTabbar = isClientProfile || isAddProcedure || isAddClient || isCourse || isLesson || isTips
 
   return (
     <div className={cx('app', hideTabbar && 'app--no-tabbar')}>
@@ -49,6 +53,8 @@ export default function App() {
         {screen === 'bonuses' && <Bonuses />}
         {screen === 'chat' && <Chat />}
         {screen === 'profile' && <Profile />}
+        {screen === 'tips' && <Tips />}
+        {screen === 'tipsPay' && <TipsPay />}
       </main>
       <TabBar />
     </div>

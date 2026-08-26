@@ -13,6 +13,8 @@ export type Screen =
   | 'addClient'
   | 'course'
   | 'lesson'
+  | 'tips'
+  | 'tipsPay'
 
 /** Фильтр списка клиентов (ЭКРАН 2: Все · Активные · Давно не был) */
 export type ClientFilter = 'all' | 'active' | 'stale'
@@ -69,10 +71,17 @@ interface AppState {
       (персистится в localStorage, ключ gaze_assignments) */
   assignments: Record<string, AssignmentState>
 
+  /** T16 — ЧАЕВЫЕ: выбранная сумма (для страницы оплаты по QR, демо) */
+  tipsAmount: number
+
   navigate: (screen: Screen) => void
   openClient: (clientId: string) => void
   /** Открыть форму записи процедуры для клиента (или без клиента) */
   openAddProcedure: (clientId: string | null) => void
+  /** T16 — Открыть экран «Чаевые» (QR) для клиента */
+  openTips: (clientId: string | null) => void
+  /** T16 — Открыть страницу оплаты чаевых (по ссылке из QR) */
+  openTipsPay: (amount?: number) => void
   /** Открыть Клиенты с предустановленным фильтром */
   openClientsWithFilter: (filter: ClientFilter) => void
   /** Сбросить отложенный фильтр после применения */
@@ -97,6 +106,7 @@ export const useAppStore = create<AppState>((set) => ({
   selectedLessonId: null,
   completedLessons: loadProgress(),
   assignments: loadAssignments(),
+  tipsAmount: 100,
 
   navigate: (screen) => set({ screen, direction: 'forward' }),
 
@@ -105,6 +115,12 @@ export const useAppStore = create<AppState>((set) => ({
 
   openAddProcedure: (clientId) =>
     set({ screen: 'addProcedure', selectedClientId: clientId, direction: 'forward' }),
+
+  openTips: (clientId) =>
+    set({ screen: 'tips', selectedClientId: clientId, direction: 'forward' }),
+
+  openTipsPay: (amount) =>
+    set({ screen: 'tipsPay', direction: 'forward', tipsAmount: amount ?? 100 }),
 
   openClientsWithFilter: (filter) =>
     set({ screen: 'clients', pendingClientsFilter: filter, direction: 'forward' }),
@@ -161,6 +177,14 @@ export const useAppStore = create<AppState>((set) => ({
       if (state.screen === 'course') {
         // Назад — в академию (хаб)
         return { screen: 'knowledge', selectedCourseId: null, direction: 'back' }
+      }
+      if (state.screen === 'tips') {
+        // Назад — на профиль клиента (selectedClientId сохраняем)
+        return { screen: 'clientProfile', direction: 'back' }
+      }
+      if (state.screen === 'tipsPay') {
+        // Назад — на экран «Чаевые» (QR)
+        return { screen: 'tips', direction: 'back' }
       }
       return { screen: 'dashboard', direction: 'back' }
     }),

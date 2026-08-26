@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ArrowLeft, Check } from 'lucide-react'
+import { ArrowLeft, Check, Heart } from 'lucide-react'
 import Button from '../components/Button'
 import Card from '../components/Card'
 import ErrorState from '../components/ErrorState'
@@ -24,6 +24,8 @@ const SERVICE_SUGGESTIONS = serviceSuggestions()
 export default function AddProcedure() {
   const goBack = useAppStore((s) => s.goBack)
   const selectedClientId = useAppStore((s) => s.selectedClientId)
+  // T16 — после сохранения процедуры можно сразу показать QR для чаевых
+  const openTips = useAppStore((s) => s.openTips)
 
   const master = useMasterStore((s) => s.master)
   const masterStatus = useMasterStore((s) => s.status)
@@ -76,8 +78,7 @@ export default function AddProcedure() {
       markOnboardingStep('procedure')
       hapticSuccess()
       setSaved(true)
-      // Даём увидеть «Сохранено ✓», потом возвращаемся на профиль клиента
-      setTimeout(() => goBack(), 400)
+      // T16 — показываем экран успеха с кнопкой «Чаевые клиенту» (вместо авто-возврата)
     } catch (err) {
       setSubmitError(friendlyError(err))
       haptic('medium')
@@ -113,6 +114,22 @@ export default function AddProcedure() {
         </div>
       ) : error ? (
         <ErrorState message={error} />
+      ) : saved ? (
+        /* T16 — успех: сразу предложить чаевые клиенту (QR) */
+        <Card className={styles.savedCard}>
+          <span className={styles.savedIcon}>
+            <Check size={22} strokeWidth={2.5} />
+          </span>
+          <h2 className={styles.savedTitle}>Процедура сохранена ✓</h2>
+          <p className={styles.savedText}>История визитов, доход за месяц и средний чек обновились.</p>
+          <Button size="lg" fullWidth onClick={() => openTips(clientId)}>
+            <Heart size={16} strokeWidth={2} />
+            Чаевые клиенту
+          </Button>
+          <Button size="lg" variant="ghost" fullWidth onClick={goBack}>
+            Готово
+          </Button>
+        </Card>
       ) : (
         <div className={styles.form}>
           {/* Клиент */}

@@ -103,6 +103,56 @@
   border-color: var(--app-success);
 }
 
+/* T16 — экран успеха после сохранения процедуры (с кнопкой «Чаевые») */
+.savedCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+  padding: 30px 20px;
+  border-color: var(--app-accent);
+  box-shadow: 0 6px 24px rgba(224, 199, 192, 0.4);
+}
+
+.savedIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--app-success);
+  color: #ffffff;
+  animation: saved-pop 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes saved-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.savedTitle {
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: 20px;
+  color: var(--app-text);
+}
+
+.savedText {
+  font-size: 13px;
+  color: var(--app-text-2);
+  line-height: 1.5;
+  max-width: 260px;
+  margin-bottom: 6px;
+}
+
 .hint {
   font-size: 12px;
   color: var(--app-text-3);

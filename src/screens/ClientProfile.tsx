@@ -5,6 +5,7 @@ import {
   Cake,
   Check,
   Copy,
+  Heart,
   Percent,
   Plus,
   Send,
@@ -82,6 +83,8 @@ export default function ClientProfile({ clientId }: ClientProfileProps) {
   const goBack = useAppStore((s) => s.goBack)
   const openAddProcedure = useAppStore((s) => s.openAddProcedure)
   const navigate = useAppStore((s) => s.navigate)
+  // T16 — экран «Чаевые» (QR) для клиента
+  const openTips = useAppStore((s) => s.openTips)
 
   const master = useMasterStore((s) => s.master)
   const masterStatus = useMasterStore((s) => s.status)
@@ -445,6 +448,19 @@ export default function ClientProfile({ clientId }: ClientProfileProps) {
         >
           <Plus size={18} strokeWidth={2} />
           Записать процедуру
+        </Button>
+        {/* T16 — показать клиенту QR для чаевых после визита */}
+        <Button
+          size="lg"
+          variant="ghost"
+          className={styles.actionBtn}
+          onClick={() => {
+            haptic('light')
+            openTips(client.id)
+          }}
+        >
+          <Heart size={16} strokeWidth={2} />
+          Чаевые
         </Button>
         <Button
           size="lg"

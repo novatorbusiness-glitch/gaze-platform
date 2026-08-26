@@ -1,0 +1,266 @@
+.screen {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding-bottom: 12px;
+}
+
+/* Шапка */
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 0;
+}
+
+.backBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  color: var(--app-text);
+  box-shadow: var(--app-shadow);
+  transition: transform 0.15s ease-out;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.backBtn:active {
+  transform: scale(0.92);
+}
+
+.headerTitle {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 20px;
+  color: var(--app-text);
+  flex: 1;
+}
+
+/* Текст для клиента */
+.heroCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+  padding: 22px 20px;
+  background: linear-gradient(160deg, #fdf7f1 0%, var(--app-surface) 70%);
+  border-color: var(--app-accent);
+}
+
+.heroIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--app-accent);
+  color: var(--app-cta);
+}
+
+.heroText {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--app-text);
+}
+
+.heroName {
+  font-size: 12px;
+  color: var(--app-text-3);
+}
+
+/* QR-код */
+.qrCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 20px;
+}
+
+.qrWrap {
+  padding: 12px;
+  background: #ffffff;
+  border: 1px solid var(--app-border);
+  border-radius: 16px;
+  box-shadow: var(--app-shadow);
+}
+
+.qrImg {
+  display: block;
+  width: 260px;
+  height: 260px;
+  max-width: 100%;
+  border-radius: 8px;
+}
+
+.qrPlaceholder {
+  width: 260px;
+  height: 260px;
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: var(--app-text-3);
+}
+
+.qrPlaceholderIcon {
+  font-size: 42px;
+}
+
+.qrPlaceholderText {
+  font-size: 13px;
+}
+
+.qrHint {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--app-text-2);
+  line-height: 1.45;
+  text-align: center;
+}
+
+.linkBtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  background: var(--app-bg);
+  border: 1px dashed var(--app-border);
+  border-radius: 12px;
+  padding: 10px 14px;
+  color: var(--app-text-2);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.linkBtn:active {
+  transform: scale(0.99);
+}
+
+.linkText {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  word-break: break-all;
+  text-align: left;
+  color: var(--app-text-2);
+}
+
+/* Быстрые суммы */
+.amounts {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sectionTitle {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 16px;
+  color: var(--app-text);
+}
+
+.chips {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.chip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 6px;
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  border-radius: 14px;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--app-text);
+  box-shadow: var(--app-shadow);
+  transition:
+    border-color 0.15s ease-out,
+    transform 0.15s ease-out,
+    background 0.15s ease-out;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.chip:active {
+  transform: scale(0.95);
+}
+
+.chipActive {
+  border-color: var(--app-cta);
+  background: var(--app-cta);
+  color: #ffffff;
+}
+
+.chipCustom {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 13px;
+}
+
+/* Своя сумма */
+.customRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  border-radius: 12px;
+  padding: 0 14px;
+  box-shadow: var(--app-shadow);
+}
+
+.customPrefix {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--app-text-2);
+}
+
+.customInput {
+  flex: 1;
+  padding: 13px 0;
+  background: transparent;
+  border: none;
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--app-text);
+}
+
+.customInput:focus {
+  outline: none;
+}
+
+.customInput::placeholder {
+  color: var(--app-text-3);
+  font-weight: 400;
+}
+
+.hint {
+  font-size: 12px;
+  color: var(--app-text-3);
+  line-height: 1.55;
+  text-align: center;
+}
+
+.mono {
+  font-family: var(--font-mono);
+}
