@@ -10,7 +10,7 @@ export interface Master {
   telegram_id: number
   name: string
   phone: string
-  specialty: string[] // ['brows', 'lashes', 'nails'] — здесь человекочитаемые: ['Бровист', 'Лэшмейкер']
+  specialty: string[] // ниша(и) специалиста: 'Маникюр', 'Массаж', 'Косметология', 'Брови/Ресницы', 'Парикмахер', 'Другое' или своя
   avatar_url: string | null
   subscription_status: SubscriptionStatus
   subscription_end: string // date

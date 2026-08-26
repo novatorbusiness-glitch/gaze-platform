@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { Bell, Camera, ChevronRight, Copy, ExternalLink, Info, LogOut, MessageCircle, User, X } from 'lucide-react'
+import { Bell, Camera, ChevronRight, Copy, ExternalLink, Info, LogOut, MessageCircle, Tag, User, X } from 'lucide-react'
 import Avatar from '../components/Avatar'
 import Badge from '../components/Badge'
 import Button from '../components/Button'
@@ -7,6 +7,12 @@ import Card from '../components/Card'
 import { Input } from '../components/Input'
 import { demoReferral, demoSubscription } from '../lib/dev-data'
 import { getDisplayName, readProfileName, saveProfileName } from '../lib/name'
+import {
+  DEFAULT_SPECIALTY,
+  readSpecialty,
+  saveSpecialty,
+  SPECIALTY_OPTIONS,
+} from '../lib/specialty'
 import { copyText, haptic, hapticSuccess } from '../lib/telegram'
 import { cx, formatDateLong, formatMoney } from '../lib/utils'
 import { useAppStore } from '../store/useAppStore'
@@ -266,12 +272,19 @@ export default function Profile() {
   const fallbackName = getDisplayName(master)
   const [savedName, setSavedName] = useState(readProfileName)
   const name = savedName || fallbackName
-  const specialty = master?.specialty ?? ['Брови', 'Ресницы']
+  // T12 — ниша мастера: сохранённая (localStorage gaze_profile_specialty),
+  // иначе ниша демо-мастера, иначе нейтральный фолбэк «Специалист».
+  const [savedSpecialty, setSavedSpecialty] = useState<string[]>(() => readSpecialty())
+  const specialty = savedSpecialty.length > 0 ? savedSpecialty : master?.specialty ?? DEFAULT_SPECIALTY
 
   // Модалка «Изменить имя и фото»
   const [editOpen, setEditOpen] = useState(false)
   const [nameDraft, setNameDraft] = useState('')
   const photoInputRef = useRef<HTMLInputElement>(null)
+
+  // Модалка «Твоя ниша» (T12)
+  const [specialtyOpen, setSpecialtyOpen] = useState(false)
+  const [nicheDraft, setNicheDraft] = useState<string>(() => specialty[0] ?? '')
 
   // Модалка «Уведомления»
   const [notifOpen, setNotifOpen] = useState(false)
@@ -296,6 +309,22 @@ export default function Profile() {
   const openNotifications = () => {
     haptic('light')
     setNotifOpen(true)
+  }
+
+  const openSpecialty = () => {
+    haptic('light')
+    setNicheDraft(specialty[0] ?? '')
+    setSpecialtyOpen(true)
+  }
+
+  const saveNiche = () => {
+    const next = nicheDraft.trim()
+    if (!next) return
+    hapticSuccess()
+    saveSpecialty([next])
+    setSavedSpecialty([next])
+    setSpecialtyOpen(false)
+    showToast('Ниша сохранена ✓')
   }
 
   const saveName = () => {
@@ -359,6 +388,11 @@ export default function Profile() {
           icon={<Bell size={16} strokeWidth={1.75} />}
           label="Уведомления"
           onClick={openNotifications}
+        />
+        <SettingsRow
+          icon={<Tag size={16} strokeWidth={1.75} />}
+          label="Твоя ниша"
+          onClick={openSpecialty}
         />
         <SettingsRow
           icon={<MessageCircle size={16} strokeWidth={1.75} />}
@@ -447,6 +481,42 @@ export default function Profile() {
               onChange={(v) => setNotification('digest', v)}
             />
           </Card>
+        </Sheet>
+      )}
+
+      {/* Модалка: твоя ниша (T12) */}
+      {specialtyOpen && (
+        <Sheet title="Твоя ниша" onClose={() => setSpecialtyOpen(false)}>
+          <p className={styles.notifIntro}>
+            Выбери своё направление — подсказки услуг и тексты подстроятся под твою нишу.
+            Подходит любой специалист: маникюр, массаж, косметология, брови/ресницы,
+            парикмахер и другое.
+          </p>
+          <div className={styles.nicheChips}>
+            {SPECIALTY_OPTIONS.map((option) => (
+              <button
+                key={option}
+                type="button"
+                className={cx(styles.nicheChip, nicheDraft === option && styles.nicheChipActive)}
+                onClick={() => {
+                  haptic('light')
+                  setNicheDraft(option)
+                }}
+              >
+                {option}
+              </button>
+            ))}
+          </div>
+          <Input
+            label="Или укажи свою нишу"
+            value={nicheDraft}
+            onChange={(e) => setNicheDraft(e.target.value)}
+            placeholder="Например, шугаринг или перманент"
+            maxLength={40}
+          />
+          <Button size="lg" fullWidth disabled={!nicheDraft.trim()} onClick={saveNiche}>
+            Сохранить
+          </Button>
         </Sheet>
       )}
 

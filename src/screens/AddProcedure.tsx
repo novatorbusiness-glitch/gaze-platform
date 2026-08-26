@@ -8,21 +8,18 @@ import SkeletonLoader from '../components/SkeletonLoader'
 import { useAsync } from '../hooks/useAsync'
 import { addProcedure, fetchClients, friendlyError, type NewProcedureInput } from '../lib/api'
 import { markOnboardingStep } from '../lib/onboarding'
+import { serviceSuggestions } from '../lib/specialty'
 import { haptic, hapticSuccess } from '../lib/telegram'
 import { formatMoney } from '../lib/utils'
 import { useAppStore } from '../store/useAppStore'
 import { useMasterStore } from '../store/useMasterStore'
 import styles from './AddProcedure.module.css'
 
-const SERVICE_SUGGESTIONS = [
-  'Архитектура бровей',
-  'Ламинирование бровей',
-  'Ламинирование ресниц',
-  'Наращивание',
-  'Окрашивание',
-  'Комплекс GAZE',
-  'Коррекция',
-]
+/**
+ * T12 — подсказки услуг подстраиваются под выбранную нишу мастера
+ * (gaze_profile_specialty), иначе — нейтральный список примеров.
+ */
+const SERVICE_SUGGESTIONS = serviceSuggestions()
 
 export default function AddProcedure() {
   const goBack = useAppStore((s) => s.goBack)
@@ -149,7 +146,7 @@ export default function AddProcedure() {
             onChange={(e) => setServiceType(e.target.value)}
             list="gaze-services"
             disabled={submitting}
-            placeholder="Например, архитектура бровей"
+            placeholder="Например, процедура или услуга"
           />
           <datalist id="gaze-services">
             {SERVICE_SUGGESTIONS.map((s) => (
@@ -167,7 +164,7 @@ export default function AddProcedure() {
             value={price}
             onChange={(e) => setPrice(e.target.value)}
             disabled={submitting}
-            placeholder="2500"
+            placeholder="1200"
           />
 
           {/* Расходы на материалы (себестоимость) — необязательно */}
@@ -180,7 +177,7 @@ export default function AddProcedure() {
             value={cost}
             onChange={(e) => setCost(e.target.value)}
             disabled={submitting}
-            placeholder="600"
+            placeholder="300"
           />
 
           {/* Заметка */}
@@ -189,7 +186,7 @@ export default function AddProcedure() {
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             disabled={submitting}
-            placeholder="Изгиб, цвет, реакция кожи…"
+            placeholder="Детали визита, пожелания клиента…"
           />
 
           {/* Ошибка сохранения (в т.ч. RLS без auth — этап 3) */}

@@ -56,7 +56,7 @@ const CATEGORIES: CategoryMeta[] = [
   { id: 'promotion', label: 'Продвижение', hint: 'Авито, соцсети, запуск', icon: Megaphone },
   { id: 'packaging', label: 'Упаковка', hint: 'Фото, профиль, прайс', icon: Package },
   { id: 'clients', label: 'Клиенты', hint: 'Скрипты, возврат, сервис', icon: Users },
-  { id: 'technique', label: 'Техника', hint: 'Брови, ресницы, лайфхаки', icon: Zap },
+  { id: 'technique', label: 'Техника', hint: 'Приёмы, лайфхаки, мастерство', icon: Zap },
 ]
 
 /** Заглушки «Скоро» — визуальное наполнение витрины (новые курсы в разработке) */

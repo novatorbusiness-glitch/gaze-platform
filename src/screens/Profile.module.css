@@ -476,6 +476,35 @@
   transform: translateX(18px);
 }
 
+/* ---- Модалка «Твоя ниша» (T12) ---- */
+.nicheChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.nicheChip {
+  padding: 9px 14px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--app-border);
+  background: var(--app-bg);
+  color: var(--app-text);
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.15s ease-out;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.nicheChip:active {
+  transform: scale(0.96);
+}
+
+.nicheChipActive {
+  background: var(--app-cta);
+  border-color: var(--app-cta);
+  color: #ffffff;
+}
+
 /* ---- Тост ---- */
 .toast {
   position: fixed;

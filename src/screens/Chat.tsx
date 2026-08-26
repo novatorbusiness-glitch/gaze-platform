@@ -11,6 +11,7 @@ import {
   type MentorMessage,
 } from '../lib/dev-data'
 import { haptic } from '../lib/telegram'
+import { displaySpecialty } from '../lib/specialty'
 import { cx } from '../lib/utils'
 import { useMasterStore } from '../store/useMasterStore'
 import styles from './Chat.module.css'
@@ -129,7 +130,7 @@ export default function Chat() {
         {
           id: `me-c-${Date.now()}`,
           author: firstName,
-          specialty: 'Бровист',
+          specialty: displaySpecialty('Специалист'),
           text,
           time,
         },
