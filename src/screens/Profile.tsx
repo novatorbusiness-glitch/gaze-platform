@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { Bell, Camera, ChevronRight, Copy, ExternalLink, Info, LogOut, MessageCircle, Tag, User, X } from 'lucide-react'
+import { Bell, Building2, Camera, ChevronRight, Copy, ExternalLink, Info, LogOut, MessageCircle, Tag, User, X } from 'lucide-react'
 import Avatar from '../components/Avatar'
 import Badge from '../components/Badge'
 import Button from '../components/Button'
@@ -15,6 +15,7 @@ import {
 } from '../lib/specialty'
 import { copyText, haptic, hapticSuccess } from '../lib/telegram'
 import { cx, formatDateLong, formatMoney } from '../lib/utils'
+import { getSalonSettings, setSalonSettings, type SalonSettings } from '../lib/salon'
 import { useAppStore } from '../store/useAppStore'
 import { useMasterStore } from '../store/useMasterStore'
 import styles from './Profile.module.css'
@@ -286,6 +287,20 @@ export default function Profile() {
   const [specialtyOpen, setSpecialtyOpen] = useState(false)
   const [nicheDraft, setNicheDraft] = useState<string>(() => specialty[0] ?? '')
 
+  // T19 — Модалка «Салон»
+  const [salonOpen, setSalonOpen] = useState(false)
+  const [salonDraft, setSalonDraft] = useState<SalonSettings>(getSalonSettings)
+
+  const openSalon = () => {
+    setSalonDraft(getSalonSettings())
+    setSalonOpen(true)
+  }
+  const saveSalon = () => {
+    setSalonSettings(salonDraft)
+    hapticSuccess()
+    setSalonOpen(false)
+  }
+
   // Модалка «Уведомления»
   const [notifOpen, setNotifOpen] = useState(false)
   const [notifications, setNotifications] = useState<NotificationSettings>(readNotifications)
@@ -417,6 +432,11 @@ export default function Profile() {
           onClick={openSpecialty}
         />
         <SettingsRow
+          icon={<Building2 size={16} strokeWidth={1.75} />}
+          label={getSalonSettings().enabled ? `Салон · ${getSalonSettings().percent}%` : 'Работаю в салоне'}
+          onClick={openSalon}
+        />
+        <SettingsRow
           icon={<MessageCircle size={16} strokeWidth={1.75} />}
           label="Связаться с поддержкой"
           onClick={() => {
@@ -537,6 +557,56 @@ export default function Profile() {
             maxLength={40}
           />
           <Button size="lg" fullWidth disabled={!nicheDraft.trim()} onClick={saveNiche}>
+            Сохранить
+          </Button>
+        </Sheet>
+      )}
+
+      {/* T19 — Модалка «Салон»: % от чека, скрытие контактов */}
+      {salonOpen && (
+        <Sheet title="Работа в салоне" onClose={() => setSalonOpen(false)}>
+          <p className={styles.notifIntro}>
+            Если ты работаешь в салоне и получаешь процент от чека — включи режим.
+            GAZE будет считать твой доход и прибыль с учётом процента и только твоих расходов.
+          </p>
+          <label className={styles.switchRow}>
+            <span>Работаю в салоне</span>
+            <input
+              type="checkbox"
+              checked={salonDraft.enabled}
+              onChange={(e) => setSalonDraft({ ...salonDraft, enabled: e.target.checked })}
+            />
+          </label>
+          {salonDraft.enabled && (
+            <>
+              <Input
+                label="Мой процент от чека, %"
+                type="number"
+                min={1}
+                max={100}
+                value={String(salonDraft.percent)}
+                onChange={(e) =>
+                  setSalonDraft({
+                    ...salonDraft,
+                    percent: Math.max(1, Math.min(100, Number(e.target.value) || 60)),
+                  })
+                }
+              />
+              <label className={styles.switchRow}>
+                <span>Салон скрывает контакты клиентов</span>
+                <input
+                  type="checkbox"
+                  checked={salonDraft.hideContacts}
+                  onChange={(e) => setSalonDraft({ ...salonDraft, hideContacts: e.target.checked })}
+                />
+              </label>
+              <p className={styles.notifIntro}>
+                Пример: чек 2 500 ₽ при {salonDraft.percent}% — твой доход{' '}
+                {Math.round((2500 * salonDraft.percent) / 100)} ₽.
+              </p>
+            </>
+          )}
+          <Button size="lg" fullWidth onClick={saveSalon}>
             Сохранить
           </Button>
         </Sheet>

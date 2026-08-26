@@ -159,3 +159,21 @@
   text-align: center;
   line-height: 1.5;
 }
+
+/* T19 — Твой доход с учётом режима салона */
+.incomeBox {
+  background: var(--surface-accent, #f3ede6);
+  padding: 12px 16px;
+}
+.incomeText {
+  font-size: 15px;
+  color: var(--text-primary, #2d2a26);
+  margin: 0;
+}
+.incomeText b {
+  font-size: 18px;
+}
+.incomeSub {
+  font-size: 13px;
+  color: var(--text-secondary, #8a8378);
+}

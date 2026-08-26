@@ -612,3 +612,22 @@
     opacity: 1;
   }
 }
+
+/* T19 — Режим салона: переключатель */
+.switchRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary, #2d2a26);
+  cursor: pointer;
+}
+.switchRow input[type='checkbox'] {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--accent, #b07d5b);
+  cursor: pointer;
+}

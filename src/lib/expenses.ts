@@ -14,10 +14,17 @@
  *   прибыль  = доход − все расходы
  */
 
-export type ExpenseCategory = 'Материалы' | 'Аренда' | 'Реклама' | 'Инструменты' | 'Другое'
+export type ExpenseCategory =
+  | 'Материалы'
+  | 'Материалы салона'
+  | 'Аренда'
+  | 'Реклама'
+  | 'Инструменты'
+  | 'Другое'
 
 export const EXPENSE_CATEGORIES: ExpenseCategory[] = [
   'Материалы',
+  'Материалы салона',
   'Аренда',
   'Реклама',
   'Инструменты',
@@ -136,6 +143,16 @@ export function monthExpensesTotal(records: ExpenseRecord[]): number {
 /** Отдельные расходы за текущий месяц (для юнит-экономики дашборда) */
 export function monthOtherExpenses(): number {
   return monthExpensesTotal(loadExpenses())
+}
+
+/**
+ * T19 — расходы, реально вычитаемые из дохода мастера.
+ * В режиме салона «Материалы салона» оплачивает салон → не вычитаются.
+ */
+export function masterExpenses(records: ExpenseRecord[]): number {
+  return records
+    .filter((e) => !(e.category === 'Материалы салона'))
+    .reduce((sum, e) => sum + e.amount, 0)
 }
 
 /** Сумма расходов за последние N дней (для неделя/квартал в аналитике) */

@@ -12,8 +12,9 @@ import { useAsync } from '../hooks/useAsync'
 import { useCountUp } from '../hooks/useCountUp'
 import { fetchDashboard } from '../lib/api'
 import { demoReminders, demoAnalytics, demoClients, demoMaster, demoProcedures, type ReminderStatus } from '../lib/dev-data'
-import { monthOtherExpenses } from '../lib/expenses'
+import { masterExpenses, monthOtherExpenses, loadExpenses } from '../lib/expenses'
 import type { Client, Procedure } from '../lib/mock'
+import { getSalonSettings } from '../lib/salon'
 import { useDisplayName } from '../lib/name'
 import {
   loadOnboarding,
@@ -125,7 +126,6 @@ export default function Dashboard() {
   const procedures =
     isDemo && dash.status === 'error' ? demoProcedures : dash.data?.procedures ?? []
 
-  const income = useCountUp(isDemo ? demoAnalytics.incomeMonth : monthIncome(procedures))
   const avg = useCountUp(isDemo ? demoAnalytics.avgCheck : averageCheck(procedures))
   const totalClients = isDemo ? (demoMaster.clients_count ?? clients.length) : clients.length
 
@@ -133,11 +133,15 @@ export default function Dashboard() {
   // T17 — прибыль = доход − материалы из процедур − прочие расходы (gaze_expenses):
   // в демо: доход 96 400 − материалы 31 400 − прочие 25 000 = 40 000 ₽, маржа ~41%.
   const procSet = isDemo ? demoProcedures : procedures
-  const otherExpenses = monthOtherExpenses()
+
+  // T19 — режим салона: «твой доход» = доход × % мастера, «материалы салона» не вычитаются
+  const salon = getSalonSettings()
+  const otherExpenses = salon.enabled ? masterExpenses(loadExpenses()) : monthOtherExpenses()
   const rawIncome = isDemo ? demoAnalytics.incomeMonth : monthIncome(procedures)
   const rawMaterials = monthExpenses(procSet)
-  const profit = useCountUp(rawIncome - rawMaterials - otherExpenses)
-  const margin = rawIncome > 0 ? Math.round(((rawIncome - rawMaterials - otherExpenses) / rawIncome) * 100) : 0
+  const incomeValue = salon.enabled ? Math.round((rawIncome * salon.percent) / 100) : rawIncome
+  const profit = useCountUp(incomeValue - rawMaterials - otherExpenses)
+  const margin = incomeValue > 0 ? Math.round(((incomeValue - rawMaterials - otherExpenses) / incomeValue) * 100) : 0
 
   const demoBadge = isDemo ? <Badge variant="demo">DEMO</Badge> : null
 
@@ -349,7 +353,7 @@ export default function Dashboard() {
       {/* Три метрики — горизонтальный скролл */}
       <div className={styles.metrics}>
         <MetricCard label="Клиентов всего" value={String(totalClients)} />
-        <MetricCard label="Доход за месяц" value={formatMoney(income)} />
+        <MetricCard label={salon.enabled ? 'Твой доход за месяц' : 'Доход за месяц'} value={formatMoney(incomeValue)} />
         <MetricCard label="Средний чек" value={formatMoney(avg)} />
         {/* T9.2 — прибыль за месяц: доход − расходы на материалы, с маржой */}
         <MetricCard label="Прибыль за месяц" value={formatMoney(profit)} caption={`маржа ${margin}%`} />

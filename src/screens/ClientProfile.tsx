@@ -23,6 +23,7 @@ import { useAsync } from '../hooks/useAsync'
 import { useCountUp } from '../hooks/useCountUp'
 import { fetchClientProfile, type Bonus } from '../lib/api'
 import { copyText, haptic } from '../lib/telegram'
+import { getSalonSettings } from '../lib/salon'
 import {
   buildTgChatUrl,
   isReminderSent,
@@ -151,6 +152,10 @@ export default function ClientProfile({ clientId }: ClientProfileProps) {
 
   const onCopyPhone = async () => {
     if (!client) return
+    if (getSalonSettings().hideContacts) {
+      showToast('Контакты скрыты салоном')
+      return
+    }
     await copyText(client.phone)
     setCopied(true)
     setTimeout(() => setCopied(false), 1600)
@@ -190,6 +195,12 @@ export default function ClientProfile({ clientId }: ClientProfileProps) {
     const text = message.trim()
     if (!text) return
     const templateId = activeTemplate ?? 'custom'
+
+    // T19 — салон скрывает контакты: мастеру недоступна отправка клиенту
+    if (getSalonSettings().hideContacts) {
+      showToast('Контакты скрыты салоном — написать клиенту нельзя')
+      return
+    }
 
     if (delivery) {
       // сразу открываем чат с готовым текстом — мастеру остаётся нажать «Отправить»
@@ -299,9 +310,15 @@ export default function ClientProfile({ clientId }: ClientProfileProps) {
           <Avatar name={client.name} size="xl" />
           <div className={styles.clientInfo}>
             <h2 className={styles.clientName}>{client.name}</h2>
-            <button className={styles.phone} onClick={onCopyPhone}>
+            <button className={styles.phone} onClick={onCopyPhone} disabled={getSalonSettings().hideContacts}>
               <Copy size={13} strokeWidth={1.5} />
-              <span>{copied ? 'Скопировано ✓' : client.phone}</span>
+              <span>
+                {getSalonSettings().hideContacts
+                  ? 'Контакты скрыты салоном'
+                  : copied
+                    ? 'Скопировано ✓'
+                    : client.phone}
+              </span>
             </button>
           </div>
         </div>

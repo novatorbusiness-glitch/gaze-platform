@@ -11,6 +11,7 @@ import {
   type TrendDir,
 } from '../lib/dev-data'
 import { expensesSince, loadExpenses, monthExpensesTotal } from '../lib/expenses'
+import { getSalonSettings } from '../lib/salon'
 import { haptic } from '../lib/telegram'
 import { getTipsStats } from '../lib/tips'
 import { cx, daysSince, formatMoney } from '../lib/utils'
@@ -95,17 +96,28 @@ export default function Analytics() {
   // Неделя — последние 7 дней, квартал — последние 90, месяц — календарный месяц.
   const otherExpenses = useMemo(() => {
     const records = loadExpenses()
-    if (periodId === 'week') return expensesSince(records, 7)
-    if (periodId === 'quarter') return expensesSince(records, 90)
-    return monthExpensesTotal(records)
+    // T19 — в режиме салона «материалы салона» не вычитаются из дохода мастера
+    const filtered = getSalonSettings().enabled
+      ? records.filter((e) => e.category !== 'Материалы салона')
+      : records
+    if (periodId === 'week') return expensesSince(filtered, 7)
+    if (periodId === 'quarter') return expensesSince(filtered, 90)
+    return monthExpensesTotal(filtered)
   }, [periodId])
 
   // T17 — все расходы = материалы из процедур + прочие расходы (аренда/реклама…)
   const totalCost = period.cost + otherExpenses
-  const totalProfit = period.income - totalCost
+
+  // T19 — режим салона: «твой доход» = доход × % мастера (sum(price×%) ≡ %×sum(price))
+  const salon = getSalonSettings()
+  const masterIncomeValue = salon.enabled
+    ? Math.round((period.income * salon.percent) / 100)
+    : period.income
+
+  const totalProfit = masterIncomeValue - totalCost
 
   // T9.3 — юнит-экономика: маржа (прибыль / доход) и прибыль на клиента
-  const unitMargin = period.income > 0 ? Math.round((totalProfit / period.income) * 100) : 0
+  const unitMargin = masterIncomeValue > 0 ? Math.round((totalProfit / masterIncomeValue) * 100) : 0
   const unitPerClient = period.clients > 0 ? Math.round(totalProfit / period.clients) : 0
 
   // T16 — чаевые через QR: статистика из localStorage gaze_tips (демо-счётчик)
@@ -172,11 +184,17 @@ export default function Analytics() {
 
       {/* Метрики — 2×2 grid */}
       <div className={styles.metrics}>
-        <MetricTile label="Доход" value={period.income} unit="₽" trend={period.trends.income} />
+        <MetricTile
+          label={salon.enabled ? 'Твой доход' : 'Доход'}
+          value={masterIncomeValue}
+          unit="₽"
+          trend={period.trends.income}
+        />
         <MetricTile label="Клиентов" value={period.clients} unit="" trend={period.trends.clients} />
         <MetricTile label="Средний чек" value={period.avgCheck} unit="₽" trend={period.trends.avgCheck} />
         <MetricTile label="Повторных" value={period.repeatRate} unit="%" trend={period.trends.repeatRate} />
-        {/* T9.2 — прибыль за период. T17: доход − материалы из процедур − прочие расходы */}
+        {/* T9.2 — прибыль за период. T17: доход − материалы из процедур − прочие расходы
+            T19: «твой доход» с учётом % салона */}
         <MetricTile
           label="Прибыль"
           value={totalProfit}
@@ -193,8 +211,8 @@ export default function Analytics() {
         <h2 className={styles.sectionTitle}>Юнит-экономика</h2>
         <div className={styles.unitTable}>
           <div className={styles.unitRow}>
-            <span className={styles.unitLabel}>Доход</span>
-            <span className={styles.unitValue}>{formatMoney(period.income)}</span>
+            <span className={styles.unitLabel}>{salon.enabled ? 'Твой доход (с учётом % салона)' : 'Доход'}</span>
+            <span className={styles.unitValue}>{formatMoney(masterIncomeValue)}</span>
           </div>
           <div className={styles.unitRow}>
             <span className={styles.unitLabel}>Расходы на материалы</span>

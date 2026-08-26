@@ -8,6 +8,7 @@ import SkeletonLoader from '../components/SkeletonLoader'
 import { useAsync } from '../hooks/useAsync'
 import { addProcedure, fetchClients, friendlyError, type NewProcedureInput } from '../lib/api'
 import { markOnboardingStep } from '../lib/onboarding'
+import { getSalonSettings } from '../lib/salon'
 import { serviceSuggestions } from '../lib/specialty'
 import { haptic, hapticSuccess } from '../lib/telegram'
 import { formatMoney } from '../lib/utils'
@@ -54,6 +55,8 @@ export default function AddProcedure() {
   const error = masterStatus === 'error' ? masterError : clientsState.status === 'error' ? clientsState.error : null
 
   const priceValue = Number(price)
+  // T19 — режим салона (перечитывается при каждом рендере, чтобы реагировать на изменения)
+  const salon = getSalonSettings()
   // Расходы на материалы — необязательно; пустое поле = 0 (себестоимость не указана)
   const costValue = cost.trim() === '' ? 0 : Number(cost)
   const canSubmit = Boolean(
@@ -196,6 +199,26 @@ export default function AddProcedure() {
             disabled={submitting}
             placeholder="300"
           />
+
+          {/* T19 — Твой доход с учётом режима салона */}
+          {priceValue > 0 && (
+            <Card className={styles.incomeBox}>
+              <p className={styles.incomeText}>
+                {salon.enabled ? (
+                  <>
+                    Твой доход: <b>{formatMoney(Math.round((priceValue * salon.percent) / 100))}</b>{' '}
+                    <span className={styles.incomeSub}>
+                      ({salon.percent}% от {formatMoney(priceValue)})
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    Твой доход: <b>{formatMoney(priceValue)}</b>
+                  </>
+                )}
+              </p>
+            </Card>
+          )}
 
           {/* Заметка */}
           <Textarea
