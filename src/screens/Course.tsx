@@ -22,12 +22,15 @@ const CATEGORY_LABEL: Record<string, string> = {
 
 /**
  * T10 — Страница курса академии: обложка, прогресс, список уроков-гидов.
+ * T11 — урок считается пройденным, когда выполнено его задание
+ *       (✍️-отметка в списке + галочка по выполнении).
  */
 export default function Course() {
   const courseId = useAppStore((s) => s.selectedCourseId)
   const goBack = useAppStore((s) => s.goBack)
   const openLesson = useAppStore((s) => s.openLesson)
   const completedLessons = useAppStore((s) => s.completedLessons)
+  const assignments = useAppStore((s) => s.assignments)
 
   const course = demoCourses.find((c) => c.id === courseId) ?? null
 
@@ -51,8 +54,14 @@ export default function Course() {
     )
   }
 
+  /** T11 — урок пройден: выполнено задание (gaze_assignments) ИЛИ отмечен вручную (T10) */
+  const isLessonDone = (lessonId: string) =>
+    Boolean(
+      completedLessons[lessonId] || assignments[`${course.id}_${lessonId}`]?.done,
+    )
+
   const total = course.lessons.length
-  const done = course.lessons.filter((l) => completedLessons[l.id]).length
+  const done = course.lessons.filter((l) => isLessonDone(l.id)).length
   const pct = total > 0 ? Math.round((done / total) * 100) : 0
 
   const styleVars = { '--course-accent': course.accent } as CSSProperties
@@ -128,7 +137,8 @@ export default function Course() {
         <h2 className={styles.lessonsTitle}>Уроки курса</h2>
         <div className={styles.lessonList}>
           {course.lessons.map((lesson, i) => {
-            const isDone = Boolean(completedLessons[lesson.id])
+            const isDone = isLessonDone(lesson.id)
+            const assignDone = Boolean(assignments[`${course.id}_${lesson.id}`]?.done)
             return (
               <button
                 key={lesson.id}
@@ -145,6 +155,14 @@ export default function Course() {
                   <span className={styles.lessonTitle}>{lesson.title}</span>
                   <span className={styles.lessonMeta}>
                     {lesson.video ? '🎬 видео' : '📄 гид'} · {lesson.duration}
+                    {lesson.assignment && (
+                      <>
+                        {' '}·{' '}
+                        <span className={cx(styles.lessonAssign, assignDone && styles.lessonAssignDone)}>
+                          {assignDone ? '✍️ задание ✓' : '✍️ задание'}
+                        </span>
+                      </>
+                    )}
                   </span>
                 </span>
                 <ArrowRight size={16} strokeWidth={2} className={styles.lessonArrow} />

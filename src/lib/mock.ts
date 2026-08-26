@@ -99,6 +99,18 @@ export interface LessonVideo {
   duration: string
 }
 
+/** T11 — Практическое задание в конце урока (академия = обучение с практикой) */
+export interface LessonAssignment {
+  /** Что сделать — текст задания */
+  task: string
+  /** Подсказка/пример выполнения (опционально) */
+  hint?: string
+  /** Тип ответа: свободный текст или чек-лист */
+  type: 'text' | 'checklist'
+  /** Пункты чек-листа (для type: 'checklist') */
+  items?: string[]
+}
+
 /** Урок внутри курса: видео-плейсхолдер + богатый текст + схема */
 export interface Lesson {
   id: string
@@ -111,6 +123,8 @@ export interface Lesson {
   video?: LessonVideo
   /** Схема/этапы процесса */
   schema?: LessonSchema
+  /** T11 — практическое задание в конце урока */
+  assignment?: LessonAssignment
   /** Стартовый прогресс мастера (демо) */
   is_completed?: boolean
 }

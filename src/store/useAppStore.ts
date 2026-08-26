@@ -20,11 +20,32 @@ export type ClientFilter = 'all' | 'active' | 'stale'
 /** Ключ localStorage для прогресса по урокам академии (T10) */
 const ACADEMY_PROGRESS_KEY = 'gaze-academy-progress'
 
+/** T11 — Ключ localStorage для заданий уроков: courseId_lessonId → { done, answer } */
+const ASSIGNMENTS_KEY = 'gaze_assignments'
+
+/** T11 — Состояние выполненного задания урока */
+export interface AssignmentState {
+  /** Задание выполнено */
+  done: boolean
+  /** Ответ мастера: текст (для text) или сводка отмеченных пунктов (для checklist) */
+  answer?: string
+}
+
 /** Загружаем прогресс (lessonId → пройдено) из localStorage при старте */
 function loadProgress(): Record<string, boolean> {
   try {
     const raw = localStorage.getItem(ACADEMY_PROGRESS_KEY)
     return raw ? (JSON.parse(raw) as Record<string, boolean>) : {}
+  } catch {
+    return {}
+  }
+}
+
+/** T11 — Загружаем задания (courseId_lessonId → состояние) из localStorage */
+function loadAssignments(): Record<string, AssignmentState> {
+  try {
+    const raw = localStorage.getItem(ASSIGNMENTS_KEY)
+    return raw ? (JSON.parse(raw) as Record<string, AssignmentState>) : {}
   } catch {
     return {}
   }
@@ -44,6 +65,9 @@ interface AppState {
   selectedLessonId: string | null
   /** Прогресс по урокам: lessonId → true, если пройден (персистится в localStorage) */
   completedLessons: Record<string, boolean>
+  /** T11 — Состояние заданий уроков: `${courseId}_${lessonId}` → { done, answer }
+      (персистится в localStorage, ключ gaze_assignments) */
+  assignments: Record<string, AssignmentState>
 
   navigate: (screen: Screen) => void
   openClient: (clientId: string) => void
@@ -59,6 +83,8 @@ interface AppState {
   openLesson: (courseId: string, lessonId: string) => void
   /** Отметить урок пройденным (T10): сохраняет и в localStorage */
   markLessonCompleted: (lessonId: string) => void
+  /** T11 — Сохранить ответ/выполнение задания урока (courseId_lessonId → state) */
+  saveAssignment: (courseId: string, lessonId: string, data: Partial<AssignmentState>) => void
   goBack: () => void
 }
 
@@ -70,6 +96,7 @@ export const useAppStore = create<AppState>((set) => ({
   selectedCourseId: null,
   selectedLessonId: null,
   completedLessons: loadProgress(),
+  assignments: loadAssignments(),
 
   navigate: (screen) => set({ screen, direction: 'forward' }),
 
@@ -99,6 +126,19 @@ export const useAppStore = create<AppState>((set) => ({
         /* localStorage недоступен (приватный режим) — прогресс живёт в памяти */
       }
       return { completedLessons }
+    }),
+
+  saveAssignment: (courseId, lessonId, data) =>
+    set((state) => {
+      const key = `${courseId}_${lessonId}`
+      const prev = state.assignments[key] ?? { done: false }
+      const assignments = { ...state.assignments, [key]: { ...prev, ...data } }
+      try {
+        localStorage.setItem(ASSIGNMENTS_KEY, JSON.stringify(assignments))
+      } catch {
+        /* localStorage недоступен — состояние живёт в памяти */
+      }
+      return { assignments }
     }),
 
   goBack: () =>

@@ -182,6 +182,185 @@
   box-shadow: 0 6px 18px rgba(139, 168, 136, 0.3);
 }
 
+.completeBtnLocked {
+  background: rgba(107, 94, 83, 0.25);
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+/* ---------- T11 — Задание в конце урока ---------- */
+
+.assignment {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px;
+  border-radius: var(--radius-card);
+  background:
+    radial-gradient(120% 180% at 100% 0%, rgba(224, 199, 192, 0.35) 0%, rgba(255, 255, 255, 0) 55%),
+    linear-gradient(165deg, #ffffff 0%, #fbf7f3 100%);
+  border: 1px solid rgba(224, 199, 192, 0.65);
+  box-shadow: var(--app-shadow);
+}
+
+.assignmentDone {
+  border-color: rgba(139, 168, 136, 0.5);
+  background: linear-gradient(165deg, #ffffff 0%, rgba(139, 168, 136, 0.08) 100%);
+}
+
+.assignmentHead {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.assignmentIcon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: rgba(224, 199, 192, 0.5);
+  color: var(--app-cta);
+}
+
+.assignmentHeadText {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.assignmentKicker {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--app-text-3);
+}
+
+.assignmentTitle {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--app-text);
+  margin: 0;
+}
+
+.assignmentTask {
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--app-text);
+  margin: 0;
+}
+
+.assignmentHint {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(224, 199, 192, 0.3);
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--app-text-2);
+}
+
+.assignmentInput {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: var(--radius-btn);
+  border: 1px solid var(--app-border);
+  background: var(--app-surface);
+  color: var(--app-text);
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.5;
+  resize: vertical;
+  box-shadow: inset 0 1px 3px rgba(107, 94, 83, 0.05);
+}
+
+.assignmentInput:focus {
+  outline: none;
+  border-color: var(--app-cta);
+}
+
+.assignmentInput::placeholder {
+  color: var(--app-text-3);
+}
+
+.assignmentList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.assignmentItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(224, 199, 192, 0.18);
+  border: 1px solid rgba(107, 94, 83, 0.08);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.assignmentCheck {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin: 1px 0 0;
+  accent-color: var(--app-success);
+  cursor: pointer;
+}
+
+.assignmentItemText {
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--app-text);
+}
+
+.assignmentBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: var(--radius-btn);
+  background: var(--app-success);
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 700;
+  box-shadow: 0 6px 18px rgba(139, 168, 136, 0.3);
+  transition: transform 0.15s ease-out, opacity 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.assignmentBtn:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.assignmentBtn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.assignmentSuccess {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(139, 168, 136, 0.16);
+  border: 1px solid rgba(139, 168, 136, 0.45);
+  color: var(--app-success);
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
 /* ---------- Навигация предыдущий/следующий ---------- */
 
 .nav {

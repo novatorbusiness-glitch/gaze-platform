@@ -262,6 +262,18 @@
   color: var(--app-text-3);
 }
 
+/* T11 — отметка задания в списке уроков */
+.lessonAssign {
+  font-weight: 600;
+  color: var(--app-cta);
+  opacity: 0.75;
+}
+
+.lessonAssignDone {
+  color: var(--app-success);
+  opacity: 1;
+}
+
 .lessonArrow {
   flex: none;
   color: var(--app-cta);
