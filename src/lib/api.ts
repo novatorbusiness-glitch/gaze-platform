@@ -337,8 +337,11 @@ export async function resolveMaster(force = false): Promise<MasterResolution> {
   const tgName = getTelegramUserName()
   const name = tgName ?? (isDev ? DEV_NAME : 'Мастер GAZE')
 
-  // Браузер вне Telegram ИЛИ Supabase не настроен → демо-режим (T1-T12)
-  if (!isSupabaseReady || isDev) {
+  // Браузер вне Telegram ИЛИ Supabase не настроен.
+  // Если Supabase готов и у пользователя УЖЕ есть сохранённая анонимная сессия
+  // (открывал через WebApp ранее) — пытаемся найти его аккаунт по user_id,
+  // а не кидаем в демо. Демо — только если аккаунта нет совсем.
+  if (!isSupabaseReady) {
     demoMode = true
     demoAllowed = true
     cachedResolution = {
@@ -364,6 +367,21 @@ export async function resolveMaster(force = false): Promise<MasterResolution> {
     if (uidError) throw uidError
     if (byUid) {
       cachedResolution = { master: mapMaster(byUid), telegramId, isDev, isDemo: false, error: null }
+      return cachedResolution
+    }
+
+    // Вне Telegram (браузер, нет initData): аккаунта по сохранённой сессии нет →
+    // демо (не создаём мусорного мастера с dev-телеграм id).
+    if (isDev) {
+      demoMode = true
+      demoAllowed = true
+      cachedResolution = {
+        master: demoMaster,
+        telegramId,
+        isDev,
+        isDemo: true,
+        error: null,
+      }
       return cachedResolution
     }
 
