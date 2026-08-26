@@ -87,6 +87,10 @@ export default function Analytics() {
   const period =
     demoAnalyticsPeriods.find((p) => p.id === periodId) ?? demoAnalyticsPeriods[1]
 
+  // T9.3 — юнит-экономика: маржа (прибыль / доход) и прибыль на клиента
+  const unitMargin = period.income > 0 ? Math.round((period.profit / period.income) * 100) : 0
+  const unitPerClient = period.clients > 0 ? Math.round(period.profit / period.clients) : 0
+
   // Инсайт: сколько клиентов не были 30+ дней (считается из реального списка)
   const staleCount = useMemo(
     () => demoClients.filter((c) => daysSince(c.last_visit) >= STALE_DAYS).length,
@@ -160,6 +164,33 @@ export default function Analytics() {
           className={styles.profitTile}
         />
       </div>
+
+      {/* T9.3 — Юнит-экономика: доход, расходы, прибыль, маржа, прибыль на клиента */}
+      <Card className={styles.unitCard}>
+        <h2 className={styles.sectionTitle}>Юнит-экономика</h2>
+        <div className={styles.unitTable}>
+          <div className={styles.unitRow}>
+            <span className={styles.unitLabel}>Доход</span>
+            <span className={styles.unitValue}>{formatMoney(period.income)}</span>
+          </div>
+          <div className={styles.unitRow}>
+            <span className={styles.unitLabel}>Расходы на материалы</span>
+            <span className={cx(styles.unitValue, styles.unitCost)}>−{formatMoney(period.cost)}</span>
+          </div>
+          <div className={cx(styles.unitRow, styles.unitTotalRow)}>
+            <span className={styles.unitLabel}>Прибыль</span>
+            <span className={cx(styles.unitValue, styles.unitProfit)}>{formatMoney(period.profit)}</span>
+          </div>
+          <div className={styles.unitRow}>
+            <span className={styles.unitLabel}>Маржинальность</span>
+            <span className={styles.unitValue}>{unitMargin}%</span>
+          </div>
+          <div className={styles.unitRow}>
+            <span className={styles.unitLabel}>Прибыль на клиента</span>
+            <span className={styles.unitValue}>{formatMoney(unitPerClient)}</span>
+          </div>
+        </div>
+      </Card>
 
       {/* График: Доход по дням (div-based bar chart) */}
       <Card className={styles.chartCard}>

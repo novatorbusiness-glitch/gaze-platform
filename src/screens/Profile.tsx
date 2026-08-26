@@ -67,7 +67,7 @@ function writeNotifications(next: NotificationSettings): void {
 /* Карточка подписки: статус, дата окончания, тариф, прогресс-бар дней */
 /* ------------------------------------------------------------------ */
 
-function SubscriptionCard() {
+function SubscriptionCard({ onManage }: { onManage: () => void }) {
   const progress = Math.round((demoSubscription.daysLeft / demoSubscription.daysTotal) * 100)
 
   return (
@@ -99,7 +99,7 @@ function SubscriptionCard() {
         </span>
       </div>
 
-      <Button variant="ghost" fullWidth size="md">
+      <Button variant="ghost" fullWidth size="md" onClick={onManage}>
         Управлять подпиской
       </Button>
     </Card>
@@ -290,6 +290,9 @@ export default function Profile() {
   const [notifOpen, setNotifOpen] = useState(false)
   const [notifications, setNotifications] = useState<NotificationSettings>(readNotifications)
 
+  // T13 — Модалка «Подписка»: тариф, срок, продление/отмена (демо-тосты)
+  const [subOpen, setSubOpen] = useState(false)
+
   // Тосты (демо-режим и не только)
   const [toast, setToast] = useState<string | null>(null)
   const toastTimer = useRef<number | null>(null)
@@ -309,6 +312,25 @@ export default function Profile() {
   const openNotifications = () => {
     haptic('light')
     setNotifOpen(true)
+  }
+
+  const openSub = () => {
+    haptic('light')
+    setSubOpen(true)
+  }
+
+  /** T13 — Продление (демо): закрываем модалку и показываем тост */
+  const extendSub = () => {
+    hapticSuccess()
+    setSubOpen(false)
+    showToast('Подписка продлена на 30 дней ✓')
+  }
+
+  /** T13 — Отмена (демо): оплата недоступна, только уведомление */
+  const cancelSub = () => {
+    haptic('medium')
+    setSubOpen(false)
+    showToast('В демо-режиме недоступно')
   }
 
   const openSpecialty = () => {
@@ -372,7 +394,7 @@ export default function Profile() {
       </div>
 
       {/* Подписка */}
-      <SubscriptionCard />
+      <SubscriptionCard onManage={openSub} />
 
       {/* Реферальная программа */}
       <ReferralCard />
@@ -517,6 +539,47 @@ export default function Profile() {
           <Button size="lg" fullWidth disabled={!nicheDraft.trim()} onClick={saveNiche}>
             Сохранить
           </Button>
+        </Sheet>
+      )}
+
+      {/* T13 — Модалка «Подписка»: тариф, срок, продление/отмена (демо) */}
+      {subOpen && (
+        <Sheet title="Подписка" onClose={() => setSubOpen(false)}>
+          <div className={styles.subSheetCard}>
+            <div className={styles.subSheetHead}>
+              <span className={styles.subSheetPlan}>Тариф GAZE Platform</span>
+              <Badge variant="success">Активна</Badge>
+            </div>
+            <div className={styles.subSheetPrice}>
+              {demoSubscription.price}
+              <span className={styles.subSheetPer}> ₽/мес</span>
+            </div>
+            <div className={styles.subSheetRows}>
+              <div className={styles.subSheetRow}>
+                <span className={styles.subSheetLabel}>Действует до</span>
+                <span className={styles.subSheetValue}>{formatDateLong(demoSubscription.endDate)}</span>
+              </div>
+              <div className={styles.subSheetRow}>
+                <span className={styles.subSheetLabel}>Осталось дней</span>
+                <span className={styles.subSheetValue}>
+                  {demoSubscription.daysLeft} из {demoSubscription.daysTotal}
+                </span>
+              </div>
+              <div className={styles.subSheetRow}>
+                <span className={styles.subSheetLabel}>Списание</span>
+                <span className={styles.subSheetValue}>ежемесячно</span>
+              </div>
+            </div>
+          </div>
+          <Button size="lg" fullWidth onClick={extendSub}>
+            Продлить подписку
+          </Button>
+          <Button variant="ghost" size="md" fullWidth onClick={cancelSub}>
+            Отменить подписку
+          </Button>
+          <p className={styles.hint}>
+            В демо-режиме оплата не выполняется — показываем только уведомления.
+          </p>
         </Sheet>
       )}
 

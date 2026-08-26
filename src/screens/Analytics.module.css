@@ -355,3 +355,55 @@
     transform: scaleX(1);
   }
 }
+
+/* ---- T9.3 — Юнит-экономика: таблица-карточка по периодам ---- */
+.unitCard {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.unitTable {
+  display: flex;
+  flex-direction: column;
+}
+
+.unitRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--app-border);
+}
+
+.unitRow:last-child {
+  border-bottom: none;
+}
+
+.unitTotalRow {
+  border-bottom: none;
+}
+
+.unitLabel {
+  font-size: 13px;
+  color: var(--app-text-2);
+}
+
+.unitValue {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--app-text);
+  white-space: nowrap;
+}
+
+.unitCost {
+  color: var(--app-danger);
+  font-weight: 500;
+}
+
+.unitProfit {
+  color: var(--app-success);
+  font-weight: 700;
+}
