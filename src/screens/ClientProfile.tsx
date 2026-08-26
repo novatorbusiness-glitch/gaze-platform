@@ -1,5 +1,17 @@
-import { useState } from 'react'
-import { ArrowLeft, Copy, Percent, Plus, Send } from 'lucide-react'
+import { useRef, useState } from 'react'
+import {
+  ArrowLeft,
+  BellRing,
+  Cake,
+  Check,
+  Copy,
+  Percent,
+  Plus,
+  Send,
+  Undo2,
+  X,
+  type LucideIcon,
+} from 'lucide-react'
 import Avatar from '../components/Avatar'
 import Badge from '../components/Badge'
 import Button from '../components/Button'
@@ -16,6 +28,49 @@ import { useMasterStore } from '../store/useMasterStore'
 import styles from './ClientProfile.module.css'
 
 const STALE_DAYS = 30
+
+/* ------------------------------------------------------------------ */
+/* T4 — Готовые шаблоны сообщений (ценность GAZE: тап → сообщение)      */
+/* ------------------------------------------------------------------ */
+type TemplateId = 'reminder' | 'return' | 'birthday'
+
+interface MessageTemplate {
+  id: TemplateId
+  label: string
+  hint: string
+  icon: LucideIcon
+  build: (name: string) => string
+}
+
+/** Время для шаблона «Напоминание» — в демо нет расписания, берём дефолт */
+const REMINDER_TIME = '12:00'
+
+const MESSAGE_TEMPLATES: MessageTemplate[] = [
+  {
+    id: 'reminder',
+    label: 'Напоминание о записи',
+    hint: `Завтра в ${REMINDER_TIME} · мягко, с сердечком`,
+    icon: BellRing,
+    build: (name) =>
+      `Здравствуйте, ${name}! Напоминаем о вашей записи завтра в ${REMINDER_TIME} 💛`,
+  },
+  {
+    id: 'return',
+    label: 'Возврат — давно не была',
+    hint: 'Согревает и зовёт на повторный визит',
+    icon: Undo2,
+    build: (name) =>
+      `${name}, добрый день! Давно вас не видели — соскучились. Хотите, подберу удобное время?`,
+  },
+  {
+    id: 'birthday',
+    label: 'День рождения',
+    hint: 'Поздравление + намёк на подарок',
+    icon: Cake,
+    build: (name) =>
+      `${name}, с днём рождения! 🎂 Пусть этот год будет лёгким и красивым. Приходите — подарок ждёт!`,
+  },
+]
 
 interface ClientProfileProps {
   /** Опционально: ID клиента. По умолчанию — из навигационного стора. */
@@ -40,6 +95,13 @@ export default function ClientProfile({ clientId }: ClientProfileProps) {
   const [expandedNote, setExpandedNote] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
   const [attempt, setAttempt] = useState(0)
+
+  // T4 — шаблоны сообщений
+  const [activeTemplate, setActiveTemplate] = useState<TemplateId | null>(null)
+  const [message, setMessage] = useState('')
+  const [sent, setSent] = useState(false)
+  const [toast, setToast] = useState<string | null>(null)
+  const toastTimer = useRef<number | undefined>(undefined)
 
   const state = useAsync(
     () =>
@@ -82,6 +144,29 @@ export default function ClientProfile({ clientId }: ClientProfileProps) {
     await copyText(client.phone)
     setCopied(true)
     setTimeout(() => setCopied(false), 1600)
+  }
+
+  /* T4 — шаблоны сообщений (демо: тост, реально не отправляет) */
+  const openTemplate = (tpl: MessageTemplate) => {
+    if (!client) return
+    haptic('light')
+    setMessage(tpl.build(client.name))
+    setSent(false)
+    setActiveTemplate(tpl.id)
+  }
+
+  const closeTemplate = () => {
+    haptic('light')
+    setActiveTemplate(null)
+    setSent(false)
+  }
+
+  const sendMessage = () => {
+    haptic('medium')
+    setSent(true)
+    setToast('Отправлено ✓')
+    if (toastTimer.current !== undefined) window.clearTimeout(toastTimer.current)
+    toastTimer.current = window.setTimeout(() => setToast(null), 2400)
   }
 
   /* Загрузка */
@@ -291,6 +376,63 @@ export default function ClientProfile({ clientId }: ClientProfileProps) {
         </Card>
       </section>
 
+      {/* Сообщения (T4): готовые шаблоны — тап → предпросмотр → Отправить (демо) */}
+      <section>
+        <h2 className={styles.sectionTitle}>Сообщения</h2>
+        <div className={styles.msgTemplates}>
+          {MESSAGE_TEMPLATES.map((tpl) => {
+            const Icon = tpl.icon
+            const active = activeTemplate === tpl.id
+            return (
+              <button
+                key={tpl.id}
+                className={cx(styles.msgTemplate, active && styles.msgTemplateActive)}
+                onClick={() => (active ? closeTemplate() : openTemplate(tpl))}
+              >
+                <span className={styles.msgTemplateIcon}>
+                  <Icon size={18} strokeWidth={1.75} />
+                </span>
+                <span className={styles.msgTemplateText}>
+                  <span className={styles.msgTemplateLabel}>{tpl.label}</span>
+                  <span className={styles.msgTemplateHint}>{tpl.hint}</span>
+                </span>
+              </button>
+            )
+          })}
+        </div>
+
+        {activeTemplate && (
+          <Card className={styles.msgPreview}>
+            <div className={styles.msgPreviewHead}>
+              <span className={styles.msgPreviewTitle}>Предпросмотр сообщения</span>
+              <button
+                className={styles.msgClose}
+                aria-label="Закрыть предпросмотр"
+                onClick={closeTemplate}
+              >
+                <X size={16} strokeWidth={2} />
+              </button>
+            </div>
+            <textarea
+              className={styles.msgText}
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              rows={3}
+              aria-label="Текст сообщения"
+            />
+            <Button
+              size="lg"
+              fullWidth
+              disabled={sent}
+              onClick={sendMessage}
+            >
+              {sent ? <Check size={18} strokeWidth={2.5} /> : <Send size={16} strokeWidth={2} />}
+              {sent ? 'Отправлено ✓' : 'Отправить'}
+            </Button>
+          </Card>
+        )}
+      </section>
+
       {/* Sticky-действия внизу */}
       <div className={styles.actions}>
         <Button
@@ -317,6 +459,14 @@ export default function ClientProfile({ clientId }: ClientProfileProps) {
           Написать
         </Button>
       </div>
+
+      {/* Тост «Отправлено ✓» (демо-режим) */}
+      {toast && (
+        <div className={styles.toast} role="status">
+          <Check size={16} strokeWidth={2.5} />
+          <span>{toast}</span>
+        </div>
+      )}
     </div>
   )
 }

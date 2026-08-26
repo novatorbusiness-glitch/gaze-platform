@@ -6,6 +6,7 @@ import Button from '../components/Button'
 import Card from '../components/Card'
 import { Input } from '../components/Input'
 import { demoReferral, demoSubscription } from '../lib/dev-data'
+import { getDisplayName, readProfileName, saveProfileName } from '../lib/name'
 import { copyText, haptic, hapticSuccess } from '../lib/telegram'
 import { cx, formatDateLong, formatMoney } from '../lib/utils'
 import { useAppStore } from '../store/useAppStore'
@@ -16,17 +17,7 @@ import styles from './Profile.module.css'
 /* Локальные настройки в localStorage                                  */
 /* ------------------------------------------------------------------ */
 
-const NAME_KEY = 'gaze_profile_name'
 const NOTIF_KEY = 'gaze_notifications'
-
-/** Имя, сохранённое в профиле (localStorage) — приоритет над демо-именем */
-function readSavedName(): string {
-  try {
-    return localStorage.getItem(NAME_KEY) ?? ''
-  } catch {
-    return ''
-  }
-}
 
 export interface NotificationSettings {
   /** Напоминания о записях */
@@ -272,8 +263,8 @@ export default function Profile() {
   const master = useMasterStore((s) => s.master)
   const navigate = useAppStore((s) => s.navigate)
 
-  const fallbackName = master?.name ?? 'Анна Казак'
-  const [savedName, setSavedName] = useState(readSavedName)
+  const fallbackName = getDisplayName(master)
+  const [savedName, setSavedName] = useState(readProfileName)
   const name = savedName || fallbackName
   const specialty = master?.specialty ?? ['Брови', 'Ресницы']
 

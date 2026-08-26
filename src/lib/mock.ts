@@ -45,6 +45,8 @@ export interface Procedure {
   master_id: string
   service_type: string // 'brows_arch' | 'lashes_classic' | ... (здесь человекочитаемые)
   price: number
+  /** Себестоимость (расходы на материалы), ₽. По умолчанию 0. */
+  cost: number
   notes: string
   photos: string[]
   created_at: string
