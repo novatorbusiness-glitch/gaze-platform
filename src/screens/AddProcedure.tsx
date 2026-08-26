@@ -7,6 +7,7 @@ import { Input, Textarea } from '../components/Input'
 import SkeletonLoader from '../components/SkeletonLoader'
 import { useAsync } from '../hooks/useAsync'
 import { addProcedure, fetchClients, friendlyError, type NewProcedureInput } from '../lib/api'
+import { markOnboardingStep } from '../lib/onboarding'
 import { haptic, hapticSuccess } from '../lib/telegram'
 import { formatMoney } from '../lib/utils'
 import { useAppStore } from '../store/useAppStore'
@@ -70,6 +71,8 @@ export default function AddProcedure() {
         notes: notes.trim() || undefined,
       }
       await addProcedure(input)
+      // T3 — шаг квеста «Запиши первую процедуру» выполнен
+      markOnboardingStep('procedure')
       hapticSuccess()
       setSaved(true)
       // Даём увидеть «Сохранено ✓», потом возвращаемся на профиль клиента

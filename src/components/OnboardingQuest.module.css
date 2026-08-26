@@ -1,0 +1,198 @@
+/* ============================================================
+   T3 — Онбординг-квест «Начни с 3 шагов»
+   Светлая премиум-тема (cream #F9F8F6 · blush #E0C7C0 · warm #6B5E53)
+   ============================================================ */
+
+/* Карточка квеста: мягкий blush-градиент сверху, без «крика» */
+.quest {
+  padding: 18px 16px 14px;
+  background: linear-gradient(180deg, rgba(224, 199, 192, 0.28) 0%, rgba(249, 248, 246, 0) 46%);
+  border: 1px solid rgba(224, 199, 192, 0.55);
+}
+
+/* Шапка: заголовок слева, счётчик справа */
+.questHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.questHeading {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.questKicker {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--app-cta);
+}
+
+.questTitle {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--app-text);
+}
+
+.questCount {
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--app-cta);
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  background: rgba(107, 94, 83, 0.08);
+}
+
+/* Тонкий прогресс-бар */
+.progressTrack {
+  margin-top: 12px;
+  height: 6px;
+  border-radius: var(--radius-pill);
+  background: rgba(224, 199, 192, 0.45);
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(90deg, var(--app-accent), var(--app-cta));
+  transition: width 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Чек-лист шагов — аккуратные строки-кнопки */
+.stepList {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+}
+
+.step {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 11px 2px;
+  background: transparent;
+  border: 0;
+  border-top: 1px solid rgba(107, 94, 83, 0.08);
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.15s ease-out;
+}
+
+.step:active {
+  transform: scale(0.985);
+}
+
+/* Кружок-галочка: номер, пока не сделан; тёплая заливка + белый чек — после */
+.check {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(107, 94, 83, 0.28);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: transparent;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.checkNum {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--app-text-3);
+}
+
+.checkDone {
+  background: var(--app-cta);
+  border-color: var(--app-cta);
+  color: #ffffff;
+}
+
+/* Текст шага */
+.stepBody {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.stepTitle {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--app-text);
+  transition: color 0.2s ease;
+}
+
+.stepTitleDone {
+  color: var(--app-text-3);
+}
+
+.stepHint {
+  font-size: 12px;
+  color: var(--app-text-2);
+  line-height: 1.35;
+}
+
+.stepIcon {
+  flex-shrink: 0;
+  color: var(--app-cta);
+  opacity: 0.85;
+}
+
+.chevron {
+  flex-shrink: 0;
+  color: var(--app-text-3);
+}
+
+.questNote {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--app-text-3);
+  line-height: 1.4;
+}
+
+/* ---------- Состояние «Вы в деле! 🎉» ---------- */
+.doneCard {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+  background: linear-gradient(135deg, rgba(139, 168, 136, 0.12), rgba(224, 199, 192, 0.18));
+  border: 1px solid rgba(139, 168, 136, 0.4);
+}
+
+.doneEmoji {
+  flex-shrink: 0;
+  font-size: 22px;
+  line-height: 1;
+}
+
+.doneTextWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.doneTitle {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--app-text);
+}
+
+.doneText {
+  font-size: 12.5px;
+  color: var(--app-text-2);
+  line-height: 1.45;
+}

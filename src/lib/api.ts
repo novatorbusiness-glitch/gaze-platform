@@ -467,47 +467,58 @@ export async function fetchArticles(): Promise<Article[]> {
 /* ------------------------------------------------------------------ */
 
 /**
+ * Синтетическая процедура для демо-режима (этап 3: запись в БД заменит фолбэк).
+ * Параллель demoClientFromInput: в демо-режиме запись процедуры должна
+ * «успевать» так же, как добавление клиента, иначе форма покажет ошибку RLS.
+ */
+function demoProcedureFromInput(input: NewProcedureInput): Procedure {
+  const now = new Date()
+  return {
+    id: `demo-p-${now.getTime()}`,
+    client_id: input.client_id,
+    master_id: input.master_id,
+    service_type: input.service_type,
+    price: input.price,
+    notes: input.notes ?? '',
+    photos: [],
+    created_at: now.toISOString(),
+  }
+}
+
+/**
  * Записывает процедуру и обновляет статистику клиента:
  * last_visit = сегодня, total_visits +1, total_spent + price.
+ * В демо-режиме (RLS без auth, этап 3) вставка падает — вместо ошибки
+ * возвращаем синтетическую процедуру, как и в addClient.
  */
 export async function addProcedure(input: NewProcedureInput): Promise<Procedure> {
-  const { data, error } = await supabase
-    .from('procedures')
-    .insert({
-      client_id: input.client_id,
-      master_id: input.master_id,
-      service_type: input.service_type,
-      price: input.price,
-      notes: input.notes ?? null,
-      photos: [],
-    })
-    .select()
-    .single()
+  if (!isSupabaseReady) {
+    demoMode = true
+    return demoProcedureFromInput(input)
+  }
+  try {
+    const { data, error } = await supabase
+      .from('procedures')
+      .insert({
+        client_id: input.client_id,
+        master_id: input.master_id,
+        service_type: input.service_type,
+        price: input.price,
+        notes: input.notes ?? null,
+        photos: [],
+      })
+      .select()
+      .single()
 
-  if (error) throw error
-
-  // Статистика клиента: берём текущие значения и инкрементим
-  const { data: clientRow, error: fetchErr } = await supabase
-    .from('clients')
-    .select('total_visits, total_spent')
-    .eq('id', input.client_id)
-    .maybeSingle()
-
-  if (fetchErr) throw fetchErr
-
-  const today = new Date().toISOString().slice(0, 10)
-  const { error: updErr } = await supabase
-    .from('clients')
-    .update({
-      last_visit: today,
-      total_visits: Number(clientRow?.total_visits ?? 0) + 1,
-      total_spent: Number(clientRow?.total_spent ?? 0) + input.price,
-    })
-    .eq('id', input.client_id)
-
-  if (updErr) throw updErr
-
-  return mapProcedure(data)
+    if (error) throw error
+    return mapProcedure(data)
+  } catch (err) {
+    if (isAccessError(err)) {
+      demoMode = true
+      return demoProcedureFromInput(input)
+    }
+    throw err
+  }
 }
 
 /** Синтетический клиент для демо-режима (этап 3: запись в БД заменит фолбэк) */

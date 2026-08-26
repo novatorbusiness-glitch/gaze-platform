@@ -6,12 +6,19 @@ import Card from '../components/Card'
 import ClientRow from '../components/ClientRow'
 import ErrorState from '../components/ErrorState'
 import MetricCard from '../components/MetricCard'
+import OnboardingQuest from '../components/OnboardingQuest'
 import SkeletonLoader from '../components/SkeletonLoader'
 import { useAsync } from '../hooks/useAsync'
 import { useCountUp } from '../hooks/useCountUp'
 import { fetchDashboard } from '../lib/api'
 import { demoReminders, demoAnalytics, demoClients, demoMaster, demoProcedures, type ReminderStatus } from '../lib/dev-data'
 import type { Procedure } from '../lib/mock'
+import {
+  loadOnboarding,
+  saveOnboarding,
+  type OnboardingState,
+  type OnboardingStep,
+} from '../lib/onboarding'
 import { haptic } from '../lib/telegram'
 import { daysSince, formatDate, formatMoney, greeting } from '../lib/utils'
 import { useAppStore } from '../store/useAppStore'
@@ -83,6 +90,10 @@ export default function Dashboard() {
   const [expanded, setExpanded] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
   const toastTimer = useRef<number | undefined>(undefined)
+
+  // T3 — онбординг-квест «Начни с 3 шагов»: прогресс из localStorage (gaze_onboarding)
+  const [onboarding, setOnboarding] = useState<OnboardingState>(() => loadOnboarding())
+  const insightsRef = useRef<HTMLDivElement | null>(null)
 
   const dash = useAsync(
     () => (masterId ? fetchDashboard(masterId) : Promise.resolve({ clients: [], procedures: [] })),
@@ -162,6 +173,33 @@ export default function Dashboard() {
     toastTimer.current = window.setTimeout(() => setToast(null), 2400)
   }
 
+  // T3 — отметить шаг квеста сделанным и сохранить прогресс в localStorage
+  const completeQuestStep = (step: OnboardingStep) => {
+    setOnboarding((prev) => {
+      if (prev[step]) return prev
+      const next = { ...prev, [step]: true }
+      saveOnboarding(next)
+      return next
+    })
+  }
+
+  // T3 — клик по шагу квеста: «client»/«procedure» → форма (T1),
+  // «insight» → отметить и плавно скроллить к блоку «Кого вернуть» (T2)
+  const handleQuestStep = (step: OnboardingStep) => {
+    haptic('light')
+    if (step === 'insight') {
+      completeQuestStep('insight')
+      requestAnimationFrame(() => {
+        insightsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      })
+      return
+    }
+    navigate(step === 'client' ? 'addClient' : 'addProcedure')
+  }
+
+  // T3 — сам блок квеста (или «Вы в деле! 🎉», когда все 3 шага сделаны)
+  const questBlock = <OnboardingQuest state={onboarding} onStep={handleQuestStep} />
+
   /* Загрузка */
   if (loading) {
     return (
@@ -220,6 +258,9 @@ export default function Dashboard() {
           </div>
         </header>
 
+        {/* T3 — онбординг-квест для нового мастера */}
+        {questBlock}
+
         <Card className={styles.emptyCard}>
           <p className={styles.emptyText}>
             Добавь первого клиента — и платформа начнёт работать на тебя
@@ -250,6 +291,9 @@ export default function Dashboard() {
           {demoBadge}
         </div>
       </header>
+
+      {/* T3 — онбординг-квест «Начни с 3 шагов» (сверху, перед метриками) */}
+      {questBlock}
 
       {/* Три метрики — горизонтальный скролл */}
       <div className={styles.metrics}>
@@ -285,7 +329,7 @@ export default function Dashboard() {
       {/* T2 — «Кого вернуть»: инсайты-крючки (Нейро-Воронка: открытая петля / Зейгарник) */}
       {staleClients.length > 0 && (
         <>
-          <div className={styles.insightTitleRow}>
+          <div ref={insightsRef} className={styles.insightTitleRow}>
             <h2 className={styles.sectionTitle}>Кого вернуть</h2>
             <Badge variant="warning">{staleClients.length}</Badge>
           </div>

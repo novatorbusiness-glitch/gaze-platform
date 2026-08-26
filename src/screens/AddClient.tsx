@@ -4,6 +4,7 @@ import Button from '../components/Button'
 import Card from '../components/Card'
 import { Input } from '../components/Input'
 import { addClient, friendlyError } from '../lib/api'
+import { markOnboardingStep } from '../lib/onboarding'
 import { haptic, hapticSuccess } from '../lib/telegram'
 import { useAppStore } from '../store/useAppStore'
 import { useMasterStore } from '../store/useMasterStore'
@@ -30,6 +31,8 @@ export default function AddClient() {
     try {
       // В демо-режиме (этап 3 без auth) addClient не падает: возвращает успех
       await addClient({ master_id: master.id, name: name.trim(), phone: phone.trim() })
+      // T3 — шаг квеста «Добавь первого клиента» выполнен
+      markOnboardingStep('client')
       hapticSuccess()
       setSaved(true)
       // Даём увидеть «Клиент добавлен ✓», потом возвращаемся на список клиентов
