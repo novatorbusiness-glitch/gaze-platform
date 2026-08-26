@@ -1,14 +1,14 @@
 /**
- * GAZE Platform — Supabase клиент (ЭТАП 2)
+ * GAZE Platform — Supabase клиент (ЭТАП 3: персональные аккаунты, T7)
  *
- * Этап 2: PostgreSQL-данные через anon-ключ.
- * RLS активна, поэтому без Supabase Auth (этап 3) аноним читает только то,
- * на что есть политики. Весь доступ в коде идёт по правилам RLS:
- *   - клиенты/procedures/bonuses — строго по своему master_id;
- *   - masters — по telegram_id (upsert).
+ * Вход через Supabase Auth: signInAnonymously() при открытии мини-аппа из
+ * Telegram. После входа auth.uid() = user_id мастера, и RLS отдаёт каждому
+ * ТОЛЬКО его данные (masters/clients/procedures/bonuses — по user_id).
+ * Сессия сохраняется (localStorage) — при переоткрытии тот же анонимный
+ * пользователь остаётся тем же мастером.
  *
- * TODO (этап 3): подключить Supabase Auth через Telegram (signInWithOtp / JWT),
- * чтобы auth.uid() совпадал с master.id — тогда RLS заработает полностью.
+ * Вне Telegram (браузер/превью) Supabase Auth не вызывается — работает
+ * демо-режим (dev-данные), см. resolveMaster в api.ts.
  */
 import { createClient } from '@supabase/supabase-js'
 
@@ -23,8 +23,9 @@ export const supabase = createClient(
   supabaseAnonKey ?? 'placeholder-anon-key',
   {
     auth: {
-      persistSession: false,
-      autoRefreshToken: false,
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: false,
     },
   },
 )
@@ -36,6 +37,8 @@ export const supabase = createClient(
 export interface MasterRow {
   id: string
   telegram_id: number
+  /** T7 — Привязка к auth.uid() (персональный аккаунт). null до первого входа. */
+  user_id: string | null
   name: string | null
   phone: string | null
   specialty: string[] | null
@@ -54,6 +57,10 @@ export interface ClientRow {
   name: string | null
   phone: string | null
   notes: string | null
+  /** T15 — Ссылка (Telegram/соцсеть) */
+  link?: string | null
+  /** T15 — Краткое описание клиента */
+  description?: string | null
   last_visit: string | null
   total_visits: number | null
   total_spent: number | string | null

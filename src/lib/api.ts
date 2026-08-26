@@ -82,6 +82,10 @@ export interface NewClientInput {
   name: string
   phone: string
   notes?: string
+  /** T15 — Ссылка (Telegram/соцсеть), необязательно */
+  link?: string
+  /** T15 — Краткое описание клиента, необязательно */
+  description?: string
 }
 
 /* ------------------------------------------------------------------ */
@@ -113,6 +117,8 @@ function mapClient(row: ClientRow): Client {
     name: row.name ?? 'Клиент',
     phone: row.phone ?? '',
     notes: row.notes ?? '',
+    link: row.link ?? '',
+    description: row.description ?? '',
     last_visit: row.last_visit ?? '',
     total_visits: Number(row.total_visits ?? 0),
     total_spent: Number(row.total_spent ?? 0),
@@ -210,11 +216,18 @@ export function friendlyError(err: unknown): string {
 /* ------------------------------------------------------------------ */
 
 /**
- * true, когда приложение работает на демо-данных (RLS без auth).
- * Устанавливается при первом падении с ошибкой доступа и далее все
- * чтения отдают данные из src/lib/dev-data.ts.
+ * true, когда приложение работает на демо-данных.
+ * Устанавливается при первом переходе в демо (браузер вне Telegram или
+ * Supabase не настроен) и далее все чтения отдают данные из src/lib/dev-data.ts.
  */
 let demoMode = false
+
+/**
+ * T7 — true, когда демо-данные РАЗРЕШЕНЫ (браузер вне Telegram / Supabase не
+ * настроен). Для реальных Telegram-пользователей (вход через Supabase Auth)
+ * демо-фолбэк НЕ применяется: любая ошибка RLS отдаётся как ошибка.
+ */
+let demoAllowed = false
 
 /** Текущий режим: true — отдаём демо-данные */
 export function isDemoMode(): boolean {
@@ -242,10 +255,37 @@ function isAccessError(err: unknown): boolean {
   )
 }
 
-/** Демо-дашборд: клиенты + процедуры с флагом isDemo */
+/**
+ * T15 — Локально добавленные клиенты (демо-режим): персистятся в localStorage,
+ * чтобы повторный визит находил их без создания дубля и они появлялись в списках.
+ */
+const ADDED_CLIENTS_KEY = 'gaze_demo_added_clients'
+
+function readAddedClients(): Client[] {
+  try {
+    const raw = localStorage.getItem(ADDED_CLIENTS_KEY)
+    return raw ? (JSON.parse(raw) as Client[]) : []
+  } catch {
+    return []
+  }
+}
+
+function writeAddedClients(clients: Client[]): void {
+  try {
+    localStorage.setItem(ADDED_CLIENTS_KEY, JSON.stringify(clients))
+  } catch {
+    /* localStorage недоступен (приватный режим) — клиент живёт в памяти */
+  }
+}
+
+/** Демо-дашборд: клиенты (вкл. добавленные в этой сессии) + процедуры с флагом isDemo */
 function demoDashboard(): DashboardData {
   demoMode = true
-  return { clients: [...demoClients], procedures: [...demoProcedures], isDemo: true }
+  return {
+    clients: [...readAddedClients(), ...demoClients],
+    procedures: [...demoProcedures],
+    isDemo: true,
+  }
 }
 
 /* ------------------------------------------------------------------ */
@@ -259,10 +299,34 @@ const DEV_NAME = 'Анна'
 let cachedResolution: MasterResolution | null = null
 
 /**
- * Определяет текущего мастера по telegram_id (WebApp.initDataUnsafe.user.id).
- * Мастера нет в БД — создаём upsert-ом по telegram_id.
- * При RLS без auth (этап 3: Supabase Auth) вставка падает — вместо ошибки
- * возвращаем ДЕМО-мастера (dev-фолбэк), чтобы мини-апп оставался рабочим.
+ * T7 — Гарантирует анонимный вход (Supabase Auth) и возвращает uid пользователя.
+ * Сессия сохраняется (persistSession: true) — при переоткрытии мини-аппа
+ * восстанавливается тот же анонимный пользователь, а значит тот же мастер.
+ * auth.uid() = user_id мастера (персональный аккаунт, RLS отдаёт свои данные).
+ */
+async function ensureAnonymousUser(): Promise<string> {
+  const { data: sessionData } = await supabase.auth.getSession()
+  const existing = sessionData.session?.user
+  if (existing?.id) return existing.id
+
+  const { data, error } = await supabase.auth.signInAnonymously()
+  if (error) throw error
+  const uid = data.user?.id
+  if (!uid) throw new Error('Не удалось войти: Supabase Auth не вернул пользователя.')
+  return uid
+}
+
+/**
+ * T7 — Персональный аккаунт мастера через Supabase Auth.
+ *
+ * 1) Вне Telegram (браузер/превью) или без настроек Supabase → ДЕМО-режим
+ *    (dev-данные, как было на этапах 1-2). Auth не вызывается.
+ * 2) Реальный Telegram-пользователь:
+ *    signInAnonymously → auth.uid() = user_id мастера;
+ *    ищем аккаунт по user_id=uid (быстрый путь) → если нет, вызываем
+ *    resolve_master (найдёт по telegram_id и привяжет user_id, либо создаст
+ *    новый аккаунт с trial-подпиской). Возвращаем СВОЙ аккаунт.
+ *    В демо НЕ падаем — ошибка возвращается как есть.
  */
 export async function resolveMaster(force = false): Promise<MasterResolution> {
   if (cachedResolution && !force) return cachedResolution
@@ -273,9 +337,10 @@ export async function resolveMaster(force = false): Promise<MasterResolution> {
   const tgName = getTelegramUserName()
   const name = tgName ?? (isDev ? DEV_NAME : 'Мастер GAZE')
 
-  if (!isSupabaseReady) {
-    // Supabase не настроен — сразу демо-данные (dev-фолбэк)
+  // Браузер вне Telegram ИЛИ Supabase не настроен → демо-режим (T1-T12)
+  if (!isSupabaseReady || isDev) {
     demoMode = true
+    demoAllowed = true
     cachedResolution = {
       master: demoMaster,
       telegramId,
@@ -287,47 +352,35 @@ export async function resolveMaster(force = false): Promise<MasterResolution> {
   }
 
   try {
-    const { data, error } = await supabase
+    // 1) Анонимный вход → auth.uid() = user_id мастера (персональный аккаунт)
+    const uid = await ensureAnonymousUser()
+
+    // 2) Уже привязанный аккаунт (быстрый путь по user_id)
+    const { data: byUid, error: uidError } = await supabase
       .from('masters')
       .select('*')
-      .eq('telegram_id', telegramId)
+      .eq('user_id', uid)
       .maybeSingle()
-
-    if (error) throw error
-
-    if (data) {
-      cachedResolution = { master: mapMaster(data), telegramId, isDev, isDemo: false, error: null }
+    if (uidError) throw uidError
+    if (byUid) {
+      cachedResolution = { master: mapMaster(byUid), telegramId, isDev, isDemo: false, error: null }
       return cachedResolution
     }
 
-    // Мастера нет — upsert по telegram_id (создаст запись с trial-подпиской)
-    const { data: inserted, error: insertError } = await supabase
-      .from('masters')
-      .upsert({ telegram_id: telegramId, name, subscription_status: 'trial' }, { onConflict: 'telegram_id' })
-      .select()
-      .maybeSingle()
+    // 3) resolve_master (SECURITY DEFINER, RLS не применяется): найдёт аккаунт
+    //    по telegram_id и привяжет к user_id=uid (Костя уже есть в БД — его
+    //    подписка active сохранится), либо создаст новый с trial-подпиской.
+    const { data: row, error: rpcError } = await supabase.rpc('resolve_master', {
+      p_telegram_id: telegramId,
+      p_name: name,
+    })
+    if (rpcError) throw rpcError
+    if (!row) throw new Error('resolve_master не вернул аккаунт мастера.')
 
-    if (insertError) throw insertError
-    if (!inserted) {
-      return { master: null, telegramId, isDev, isDemo: false, error: 'Не удалось создать запись мастера.' }
-    }
-
-    cachedResolution = { master: mapMaster(inserted), telegramId, isDev, isDemo: false, error: null }
+    cachedResolution = { master: mapMaster(row), telegramId, isDev, isDemo: false, error: null }
     return cachedResolution
   } catch (err) {
-    // RLS без Supabase Auth блокирует чтение/upsert анониму — ожидаемо на этапе 2.
-    // Вместо ошибки отдаём демо-мастера (временное решение до этапа 3).
-    if (isAccessError(err)) {
-      demoMode = true
-      cachedResolution = {
-        master: demoMaster,
-        telegramId,
-        isDev,
-        isDemo: true,
-        error: null,
-      }
-      return cachedResolution
-    }
+    // Реальный Telegram-пользователь: аккаунт обязан быть СВОИМ — без демо.
     return { master: null, telegramId, isDev, isDemo: false, error: friendlyError(err) }
   }
 }
@@ -362,8 +415,8 @@ export async function fetchDashboard(masterId: string): Promise<DashboardData> {
 
     return { clients, procedures }
   } catch (err) {
-    // RLS без auth (этап 2) — dev-фолбэк на демо-данные
-    if (isAccessError(err)) return demoDashboard()
+    // Демо-фолбэк только для браузера вне Telegram (T7: реальным пользователям — ошибка)
+    if (isAccessError(err) && demoAllowed) return demoDashboard()
     throw err
   }
 }
@@ -379,12 +432,12 @@ export async function fetchClients(masterId: string): Promise<Client[]> {
     if (error) throw error
 
     const clients = (data ?? []).map(mapClient)
-    if (demoMode && clients.length === 0) return [...demoClients]
+    if (demoMode && clients.length === 0) return [...readAddedClients(), ...demoClients]
     return clients
   } catch (err) {
-    if (isAccessError(err)) {
+    if (isAccessError(err) && demoAllowed) {
       demoMode = true
-      return [...demoClients]
+      return [...readAddedClients(), ...demoClients]
     }
     throw err
   }
@@ -401,12 +454,14 @@ export async function fetchClient(clientId: string): Promise<Client | null> {
     if (error) throw error
 
     // RLS без auth вернула пусто (200, отфильтровано auth.uid()=null) — ищем в демо
-    if (!data && demoMode) return demoClients.find((c) => c.id === clientId) ?? null
+    if (!data && demoMode) {
+      return readAddedClients().find((c) => c.id === clientId) ?? demoClients.find((c) => c.id === clientId) ?? null
+    }
     return data ? mapClient(data) : null
   } catch (err) {
-    if (isAccessError(err)) {
+    if (isAccessError(err) && demoAllowed) {
       demoMode = true
-      return demoClients.find((c) => c.id === clientId) ?? null
+      return readAddedClients().find((c) => c.id === clientId) ?? demoClients.find((c) => c.id === clientId) ?? null
     }
     throw err
   }
@@ -428,7 +483,7 @@ export async function fetchClientProcedures(clientId: string): Promise<Procedure
     }
     return procedures
   } catch (err) {
-    if (isAccessError(err)) {
+    if (isAccessError(err) && demoAllowed) {
       demoMode = true
       return demoProcedures.filter((p) => p.client_id === clientId)
     }
@@ -449,7 +504,7 @@ export async function fetchBonuses(masterId: string): Promise<Bonus[]> {
     if (demoMode && bonuses.length === 0) return [...demoBonuses]
     return bonuses
   } catch (err) {
-    if (isAccessError(err)) {
+    if (isAccessError(err) && demoAllowed) {
       demoMode = true
       return [...demoBonuses]
     }
@@ -479,7 +534,7 @@ export async function fetchArticles(): Promise<Article[]> {
     if (demoMode && articles.length === 0) return [...demoArticles]
     return articles
   } catch (err) {
-    if (isAccessError(err)) {
+    if (isAccessError(err) && demoAllowed) {
       demoMode = true
       return [...demoArticles]
     }
@@ -504,7 +559,7 @@ export async function fetchCourses(): Promise<Course[]> {
     if (demoMode && courses.length === 0) return [...demoCourses]
     return courses
   } catch (err) {
-    if (isAccessError(err)) {
+    if (isAccessError(err) && demoAllowed) {
       demoMode = true
       return [...demoCourses]
     }
@@ -565,7 +620,7 @@ export async function addProcedure(input: NewProcedureInput): Promise<Procedure>
     if (error) throw error
     return mapProcedure(data)
   } catch (err) {
-    if (isAccessError(err)) {
+    if (isAccessError(err) && demoAllowed) {
       demoMode = true
       return demoProcedureFromInput(input)
     }
@@ -576,18 +631,30 @@ export async function addProcedure(input: NewProcedureInput): Promise<Procedure>
 /** Синтетический клиент для демо-режима (этап 3: запись в БД заменит фолбэк) */
 function demoClientFromInput(input: NewClientInput): Client {
   const now = new Date()
-  return {
+  const client: Client = {
     id: `demo-c-${now.getTime()}`,
     master_id: input.master_id,
     name: input.name,
     phone: input.phone ?? '',
     notes: input.notes ?? '',
+    link: input.link ?? '',
+    description: input.description ?? '',
     last_visit: now.toISOString().slice(0, 10),
     total_visits: 0,
     total_spent: 0,
     bonus_points: 0,
     created_at: now.toISOString(),
   }
+  // T15 — сохраняем добавленного клиента в localStorage (повторный визит без дублей).
+  // Страховка от дубля на уровне данных: не добавляем, если имя/телефон уже есть.
+  const prev = readAddedClients()
+  const already = prev.some(
+    (c) =>
+      c.name.trim().toLowerCase() === client.name.trim().toLowerCase() ||
+      (client.phone !== '' && c.phone.replace(/\D/g, '') === client.phone.replace(/\D/g, '')),
+  )
+  if (!already) writeAddedClients([client, ...prev])
+  return client
 }
 
 /**
@@ -608,6 +675,8 @@ export async function addClient(input: NewClientInput): Promise<Client> {
         name: input.name,
         phone: input.phone ?? '',
         notes: input.notes ?? null,
+        link: input.link ?? null,
+        description: input.description ?? null,
         last_visit: new Date().toISOString().slice(0, 10),
         total_visits: 0,
         total_spent: 0,
@@ -619,7 +688,7 @@ export async function addClient(input: NewClientInput): Promise<Client> {
     if (error) throw error
     return mapClient(data)
   } catch (err) {
-    if (isAccessError(err)) {
+    if (isAccessError(err) && demoAllowed) {
       demoMode = true
       return demoClientFromInput(input)
     }
