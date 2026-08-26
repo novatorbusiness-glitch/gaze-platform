@@ -166,17 +166,18 @@ export const demoClients: Client[] = [
 /* ------------------------------------------------------------------ */
 
 // [услуга, цена, количество за месяц, себестоимость] — сумма 96 400, всего 40 процедур
-// cost ~20-35% от цены (реалистично для материалов бровей/ресниц)
+// cost ~25-33% от цены (реалистично для материалов бровей/ресниц).
+// Итог месяца (T9.2): расходы 31 400 ₽ → прибыль 65 000 ₽, маржа ~67%.
 const MONTH_PROCEDURES: Array<[string, number, number, number]> = [
-  ['Ламинирование ресниц', 2500, 8, 600],
-  ['Архитектура бровей', 2500, 8, 600],
-  ['Коррекция бровей', 1800, 10, 450],
-  ['Наращивание 2D', 4500, 4, 1200],
-  ['Ламинирование бровей', 3000, 4, 800],
-  ['Окрашивание бровей', 1200, 1, 300],
-  ['Снятие наращённых ресниц', 800, 1, 200],
-  ['Коррекция + окрашивание', 2200, 2, 600],
-  ['Оформление бровей хной', 1000, 2, 250],
+  ['Ламинирование ресниц', 2500, 8, 800],
+  ['Архитектура бровей', 2500, 8, 800],
+  ['Коррекция бровей', 1800, 10, 600],
+  ['Наращивание 2D', 4500, 4, 1500],
+  ['Ламинирование бровей', 3000, 4, 1000],
+  ['Окрашивание бровей', 1200, 1, 350],
+  ['Снятие наращённых ресниц', 800, 1, 250],
+  ['Коррекция + окрашивание', 2200, 2, 700],
+  ['Оформление бровей хной', 1000, 2, 300],
 ]
 
 const NOTES = [
@@ -1107,6 +1108,10 @@ export interface AnalyticsPeriodData {
   id: 'week' | 'month' | 'quarter'
   label: string
   income: number
+  /** T9.2 — Расходы на материалы за период, ₽ */
+  cost: number
+  /** T9.2 — Прибыль за период: income − cost, ₽ */
+  profit: number
   clients: number
   avgCheck: number
   repeatRate: number
@@ -1115,6 +1120,8 @@ export interface AnalyticsPeriodData {
     clients: Trend
     avgCheck: Trend
     repeatRate: Trend
+    /** T9.2 — тренд прибыли за период */
+    profit: Trend
   }
   daily: DailyBar[]
   topServices: TopService[]
@@ -1125,6 +1132,8 @@ export const demoAnalyticsPeriods: AnalyticsPeriodData[] = [
     id: 'week',
     label: 'Неделя',
     income: 24100,
+    cost: 7900,
+    profit: 16200,
     clients: 12,
     avgCheck: 2410,
     repeatRate: 64,
@@ -1133,6 +1142,7 @@ export const demoAnalyticsPeriods: AnalyticsPeriodData[] = [
       clients: { dir: 'up', delta: 9 },
       avgCheck: { dir: 'down', delta: 4 },
       repeatRate: { dir: 'flat', delta: 0 },
+      profit: { dir: 'up', delta: 14 },
     },
     daily: [
       { label: 'Пн', value: 2500 },
@@ -1154,6 +1164,8 @@ export const demoAnalyticsPeriods: AnalyticsPeriodData[] = [
     id: 'month',
     label: 'Месяц',
     income: 96400,
+    cost: 31400,
+    profit: 65000,
     clients: 47,
     avgCheck: 2410,
     repeatRate: 68,
@@ -1162,6 +1174,7 @@ export const demoAnalyticsPeriods: AnalyticsPeriodData[] = [
       clients: { dir: 'up', delta: 14 },
       avgCheck: { dir: 'down', delta: 3 },
       repeatRate: { dir: 'up', delta: 5 },
+      profit: { dir: 'up', delta: 9 },
     },
     daily: [
       { label: '1 авг', value: 8200 },
@@ -1184,6 +1197,8 @@ export const demoAnalyticsPeriods: AnalyticsPeriodData[] = [
     id: 'quarter',
     label: 'Квартал',
     income: 264800,
+    cost: 87400,
+    profit: 177400,
     clients: 89,
     avgCheck: 2975,
     repeatRate: 71,
@@ -1192,6 +1207,7 @@ export const demoAnalyticsPeriods: AnalyticsPeriodData[] = [
       clients: { dir: 'up', delta: 17 },
       avgCheck: { dir: 'up', delta: 6 },
       repeatRate: { dir: 'down', delta: 2 },
+      profit: { dir: 'up', delta: 24 },
     },
     daily: [
       { label: 'Июнь 1', value: 31000 },

@@ -1,7 +1,29 @@
 /** Утилиты форматирования и хелперы (ТЗ, Часть 2 — lib/utils.ts) */
+import type { Procedure } from './mock'
 
 export function cx(...classes: Array<string | false | null | undefined>): string {
   return classes.filter(Boolean).join(' ')
+}
+
+/* ------------------------------------------------------------------ */
+/* T9.2 — Юнит-экономика: расходы, прибыль и маржа                       */
+/* ------------------------------------------------------------------ */
+
+/** Сумма расходов на материалы (себестоимость cost) за период, ₽ */
+export function monthExpenses(procedures: Procedure[]): number {
+  return procedures.reduce((sum, p) => sum + (p.cost ?? 0), 0)
+}
+
+/** Прибыль за период: доход (price) − расходы на материалы (cost), ₽ */
+export function monthProfit(procedures: Procedure[]): number {
+  return procedures.reduce((sum, p) => sum + p.price, 0) - monthExpenses(procedures)
+}
+
+/** Маржа за период, %: прибыль / доход × 100 (0, если дохода нет) */
+export function monthMarginPct(procedures: Procedure[]): number {
+  const income = procedures.reduce((sum, p) => sum + p.price, 0)
+  if (income <= 0) return 0
+  return Math.round((monthProfit(procedures) / income) * 100)
 }
 
 /** 12 400 ₽ */

@@ -21,7 +21,7 @@ import {
   type OnboardingStep,
 } from '../lib/onboarding'
 import { haptic } from '../lib/telegram'
-import { daysSince, formatDate, formatMoney, greeting } from '../lib/utils'
+import { daysSince, formatDate, formatMoney, greeting, monthMarginPct, monthProfit } from '../lib/utils'
 import { useAppStore } from '../store/useAppStore'
 import { useMasterStore } from '../store/useMasterStore'
 import styles from './Dashboard.module.css'
@@ -114,6 +114,12 @@ export default function Dashboard() {
   const income = useCountUp(isDemo ? demoAnalytics.incomeMonth : monthIncome(procedures))
   const avg = useCountUp(isDemo ? demoAnalytics.avgCheck : averageCheck(procedures))
   const totalClients = isDemo ? (demoMaster.clients_count ?? clients.length) : clients.length
+
+  // T9.2 — юнит-экономика: расходы на материалы, прибыль (доход − cost) и маржа.
+  // В демо-режиме считаем по демо-процедурам: доход 96 400 → расходы 31 400,
+  // прибыль 65 000 ₽, маржа ~67%. Процедуры за текущий месяц уже в demoProcedures.
+  const profit = useCountUp(isDemo ? monthProfit(demoProcedures) : monthProfit(procedures))
+  const margin = isDemo ? monthMarginPct(demoProcedures) : monthMarginPct(procedures)
 
   const demoBadge = isDemo ? <Badge variant="demo">DEMO</Badge> : null
 
@@ -216,6 +222,7 @@ export default function Dashboard() {
           <SkeletonLoader shape="card" width={140} height={90} />
           <SkeletonLoader shape="card" width={150} height={90} />
           <SkeletonLoader shape="card" width={140} height={90} />
+          <SkeletonLoader shape="card" width={150} height={90} />
         </div>
         <div className={styles.quickGrid}>
           <SkeletonLoader shape="button" height={56} />
@@ -304,6 +311,8 @@ export default function Dashboard() {
         <MetricCard label="Клиентов всего" value={String(totalClients)} />
         <MetricCard label="Доход за месяц" value={formatMoney(income)} />
         <MetricCard label="Средний чек" value={formatMoney(avg)} />
+        {/* T9.2 — прибыль за месяц: доход − расходы на материалы, с маржой */}
+        <MetricCard label="Прибыль за месяц" value={formatMoney(profit)} caption={`маржа ${margin}%`} />
       </div>
 
       {/* Быстрые действия — 2×2 grid */}

@@ -41,12 +41,15 @@ function MetricTile({
   value,
   unit,
   trend,
+  className,
 }: {
   label: string
   value: number
   /** ₽ / % / пусто */
   unit?: '₽' | '%' | ''
   trend: { dir: TrendDir; delta: number }
+  /** T9.2 — доп. класс (напр. широкая карточка прибыли) */
+  className?: string
 }) {
   const animated = useCountUp(value)
   const display =
@@ -56,7 +59,7 @@ function MetricTile({
         ? `${animated}%`
         : String(animated)
   return (
-    <Card className={styles.metricCard}>
+    <Card className={cx(styles.metricCard, className)}>
       <span className={styles.metricLabel}>{label}</span>
       <span className={styles.metricValue}>{display}</span>
       <TrendIndicator trend={trend} />
@@ -148,6 +151,14 @@ export default function Analytics() {
         <MetricTile label="Клиентов" value={period.clients} unit="" trend={period.trends.clients} />
         <MetricTile label="Средний чек" value={period.avgCheck} unit="₽" trend={period.trends.avgCheck} />
         <MetricTile label="Повторных" value={period.repeatRate} unit="%" trend={period.trends.repeatRate} />
+        {/* T9.2 — прибыль за период (доход − расходы на материалы) */}
+        <MetricTile
+          label="Прибыль"
+          value={period.profit}
+          unit="₽"
+          trend={period.trends.profit}
+          className={styles.profitTile}
+        />
       </div>
 
       {/* График: Доход по дням (div-based bar chart) */}
