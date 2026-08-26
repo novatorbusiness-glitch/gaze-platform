@@ -15,6 +15,7 @@ export type Screen =
   | 'lesson'
   | 'tips'
   | 'tipsPay'
+  | 'expenses'
 
 /** Фильтр списка клиентов (ЭКРАН 2: Все · Активные · Давно не был) */
 export type ClientFilter = 'all' | 'active' | 'stale'
@@ -185,6 +186,10 @@ export const useAppStore = create<AppState>((set) => ({
       if (state.screen === 'tipsPay') {
         // Назад — на экран «Чаевые» (QR)
         return { screen: 'tips', direction: 'back' }
+      }
+      if (state.screen === 'expenses') {
+        // T17 — назад — в аналитику (оттуда открывается экран «Расходы»)
+        return { screen: 'analytics', direction: 'back' }
       }
       return { screen: 'dashboard', direction: 'back' }
     }),

@@ -462,6 +462,36 @@
   border-color: var(--app-cta);
 }
 
+/* T14 — состояние «Отправлено»: реальное действие вместо пустого тоста */
+.sentBox {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sentInfo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #5f7a5c;
+}
+
+.sentActions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sentHint {
+  text-align: center;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--app-text-2);
+}
+
 /* Тост «Отправлено ✓» — над sticky-действиями, по центру снизу */
 .toast {
   position: fixed;

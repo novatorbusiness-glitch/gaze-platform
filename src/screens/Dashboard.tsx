@@ -12,7 +12,8 @@ import { useAsync } from '../hooks/useAsync'
 import { useCountUp } from '../hooks/useCountUp'
 import { fetchDashboard } from '../lib/api'
 import { demoReminders, demoAnalytics, demoClients, demoMaster, demoProcedures, type ReminderStatus } from '../lib/dev-data'
-import type { Procedure } from '../lib/mock'
+import { monthOtherExpenses } from '../lib/expenses'
+import type { Client, Procedure } from '../lib/mock'
 import { useDisplayName } from '../lib/name'
 import {
   loadOnboarding,
@@ -20,8 +21,16 @@ import {
   type OnboardingState,
   type OnboardingStep,
 } from '../lib/onboarding'
-import { haptic } from '../lib/telegram'
-import { daysSince, formatDate, formatMoney, greeting, monthMarginPct, monthProfit } from '../lib/utils'
+import { copyText, haptic } from '../lib/telegram'
+import {
+  buildTgChatUrl,
+  listSentClientIds,
+  markReminderSent,
+  openTelegramLink,
+  parseClientLink,
+  sendViaBot,
+} from '../lib/reminders'
+import { daysSince, formatDate, formatMoney, greeting, monthExpenses } from '../lib/utils'
 import { useAppStore } from '../store/useAppStore'
 import { useMasterStore } from '../store/useMasterStore'
 import styles from './Dashboard.module.css'
@@ -89,8 +98,9 @@ export default function Dashboard() {
   const masterId = master?.id ?? null
   const [attempt, setAttempt] = useState(0)
 
-  // T2 — «Кого вернуть»: кому уже отправили напоминание, развёрнут ли список, тост
-  const [reminded, setReminded] = useState<Set<string>>(new Set())
+  // T2 — «Кого вернуть»: кому уже отправили напоминание (T14: из localStorage),
+  // развёрнут ли список, тост
+  const [reminded, setReminded] = useState<Set<string>>(() => new Set(listSentClientIds()))
   const [expanded, setExpanded] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
   const toastTimer = useRef<number | undefined>(undefined)
@@ -115,11 +125,15 @@ export default function Dashboard() {
   const avg = useCountUp(isDemo ? demoAnalytics.avgCheck : averageCheck(procedures))
   const totalClients = isDemo ? (demoMaster.clients_count ?? clients.length) : clients.length
 
-  // T9.2 — юнит-экономика: расходы на материалы, прибыль (доход − cost) и маржа.
-  // В демо-режиме считаем по демо-процедурам: доход 96 400 → расходы 31 400,
-  // прибыль 65 000 ₽, маржа ~67%. Процедуры за текущий месяц уже в demoProcedures.
-  const profit = useCountUp(isDemo ? monthProfit(demoProcedures) : monthProfit(procedures))
-  const margin = isDemo ? monthMarginPct(demoProcedures) : monthMarginPct(procedures)
+  // T9.2 — юнит-экономика: прибыль и маржа.
+  // T17 — прибыль = доход − материалы из процедур − прочие расходы (gaze_expenses):
+  // в демо: доход 96 400 − материалы 31 400 − прочие 25 000 = 40 000 ₽, маржа ~41%.
+  const procSet = isDemo ? demoProcedures : procedures
+  const otherExpenses = monthOtherExpenses()
+  const rawIncome = isDemo ? demoAnalytics.incomeMonth : monthIncome(procedures)
+  const rawMaterials = monthExpenses(procSet)
+  const profit = useCountUp(rawIncome - rawMaterials - otherExpenses)
+  const margin = rawIncome > 0 ? Math.round(((rawIncome - rawMaterials - otherExpenses) / rawIncome) * 100) : 0
 
   const demoBadge = isDemo ? <Badge variant="demo">DEMO</Badge> : null
 
@@ -174,11 +188,28 @@ export default function Dashboard() {
     }
   }
 
-  // T2 — «Отправить напоминание»: в демо-режиме просто успех (крючок по «Нейро-Воронке»)
-  const sendReminder = (client: { id: string; name: string }) => {
+  // T2 — «Отправить напоминание»: T14 — РЕАЛЬНАЯ доставка, а не тост в никуда.
+  // Есть Telegram-ссылка → пробуем бота (/api/send-reminder), иначе открываем
+  // deep-link t.me/<username>?text=… (Telegram подставит текст — остаётся нажать
+  // «Отправить»). Нет ссылки → копируем телефон. Ничего нет → подсказка.
+  const sendReminder = async (client: Client & { days?: number }) => {
     haptic('medium')
-    setReminded((prev) => new Set(prev).add(client.id))
-    setToast(`Напоминание отправлено: ${client.name} ✓`)
+    const target = parseClientLink(client.link)
+    const reminderText = `Здравствуйте, ${client.name}! Давно вас не видели — соскучились 💛 Хотите, подберу удобное время?`
+    if (target) {
+      await sendViaBot(target.username, reminderText) // без бэкенда — сразу deep-link
+      openTelegramLink(buildTgChatUrl(target.username, reminderText))
+      setReminded((prev) => new Set(prev).add(client.id))
+      markReminderSent(client.id, 'return')
+      setToast(`Чат с ${target.display} открыт — текст уже в поле ввода`)
+    } else if (client.phone) {
+      await copyText(client.phone)
+      setReminded((prev) => new Set(prev).add(client.id))
+      markReminderSent(client.id, 'return')
+      setToast(`Телефон ${client.name} скопирован — напишите ей`)
+    } else {
+      setToast(`У ${client.name} нет ссылки — добавьте в карточке`)
+    }
     if (toastTimer.current !== undefined) window.clearTimeout(toastTimer.current)
     toastTimer.current = window.setTimeout(() => setToast(null), 2400)
   }
@@ -462,7 +493,7 @@ export default function Dashboard() {
         )}
       </div>
 
-      {/* Тост «Напоминание отправлено ✓» (демо-режим, крючок → результат) */}
+      {/* Тост (T14: реальный статус — открыт чат / скопирован телефон) */}
       {toast && (
         <div className={styles.toast} role="status">
           <Check size={16} strokeWidth={2.5} />

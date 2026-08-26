@@ -1,0 +1,263 @@
+.screen {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding-bottom: 12px;
+}
+
+/* Шапка */
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 0;
+}
+
+.backBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  color: var(--app-text);
+  box-shadow: var(--app-shadow);
+  transition: transform 0.15s ease-out;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.backBtn:active {
+  transform: scale(0.92);
+}
+
+.headerTitle {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 20px;
+  color: var(--app-text);
+  flex: 1;
+}
+
+.sectionTitle {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--app-text);
+}
+
+/* ---- Итог за месяц ---- */
+.summaryCard {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border-color: var(--app-accent);
+  background: linear-gradient(160deg, #fdf7f1 0%, var(--app-surface) 80%);
+}
+
+.summaryHead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.summaryIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
+  background: rgba(224, 199, 192, 0.45);
+  color: var(--app-cta);
+}
+
+.summaryLabel {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--app-text-2);
+}
+
+.summaryValue {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 34px;
+  line-height: 1.1;
+  color: var(--app-danger);
+}
+
+.summaryMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+}
+
+.summaryMetaItem {
+  font-size: 12px;
+  color: var(--app-text-2);
+  font-weight: 500;
+}
+
+/* Разбивка по категориям — pill-чипы */
+.categoryBreakdown {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.categoryPill {
+  padding: 5px 10px;
+  border-radius: var(--radius-pill);
+  background: rgba(107, 94, 83, 0.07);
+  color: var(--app-text-2);
+  font-size: 11.5px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* ---- Форма ---- */
+.formCard {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.fieldLabel {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--app-text-2);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip {
+  padding: 8px 14px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--app-border);
+  background: var(--app-surface);
+  color: var(--app-text-2);
+  font-size: 13px;
+  font-weight: 600;
+  transition:
+    transform 0.15s ease-out,
+    background 0.15s ease-out,
+    color 0.15s ease-out,
+    border-color 0.15s ease-out;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.chip:active {
+  transform: scale(0.97);
+}
+
+.chipActive {
+  background: var(--app-cta);
+  border-color: var(--app-cta);
+  color: #ffffff;
+}
+
+/* ---- Список расходов ---- */
+.expenseCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+}
+
+.expenseBody {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.expenseCategory {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--app-text);
+}
+
+.expenseDate {
+  font-size: 12px;
+  color: var(--app-text-3);
+}
+
+.expenseComment {
+  font-size: 12px;
+  color: var(--app-text-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
+}
+
+.expenseRight {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.expenseAmount {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--app-danger);
+  white-space: nowrap;
+}
+
+.deleteBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
+  border: 1px solid var(--app-border);
+  background: var(--app-surface);
+  color: var(--app-text-3);
+  transition:
+    transform 0.15s ease-out,
+    color 0.15s ease-out,
+    border-color 0.15s ease-out;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.deleteBtn:active {
+  transform: scale(0.92);
+  color: var(--app-danger);
+  border-color: rgba(201, 106, 93, 0.4);
+}
+
+/* Пустое состояние */
+.emptyCard {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 26px 20px;
+  border: 1px dashed var(--app-border);
+  text-align: center;
+}
+
+.emptyText {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--app-text-2);
+  line-height: 1.5;
+}
+
+.hint {
+  font-size: 12px;
+  color: var(--app-text-3);
+  line-height: 1.5;
+}
+
+.mono {
+  font-family: var(--font-mono);
+}

@@ -22,7 +22,15 @@ import SkeletonLoader from '../components/SkeletonLoader'
 import { useAsync } from '../hooks/useAsync'
 import { useCountUp } from '../hooks/useCountUp'
 import { fetchClientProfile, type Bonus } from '../lib/api'
-import { copyText, haptic } from '../lib/telegram'
+import { copyText, haptic, hapticSuccess } from '../lib/telegram'
+import {
+  buildTgChatUrl,
+  isReminderSent,
+  markReminderSent,
+  openTelegramLink,
+  parseClientLink,
+  sendViaBot,
+} from '../lib/reminders'
 import { cx, daysSince, formatDate, formatMoney } from '../lib/utils'
 import { useAppStore } from '../store/useAppStore'
 import { useMasterStore } from '../store/useMasterStore'
@@ -149,12 +157,14 @@ export default function ClientProfile({ clientId }: ClientProfileProps) {
     setTimeout(() => setCopied(false), 1600)
   }
 
-  /* T4 — шаблоны сообщений (демо: тост, реально не отправляет) */
+  /* T4 — шаблоны сообщений. T14: отправка РЕАЛЬНАЯ (см. sendMessage) */
+  const delivery = client ? parseClientLink(client.link) : null
+
   const openTemplate = (tpl: MessageTemplate) => {
     if (!client) return
     haptic('light')
     setMessage(tpl.build(client.name))
-    setSent(false)
+    setSent(isReminderSent(client.id))
     setActiveTemplate(tpl.id)
   }
 
@@ -164,12 +174,49 @@ export default function ClientProfile({ clientId }: ClientProfileProps) {
     setSent(false)
   }
 
-  const sendMessage = () => {
-    haptic('medium')
-    setSent(true)
-    setToast('Отправлено ✓')
+  const showToast = (msg: string) => {
+    setToast(msg)
     if (toastTimer.current !== undefined) window.clearTimeout(toastTimer.current)
     toastTimer.current = window.setTimeout(() => setToast(null), 2400)
+  }
+
+  /* T14 — «Отправить»: РЕАЛЬНАЯ доставка, а не тост «Отправлено ✓» в никуда.
+   * 1) Есть Telegram-ссылка → пробуем бота (/api/send-reminder, если настроен
+   *    VITE_REMINDER_API); если бот недоступен или клиент не в боте → deep-link
+   *    t.me/<username>?text=… (Telegram открывает чат и подставляет текст).
+   * 2) Нет ссылки, но есть телефон → копируем номер.
+   * 3) Ничего нет → подсказка добавить ссылку. */
+  const sendMessage = async () => {
+    haptic('medium')
+    if (!client) return
+    const text = message.trim()
+    if (!text) return
+    const templateId = activeTemplate ?? 'custom'
+
+    if (delivery) {
+      const botRes = await sendViaBot(delivery.username, text)
+      markReminderSent(client.id, templateId)
+      setSent(true)
+      if (botRes.delivered) {
+        hapticSuccess()
+        showToast(`Отправлено через бота → ${delivery.display} ✓`)
+        return
+      }
+      // бот недоступен / клиент не в боте → deep-link с готовым текстом
+      openTelegramLink(buildTgChatUrl(delivery.username, text))
+      showToast(`Чат с ${delivery.display} открыт — текст уже в поле ввода`)
+      return
+    }
+
+    if (client.phone) {
+      await copyText(client.phone)
+      markReminderSent(client.id, templateId)
+      setSent(true)
+      showToast(`Телефон ${client.phone} скопирован`)
+      return
+    }
+
+    showToast('Добавь ссылку клиенту (Telegram), чтобы написать')
   }
 
   /* Загрузка */
@@ -379,7 +426,7 @@ export default function ClientProfile({ clientId }: ClientProfileProps) {
         </Card>
       </section>
 
-      {/* Сообщения (T4): готовые шаблоны — тап → предпросмотр → Отправить (демо) */}
+      {/* Сообщения (T4): готовые шаблоны — тап → предпросмотр → Отправить (T14: реальная доставка) */}
       <section>
         <h2 className={styles.sectionTitle}>Сообщения</h2>
         <div className={styles.msgTemplates}>
@@ -423,15 +470,63 @@ export default function ClientProfile({ clientId }: ClientProfileProps) {
               rows={3}
               aria-label="Текст сообщения"
             />
-            <Button
-              size="lg"
-              fullWidth
-              disabled={sent}
-              onClick={sendMessage}
-            >
-              {sent ? <Check size={18} strokeWidth={2.5} /> : <Send size={16} strokeWidth={2} />}
-              {sent ? 'Отправлено ✓' : 'Отправить'}
-            </Button>
+            {sent ? (
+              /* T14 — после «Отправить»: реальное действие вместо пустого тоста */
+              <div className={styles.sentBox}>
+                {delivery ? (
+                  <>
+                    <p className={styles.sentInfo}>
+                      <Check size={15} strokeWidth={2.5} />
+                      Отправлено через Telegram → {delivery.display}
+                    </p>
+                    <div className={styles.sentActions}>
+                      <Button
+                        size="lg"
+                        fullWidth
+                        onClick={() => openTelegramLink(buildTgChatUrl(delivery.username, message))}
+                      >
+                        <Send size={16} strokeWidth={2} />
+                        Написать клиенту в Telegram
+                      </Button>
+                      <Button
+                        size="md"
+                        variant="ghost"
+                        fullWidth
+                        onClick={async () => {
+                          await copyText(message)
+                          showToast('Текст скопирован ✓')
+                        }}
+                      >
+                        <Copy size={15} strokeWidth={2} />
+                        Скопировать текст
+                      </Button>
+                    </div>
+                  </>
+                ) : client.phone ? (
+                  <>
+                    <p className={styles.sentInfo}>
+                      <Check size={15} strokeWidth={2.5} />
+                      Готово — напишите клиенту
+                    </p>
+                    <div className={styles.sentActions}>
+                      <Button size="lg" fullWidth onClick={onCopyPhone}>
+                        <Copy size={16} strokeWidth={2} />
+                        Скопировать телефон
+                      </Button>
+                    </div>
+                  </>
+                ) : (
+                  <p className={styles.sentHint}>
+                    У клиента нет ссылки и телефона. Добавьте ссылку в карточке, чтобы написать.
+                  </p>
+                )}
+              </div>
+            ) : (
+              <Button size="lg" fullWidth onClick={sendMessage}>
+                <Send size={16} strokeWidth={2} />
+                Отправить
+              </Button>
+            )}
           </Card>
         )}
       </section>
@@ -476,7 +571,7 @@ export default function ClientProfile({ clientId }: ClientProfileProps) {
         </Button>
       </div>
 
-      {/* Тост «Отправлено ✓» (демо-режим) */}
+      {/* Тост (T14: реальный статус доставки — открыт чат / скопировано) */}
       {toast && (
         <div className={styles.toast} role="status">
           <Check size={16} strokeWidth={2.5} />

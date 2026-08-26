@@ -32,7 +32,8 @@ export default function TabBar() {
     screen === 'course' ||
     screen === 'lesson' ||
     screen === 'tips' ||
-    screen === 'tipsPay'
+    screen === 'tipsPay' ||
+    screen === 'expenses'
   )
     return null
 

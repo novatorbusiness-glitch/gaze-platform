@@ -12,6 +12,7 @@ import Clients from './screens/Clients'
 import ClientProfile from './screens/ClientProfile'
 import Course from './screens/Course'
 import Dashboard from './screens/Dashboard'
+import Expenses from './screens/Expenses'
 import Knowledge from './screens/Knowledge'
 import Lesson from './screens/Lesson'
 import Profile from './screens/Profile'
@@ -36,7 +37,9 @@ export default function App() {
   const isLesson = screen === 'lesson'
   // T16 — экраны чаевых (QR и оплата) открываются поверх, без таббара
   const isTips = screen === 'tips' || screen === 'tipsPay'
-  const hideTabbar = isClientProfile || isAddProcedure || isAddClient || isCourse || isLesson || isTips
+  // T17 — экран «Расходы» открывается поверх (из аналитики), без таббара
+  const isExpenses = screen === 'expenses'
+  const hideTabbar = isClientProfile || isAddProcedure || isAddClient || isCourse || isLesson || isTips || isExpenses
 
   return (
     <div className={cx('app', hideTabbar && 'app--no-tabbar')}>
@@ -55,6 +58,7 @@ export default function App() {
         {screen === 'profile' && <Profile />}
         {screen === 'tips' && <Tips />}
         {screen === 'tipsPay' && <TipsPay />}
+        {screen === 'expenses' && <Expenses />}
       </main>
       <TabBar />
     </div>

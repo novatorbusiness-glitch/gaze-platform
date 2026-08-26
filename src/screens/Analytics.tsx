@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { Receipt } from 'lucide-react'
 import Badge from '../components/Badge'
 import Button from '../components/Button'
 import Card from '../components/Card'
@@ -9,6 +10,7 @@ import {
   type AnalyticsPeriodData,
   type TrendDir,
 } from '../lib/dev-data'
+import { expensesSince, loadExpenses, monthExpensesTotal } from '../lib/expenses'
 import { haptic } from '../lib/telegram'
 import { getTipsStats } from '../lib/tips'
 import { cx, daysSince, formatMoney } from '../lib/utils'
@@ -81,6 +83,7 @@ function pluralClients(n: number): string {
 export default function Analytics() {
   const isDemo = useMasterStore((s) => s.isDemo)
   const openClientsWithFilter = useAppStore((s) => s.openClientsWithFilter)
+  const navigate = useAppStore((s) => s.navigate)
 
   const [periodId, setPeriodId] = useState<AnalyticsPeriodData['id']>('month')
   const [activeBar, setActiveBar] = useState<number | null>(null)
@@ -88,9 +91,22 @@ export default function Analytics() {
   const period =
     demoAnalyticsPeriods.find((p) => p.id === periodId) ?? demoAnalyticsPeriods[1]
 
+  // T17 — отдельные расходы (gaze_expenses): за период по диапазону дат.
+  // Неделя — последние 7 дней, квартал — последние 90, месяц — календарный месяц.
+  const otherExpenses = useMemo(() => {
+    const records = loadExpenses()
+    if (periodId === 'week') return expensesSince(records, 7)
+    if (periodId === 'quarter') return expensesSince(records, 90)
+    return monthExpensesTotal(records)
+  }, [periodId])
+
+  // T17 — все расходы = материалы из процедур + прочие расходы (аренда/реклама…)
+  const totalCost = period.cost + otherExpenses
+  const totalProfit = period.income - totalCost
+
   // T9.3 — юнит-экономика: маржа (прибыль / доход) и прибыль на клиента
-  const unitMargin = period.income > 0 ? Math.round((period.profit / period.income) * 100) : 0
-  const unitPerClient = period.clients > 0 ? Math.round(period.profit / period.clients) : 0
+  const unitMargin = period.income > 0 ? Math.round((totalProfit / period.income) * 100) : 0
+  const unitPerClient = period.clients > 0 ? Math.round(totalProfit / period.clients) : 0
 
   // T16 — чаевые через QR: статистика из localStorage gaze_tips (демо-счётчик)
   const tips = useMemo(() => getTipsStats(), [])
@@ -160,17 +176,19 @@ export default function Analytics() {
         <MetricTile label="Клиентов" value={period.clients} unit="" trend={period.trends.clients} />
         <MetricTile label="Средний чек" value={period.avgCheck} unit="₽" trend={period.trends.avgCheck} />
         <MetricTile label="Повторных" value={period.repeatRate} unit="%" trend={period.trends.repeatRate} />
-        {/* T9.2 — прибыль за период (доход − расходы на материалы) */}
+        {/* T9.2 — прибыль за период. T17: доход − материалы из процедур − прочие расходы */}
         <MetricTile
           label="Прибыль"
-          value={period.profit}
+          value={totalProfit}
           unit="₽"
           trend={period.trends.profit}
           className={styles.profitTile}
         />
       </div>
 
-      {/* T9.3 — Юнит-экономика: доход, расходы, прибыль, маржа, прибыль на клиента */}
+      {/* T9.3 — Юнит-экономика: доход, расходы, прибыль, маржа, прибыль на клиента.
+          T17 — добавлены «Прочие расходы» и «Всего расходов» (аренда/реклама и т.д.
+          из gaze_expenses), прибыль считается от всех расходов. */}
       <Card className={styles.unitCard}>
         <h2 className={styles.sectionTitle}>Юнит-экономика</h2>
         <div className={styles.unitTable}>
@@ -182,9 +200,18 @@ export default function Analytics() {
             <span className={styles.unitLabel}>Расходы на материалы</span>
             <span className={cx(styles.unitValue, styles.unitCost)}>−{formatMoney(period.cost)}</span>
           </div>
+          {/* T17 — отдельные расходы из gaze_expenses (аренда, реклама, инструменты…) */}
+          <div className={styles.unitRow}>
+            <span className={styles.unitLabel}>Прочие расходы</span>
+            <span className={cx(styles.unitValue, styles.unitCost)}>−{formatMoney(otherExpenses)}</span>
+          </div>
+          <div className={styles.unitRow}>
+            <span className={styles.unitLabel}>Всего расходов</span>
+            <span className={cx(styles.unitValue, styles.unitCost)}>−{formatMoney(totalCost)}</span>
+          </div>
           <div className={cx(styles.unitRow, styles.unitTotalRow)}>
             <span className={styles.unitLabel}>Прибыль</span>
-            <span className={cx(styles.unitValue, styles.unitProfit)}>{formatMoney(period.profit)}</span>
+            <span className={cx(styles.unitValue, styles.unitProfit)}>{formatMoney(totalProfit)}</span>
           </div>
           <div className={styles.unitRow}>
             <span className={styles.unitLabel}>Маржинальность</span>
@@ -195,6 +222,18 @@ export default function Analytics() {
             <span className={styles.unitValue}>{formatMoney(unitPerClient)}</span>
           </div>
         </div>
+        {/* T17 — вход на экран «Расходы» (отдельный учёт расходов мастера) */}
+        <Button
+          variant="ghost"
+          fullWidth
+          onClick={() => {
+            haptic('medium')
+            navigate('expenses')
+          }}
+        >
+          <Receipt size={16} strokeWidth={2} />
+          Расходы · записать или посмотреть список
+        </Button>
       </Card>
 
       {/* T16 — Чаевые через QR: демо-счётчик из localStorage gaze_tips */}
