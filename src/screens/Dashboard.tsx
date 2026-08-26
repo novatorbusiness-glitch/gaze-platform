@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { BookOpen, MessageCircle, PenLine, UserPlus } from 'lucide-react'
+import { useRef, useState } from 'react'
+import { BookOpen, Check, MessageCircle, PenLine, Send, UserPlus } from 'lucide-react'
 import Badge from '../components/Badge'
 import Button from '../components/Button'
 import Card from '../components/Card'
@@ -13,7 +13,7 @@ import { fetchDashboard } from '../lib/api'
 import { demoReminders, demoAnalytics, demoClients, demoMaster, demoProcedures, type ReminderStatus } from '../lib/dev-data'
 import type { Procedure } from '../lib/mock'
 import { haptic } from '../lib/telegram'
-import { formatDate, formatMoney, greeting } from '../lib/utils'
+import { daysSince, formatDate, formatMoney, greeting } from '../lib/utils'
 import { useAppStore } from '../store/useAppStore'
 import { useMasterStore } from '../store/useMasterStore'
 import styles from './Dashboard.module.css'
@@ -24,6 +24,29 @@ const REMINDER_STATUS_LABEL: Record<ReminderStatus, string> = {
   confirmed: 'Подтверждено',
   pending: 'Ожидает',
   new: 'Новое',
+}
+
+/** T2 — «Кого вернуть»: клиент остывает, если не был 30+ дней */
+const STALE_DAYS = 30
+
+/** Русская плюрализация: 1 клиент / 2 клиента / 5 клиентов */
+function pluralClients(n: number): string {
+  const abs = Math.abs(n) % 100
+  const last = abs % 10
+  if (abs > 10 && abs < 20) return 'клиентов'
+  if (last > 1 && last < 5) return 'клиента'
+  if (last === 1) return 'клиент'
+  return 'клиентов'
+}
+
+/** Русская плюрализация дней: 1 день / 2 дня / 5 дней */
+function pluralDays(n: number): string {
+  const abs = Math.abs(n) % 100
+  const last = abs % 10
+  if (abs > 10 && abs < 20) return 'дней'
+  if (last > 1 && last < 5) return 'дня'
+  if (last === 1) return 'день'
+  return 'дней'
 }
 
 /** Доход за текущий месяц (из процедур) */
@@ -55,6 +78,12 @@ export default function Dashboard() {
   const masterId = master?.id ?? null
   const [attempt, setAttempt] = useState(0)
 
+  // T2 — «Кого вернуть»: кому уже отправили напоминание, развёрнут ли список, тост
+  const [reminded, setReminded] = useState<Set<string>>(new Set())
+  const [expanded, setExpanded] = useState(false)
+  const [toast, setToast] = useState<string | null>(null)
+  const toastTimer = useRef<number | undefined>(undefined)
+
   const dash = useAsync(
     () => (masterId ? fetchDashboard(masterId) : Promise.resolve({ clients: [], procedures: [] })),
     [masterId, attempt],
@@ -79,6 +108,15 @@ export default function Dashboard() {
 
   const clientById = new Map(clients.map((c) => [c.id, c]))
   const recent = procedures.slice(0, 4)
+
+  // T2 — «Кого вернуть»: остывающие клиенты (30+ дней), самые «горячие» сверху.
+  // В демо-режиме клиенты приходят из demoClients — цифры считаются честно оттуда.
+  const staleClients = clients
+    .map((c) => ({ ...c, days: daysSince(c.last_visit) }))
+    .filter((c) => c.days >= STALE_DAYS)
+    .sort((a, b) => b.days - a.days)
+  const staleSum = staleClients.reduce((sum, c) => sum + c.total_spent, 0)
+  const visibleStale = expanded ? staleClients : staleClients.slice(0, 5)
 
   const quickActions = [
     {
@@ -113,6 +151,15 @@ export default function Dashboard() {
     } else {
       setAttempt((a) => a + 1)
     }
+  }
+
+  // T2 — «Отправить напоминание»: в демо-режиме просто успех (крючок по «Нейро-Воронке»)
+  const sendReminder = (client: { id: string; name: string }) => {
+    haptic('medium')
+    setReminded((prev) => new Set(prev).add(client.id))
+    setToast(`Напоминание отправлено: ${client.name} ✓`)
+    if (toastTimer.current !== undefined) window.clearTimeout(toastTimer.current)
+    toastTimer.current = window.setTimeout(() => setToast(null), 2400)
   }
 
   /* Загрузка */
@@ -235,6 +282,76 @@ export default function Dashboard() {
         </button>
       </div>
 
+      {/* T2 — «Кого вернуть»: инсайты-крючки (Нейро-Воронка: открытая петля / Зейгарник) */}
+      {staleClients.length > 0 && (
+        <>
+          <div className={styles.insightTitleRow}>
+            <h2 className={styles.sectionTitle}>Кого вернуть</h2>
+            <Badge variant="warning">{staleClients.length}</Badge>
+          </div>
+
+          <div className="stagger">
+            {visibleStale.map((client) => {
+              const sent = reminded.has(client.id)
+              return (
+                <Card key={client.id} className={styles.staleCard}>
+                  <div className={styles.staleInfo}>
+                    <span className={styles.staleName}>{client.name}</span>
+                    <span className={styles.staleMeta}>
+                      не была {client.days} {pluralDays(client.days)} · чек{' '}
+                      {formatMoney(client.total_spent)}
+                    </span>
+                  </div>
+                  <Button
+                    fullWidth
+                    size="md"
+                    variant="ghost"
+                    disabled={sent}
+                    className={sent ? styles.remindSent : undefined}
+                    onClick={() => sendReminder(client)}
+                  >
+                    {sent ? (
+                      <>
+                        <Check size={16} strokeWidth={2.5} /> Отправлено
+                      </>
+                    ) : (
+                      <>
+                        <Send size={15} strokeWidth={2} /> Отправить напоминание
+                      </>
+                    )}
+                  </Button>
+                </Card>
+              )
+            })}
+          </div>
+
+          {staleClients.length > 5 && (
+            <button
+              className={styles.expandBtn}
+              onClick={() => {
+                haptic('light')
+                setExpanded((e) => !e)
+              }}
+            >
+              {expanded ? 'Свернуть список' : `Показать всех (${staleClients.length})`}
+            </button>
+          )}
+
+          {/* Крючок-итог: конкретика с цифрами (по «Нейро-Воронке») */}
+          <div className={styles.staleHook}>
+            <span className={styles.staleHookEmoji}>💡</span>
+            <p className={styles.staleHookText}>
+              GAZE заметила:{' '}
+              <strong className={styles.staleHookNum}>{staleClients.length}</strong>{' '}
+              {pluralClients(staleClients.length)}{' '}
+              {pluralClients(staleClients.length) === 'клиент' ? 'не был' : 'не были'} больше
+              месяца. Верни их — это{' '}
+              <strong className={styles.staleHookNum}>~{formatMoney(staleSum)}</strong>.
+            </p>
+          </div>
+        </>
+      )}
+
       {/* Напоминания (демо-режим: RLS без auth, этап 3) */}
       {isDemo && (
         <>
@@ -287,6 +404,14 @@ export default function Dashboard() {
           </Card>
         )}
       </div>
+
+      {/* Тост «Напоминание отправлено ✓» (демо-режим, крючок → результат) */}
+      {toast && (
+        <div className={styles.toast} role="status">
+          <Check size={16} strokeWidth={2.5} />
+          <span>{toast}</span>
+        </div>
+      )}
     </div>
   )
 }

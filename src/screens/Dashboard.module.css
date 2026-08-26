@@ -145,3 +145,131 @@
   color: var(--app-text-2);
   line-height: 1.5;
 }
+
+/* ============================================================
+   T2 — «Кого вернуть»: инсайты-крючки (светлая премиум-тема)
+   ============================================================ */
+
+/* Заголовок + бейдж-счётчик в одну строку */
+.insightTitleRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+/* Карточка остывающего клиента */
+.staleCard {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 16px;
+}
+
+.staleInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.staleName {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--app-text);
+}
+
+.staleMeta {
+  font-size: 12.5px;
+  color: var(--app-text-2);
+}
+
+/* Кнопка после отправки: приглушённый зелёный успех (disabled) */
+.remindSent:disabled {
+  opacity: 1 !important;
+  background: rgba(139, 168, 136, 0.1);
+  border-color: rgba(139, 168, 136, 0.55);
+  color: #5f7a5c;
+  pointer-events: none;
+}
+
+/* «Показать всех (N)» — pill-кнопка по центру */
+.expandBtn {
+  align-self: center;
+  padding: 8px 16px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--app-border);
+  background: var(--app-surface);
+  color: var(--app-text-2);
+  font-size: 12.5px;
+  font-weight: 600;
+  transition: transform 0.15s ease-out;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.expandBtn:active {
+  transform: scale(0.97);
+}
+
+/* Крючок-итог: мягкий blush-градиент, цифры — моно-шрифт */
+.staleHook {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 14px 16px;
+  border-radius: var(--radius-card);
+  background: linear-gradient(135deg, rgba(224, 199, 192, 0.32), rgba(224, 199, 192, 0.12));
+  border: 1px solid rgba(224, 199, 192, 0.6);
+}
+
+.staleHookEmoji {
+  flex-shrink: 0;
+  font-size: 16px;
+  line-height: 1.4;
+}
+
+.staleHookText {
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--app-text);
+}
+
+.staleHookNum {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  color: var(--app-cta);
+  white-space: nowrap;
+}
+
+/* Тост «Напоминание отправлено ✓» — поверх tab-bar, по центру снизу */
+.toast {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: calc(86px + env(safe-area-inset-bottom));
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: calc(100vw - 48px);
+  background: var(--app-cta);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 12px 18px;
+  border-radius: var(--radius-pill);
+  box-shadow: 0 10px 30px rgba(107, 94, 83, 0.3);
+  z-index: 90;
+  pointer-events: none;
+  animation: toast-in 0.22s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 14px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
