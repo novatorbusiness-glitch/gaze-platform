@@ -1,0 +1,228 @@
+/* ============================================================
+   T10 — Богатый текст урока: заголовки, списки, боксы, CTA
+   Светлая премиум-тема (cream/blush/cta), «без крика»
+   ============================================================ */
+
+.rich {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  color: var(--app-text);
+  font-size: 15px;
+  line-height: 1.68;
+}
+
+/* ---------- Заголовки разделов ---------- */
+
+.h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  color: var(--app-text);
+  padding-top: 8px;
+}
+
+/* Акцентная полоска слева от H2 — «богато» и структурированно */
+.h2::before {
+  content: '';
+  flex: none;
+  width: 4px;
+  height: 1.15em;
+  border-radius: 100px;
+  background: linear-gradient(180deg, var(--app-accent), rgba(224, 199, 192, 0.35));
+}
+
+.h3 {
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--app-text);
+  padding-top: 4px;
+}
+
+.h4 {
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.4;
+  color: var(--app-text-2);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* ---------- Абзацы ---------- */
+
+.p {
+  margin: 0;
+  color: var(--app-text-2);
+}
+
+/* ---------- Списки ---------- */
+
+.ul,
+.ol {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+}
+
+.ul li {
+  position: relative;
+  padding-left: 22px;
+  color: var(--app-text-2);
+  list-style: none;
+}
+
+.ul li::before {
+  content: '';
+  position: absolute;
+  left: 4px;
+  top: 0.62em;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--app-accent);
+}
+
+.ol {
+  counter-reset: rich-ol;
+}
+
+.ol li {
+  position: relative;
+  padding-left: 30px;
+  color: var(--app-text-2);
+  list-style: none;
+  counter-increment: rich-ol;
+}
+
+.ol li::before {
+  content: counter(rich-ol);
+  position: absolute;
+  left: 0;
+  top: 0.18em;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: rgba(224, 199, 192, 0.35);
+  color: var(--app-cta);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+/* ---------- Выделения внутри текста ---------- */
+
+.rich strong {
+  font-weight: 700;
+  color: var(--app-text);
+}
+
+.rich em {
+  color: var(--app-cta);
+  font-style: italic;
+}
+
+.rich code {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  background: rgba(224, 199, 192, 0.18);
+  border-radius: 6px;
+  padding: 2px 6px;
+  color: var(--app-text);
+}
+
+/* ---------- Цитата / скрипт ---------- */
+
+.quote {
+  margin: 0;
+  padding: 14px 16px;
+  border-left: 3px solid var(--app-cta);
+  border-radius: 0 14px 14px 0;
+  background: #fbfaf8;
+  color: var(--app-text);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* ---------- Боксы-подсказки 💡 / ⚠️ ---------- */
+
+.tip,
+.warn {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 14px 16px;
+  border-radius: 14px;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.tip {
+  background: linear-gradient(135deg, rgba(224, 199, 192, 0.28), rgba(224, 199, 192, 0.12));
+  border: 1px solid rgba(224, 199, 192, 0.5);
+  color: var(--app-text);
+}
+
+.warn {
+  background: linear-gradient(135deg, rgba(212, 165, 116, 0.22), rgba(212, 165, 116, 0.08));
+  border: 1px solid rgba(212, 165, 116, 0.45);
+  color: var(--app-text);
+}
+
+.tipIcon,
+.warnIcon {
+  flex: none;
+  font-size: 16px;
+  line-height: 1.4;
+}
+
+.tipText,
+.warnText {
+  color: var(--app-text-2);
+}
+
+.tipText strong,
+.warnText strong {
+  color: var(--app-text);
+}
+
+/* ---------- CTA-строка «→ сделай сейчас» ---------- */
+
+.cta {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: var(--app-cta);
+  color: #ffffff;
+  font-size: 14px;
+  line-height: 1.55;
+  box-shadow: 0 4px 14px rgba(107, 94, 83, 0.18);
+}
+
+.ctaArrow {
+  flex: none;
+  font-weight: 700;
+}
+
+.cta strong {
+  color: #ffffff;
+}
+
+/* ---------- Разделитель ---------- */
+
+.hr {
+  border: none;
+  height: 1px;
+  background: var(--app-border);
+  margin: 2px 0;
+}

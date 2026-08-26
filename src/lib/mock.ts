@@ -66,6 +66,74 @@ export interface Article {
   readers?: number
 }
 
+/* ------------------------------------------------------------------ */
+/* T10 — ОНЛАЙН-АКАДЕМИЯ: курсы → уроки                                */
+/* ------------------------------------------------------------------ */
+
+export type CourseLevel = 'beginner' | 'intermediate' | 'advanced'
+
+/** Карточка-этап схемы (шаг процесса с пояснением) */
+export interface ArticleStep {
+  title: string
+  text?: string
+  /** Эмодзи-иконка этапа */
+  icon?: string
+}
+
+/** Визуальная схема урока: поток этапов (стрелки) + карточки-шаги */
+export interface LessonSchema {
+  /** Заголовок схемы, напр. «Воронка мастера» */
+  title?: string
+  /** Горизонтальный поток: Клиент → Напоминание → Визит → Возврат */
+  flow?: string[]
+  /** Нумерованные карточки-этапы с описанием */
+  steps?: ArticleStep[]
+}
+
+/** Видео-плейсхолдер урока (демо): превью-эмодзи + длительность ролика.
+ *  Структура готова под реальные видео — их зальём позже. */
+export interface LessonVideo {
+  /** Эмодзи-превью вместо кадра (в демо нет картинок) */
+  previewEmoji: string
+  /** Длительность ролика, «04:32» */
+  duration: string
+}
+
+/** Урок внутри курса: видео-плейсхолдер + богатый текст + схема */
+export interface Lesson {
+  id: string
+  title: string
+  /** Время чтения/просмотра, «7 мин» */
+  duration: string
+  /** Богатый markdown: ## / ### / **жирный** / списки / 💡 / ⚠️ / → */
+  content: string
+  /** Видео-плейсхолдер (демо) */
+  video?: LessonVideo
+  /** Схема/этапы процесса */
+  schema?: LessonSchema
+  /** Стартовый прогресс мастера (демо) */
+  is_completed?: boolean
+}
+
+/** Курс академии: витрина с обложкой, уровнем и уроками */
+export interface Course {
+  id: string
+  title: string
+  /** Короткое описание для карточки-витрины */
+  subtitle: string
+  category: ArticleCategory
+  level: CourseLevel
+  /** Эмодзи-обложка курса (демо вместо картинки) */
+  coverEmoji: string
+  /** Акцентный цвет курса (hex) для обложки/акцентов */
+  accent: string
+  lessons: Lesson[]
+  is_premium: boolean
+  /** Dev/demo: сколько мастеров записались/прошли */
+  readers?: number
+  created_at: string
+}
+
 /* ---------------------------------------------------------------- */
 
 export const currentMaster: Master = {

@@ -24,8 +24,15 @@ export default function TabBar() {
   const screen = useAppStore((s) => s.screen)
   const navigate = useAppStore((s) => s.navigate)
 
-  // На экранах профиля клиента и записи процедуры tab-bar скрыт (там свои sticky-действия)
-  if (screen === 'clientProfile' || screen === 'addProcedure') return null
+  // На экранах профиля клиента, форм и академии (курс/урок) tab-bar скрыт (там свои sticky-действия)
+  if (
+    screen === 'clientProfile' ||
+    screen === 'addProcedure' ||
+    screen === 'addClient' ||
+    screen === 'course' ||
+    screen === 'lesson'
+  )
+    return null
 
   return (
     <nav className={styles.tabbar}>

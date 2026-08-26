@@ -1,13 +1,14 @@
 import { useMemo, useRef, useState } from 'react'
+import type { CSSProperties } from 'react'
 import {
   ArrowRight,
   BookOpen,
-  ChevronDown,
-  Clock,
   Flame,
+  GraduationCap,
   Lock,
   Megaphone,
   Package,
+  PlayCircle,
   Search,
   Sparkles,
   Users,
@@ -19,25 +20,32 @@ import Card from '../components/Card'
 import ErrorState from '../components/ErrorState'
 import SkeletonLoader from '../components/SkeletonLoader'
 import { useAsync } from '../hooks/useAsync'
-import { fetchArticles } from '../lib/api'
-import { demoArticles } from '../lib/dev-data'
-import type { Article, ArticleCategory } from '../lib/mock'
+import { fetchCourses } from '../lib/api'
+import { demoCourses } from '../lib/dev-data'
+import type { Course } from '../lib/mock'
 import { haptic } from '../lib/telegram'
-import { cx, formatDate } from '../lib/utils'
+import { cx } from '../lib/utils'
+import { useAppStore } from '../store/useAppStore'
 import { useMasterStore } from '../store/useMasterStore'
 import styles from './Knowledge.module.css'
 
-type CategoryFilter = 'all' | ArticleCategory
+type CategoryFilter = 'all' | Course['category']
 
-const CATEGORY_LABEL: Record<ArticleCategory, string> = {
+const CATEGORY_LABEL: Record<Course['category'], string> = {
   promotion: 'Продвижение',
   packaging: 'Упаковка',
   clients: 'Клиенты',
   technique: 'Техника',
 }
 
+const LEVEL_LABEL: Record<Course['level'], string> = {
+  beginner: 'Начальный',
+  intermediate: 'Средний',
+  advanced: 'Продвинутый',
+}
+
 interface CategoryMeta {
-  id: ArticleCategory
+  id: Course['category']
   label: string
   hint: string
   icon: LucideIcon
@@ -51,92 +59,66 @@ const CATEGORIES: CategoryMeta[] = [
   { id: 'technique', label: 'Техника', hint: 'Брови, ресницы, лайфхаки', icon: Zap },
 ]
 
-const CATEGORY_PREVIEW: Record<ArticleCategory, string> = {
-  promotion: 'Как приводить клиентов и расти без вложений в рекламу.',
-  packaging: 'Упаковка, которая продаёт ещё до первой записи.',
-  clients: 'Скрипты, возврат и сервис, за который возвращаются.',
-  technique: 'Рабочие приёмы и лайфхаки для твоего ремесла.',
-}
-
-/**
- * Заглушки «Скоро» — визуальное наполнение хаба (пока нет полных статей).
- * Отображаются в списке с бейджем «Скоро», без контента.
- */
-const STUBS: Article[] = [
+/** Заглушки «Скоро» — визуальное наполнение витрины (новые курсы в разработке) */
+const STUBS: Course[] = [
   {
     id: 'stub-1',
-    title: 'Скоро: чек-лист «Идеальное рабочее место мастера»',
-    content: '',
+    title: 'Скоро: Идеальное рабочее место',
+    subtitle: 'Чек-лист организации рабочего пространства мастера',
     category: 'technique',
-    cover_url: null,
+    level: 'beginner',
+    coverEmoji: '🪞',
+    accent: '#8b7b5f',
+    lessons: [],
     is_premium: false,
     created_at: '2026-08-22T10:00:00Z',
   },
   {
     id: 'stub-2',
-    title: 'Скоро: шаблоны сторис для продвижения',
-    content: '',
+    title: 'Скоро: Сторис для продвижения',
+    subtitle: 'Шаблоны сторис, которые продают',
     category: 'promotion',
-    cover_url: null,
+    level: 'beginner',
+    coverEmoji: '📱',
+    accent: '#b07a5a',
+    lessons: [],
     is_premium: false,
     created_at: '2026-08-24T10:00:00Z',
   },
 ]
 
-/** Примерное время чтения: ~180 слов в минуту, минимум 1 минута */
-function readMinutes(content: string): number {
-  if (!content) return 0
-  const words = content.trim().split(/\s+/).length
-  return Math.max(1, Math.round(words / 180))
-}
-
-/** Превью статьи: первые ~140 символов текста без markdown-разметки */
-function previewOf(article: Article): string {
-  if (article.content) {
-    const plain = article.content.replace(/[#*`>→-]/g, ' ').replace(/\s+/g, ' ').trim()
-    return plain.length > 140 ? `${plain.slice(0, 140)}…` : plain
-  }
-  return CATEGORY_PREVIEW[article.category]
-}
-
-/** Лёгкая очистка markdown-разметки для отображения (заголовки ##, **жирный**, *курсив*) */
-function formatContent(content: string): string {
-  return content
-    .split('\n')
-    .map((line) =>
-      line
-        .replace(/^#{1,6}\s*/, '')
-        .replace(/\*\*(.*?)\*\*/g, '$1')
-        .replace(/\*(.*?)\*/g, '$1'),
-    )
-    .join('\n')
+/** Общая длительность курса, «34 мин» */
+function totalMinutes(course: Course): number {
+  const mins = course.lessons.reduce((acc, l) => acc + (parseInt(l.duration, 10) || 0), 0)
+  return mins
 }
 
 export default function Knowledge() {
   const [filter, setFilter] = useState<CategoryFilter>('all')
   const [query, setQuery] = useState('')
-  const [expandedId, setExpandedId] = useState<string | null>(null)
   const [attempt, setAttempt] = useState(0)
   const listRef = useRef<HTMLDivElement | null>(null)
 
   const isDemo = useMasterStore((s) => s.isDemo)
+  const openCourse = useAppStore((s) => s.openCourse)
+  const completedLessons = useAppStore((s) => s.completedLessons)
 
-  const state = useAsync(() => fetchArticles(), [attempt])
+  const state = useAsync(() => fetchCourses(), [attempt])
 
-  // В демо-режиме при падении запроса отдаём демо-статьи (RLS-ошибку не показываем)
-  const fetched = isDemo && state.status === 'error' ? demoArticles : state.data ?? []
+  // В демо-режиме при падении запроса отдаём демо-курсы (RLS-ошибку не показываем)
+  const fetched = isDemo && state.status === 'error' ? demoCourses : state.data ?? []
 
-  // Полный набор: статьи + заглушки «Скоро» (без дублей)
-  const articles = useMemo(() => {
-    const ids = new Set(fetched.map((a) => a.id))
+  // Полный набор: курсы + заглушки «Скоро» (без дублей)
+  const courses = useMemo(() => {
+    const ids = new Set(fetched.map((c) => c.id))
     return [...fetched, ...STUBS.filter((s) => !ids.has(s.id))]
   }, [fetched])
 
   const countFor = useMemo(() => {
-    const map: Record<ArticleCategory, number> = { promotion: 0, packaging: 0, clients: 0, technique: 0 }
-    for (const a of articles) if (a.category in map) map[a.category] += 1
+    const map: Record<Course['category'], number> = { promotion: 0, packaging: 0, clients: 0, technique: 0 }
+    for (const c of courses) if (c.category in map) map[c.category] += 1
     return map
-  }, [articles])
+  }, [courses])
 
   /** Популярное — топ по читателям (блок виден только на «Всех» без поиска) */
   const popular = useMemo(
@@ -147,20 +129,18 @@ export default function Knowledge() {
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
-    return articles.filter((a) => {
-      const matchCat = filter === 'all' || a.category === filter
+    return courses.filter((c) => {
+      const matchCat = filter === 'all' || c.category === filter
       const matchQ =
-        !q || a.title.toLowerCase().includes(q) || a.content.toLowerCase().includes(q)
+        !q ||
+        c.title.toLowerCase().includes(q) ||
+        c.subtitle.toLowerCase().includes(q) ||
+        c.lessons.some((l) => l.title.toLowerCase().includes(q))
       return matchCat && matchQ
     })
-  }, [articles, filter, query])
+  }, [courses, filter, query])
 
-  const toggle = (id: string) => {
-    haptic('light')
-    setExpandedId((prev) => (prev === id ? null : id))
-  }
-
-  const pickCategory = (id: ArticleCategory) => {
+  const pickCategory = (id: Course['category']) => {
     haptic('light')
     setFilter((prev) => (prev === id ? 'all' : id))
     setQuery('')
@@ -182,19 +162,19 @@ export default function Knowledge() {
           <SkeletonLoader shape="card" height={92} />
         </div>
         <SkeletonLoader shape="title" width={120} height={20} />
-        <SkeletonLoader shape="card" height={96} />
-        <SkeletonLoader shape="card" height={96} />
+        <SkeletonLoader shape="card" height={132} />
+        <SkeletonLoader shape="card" height={132} />
       </div>
     )
   }
 
-  /* Ошибка. В демо-режиме не показываем (демо-статьи уже отданы) */
+  /* Ошибка. В демо-режиме не показываем (демо-курсы уже отданы) */
   if (state.status === 'error' && !isDemo) {
     return (
       <div className={styles.screen}>
         <div className={styles.hero}>
-          <h1 className={styles.heroTitle}>База знаний</h1>
-          <p className={styles.heroSub}>Расти с GAZE — практика, фишки, шаблоны</p>
+          <h1 className={styles.heroTitle}>Академия</h1>
+          <p className={styles.heroSub}>Расти с GAZE — курсы, гиды, практика</p>
         </div>
         <ErrorState message={state.error ?? ''} onRetry={() => setAttempt((a) => a + 1)} />
       </div>
@@ -202,16 +182,16 @@ export default function Knowledge() {
   }
 
   /* Пустое состояние */
-  if (articles.length === 0) {
+  if (courses.length === 0) {
     return (
       <div className={styles.screen}>
         <div className={styles.hero}>
-          <h1 className={styles.heroTitle}>База знаний</h1>
-          <p className={styles.heroSub}>Расти с GAZE — практика, фишки, шаблоны</p>
+          <h1 className={styles.heroTitle}>Академия</h1>
+          <p className={styles.heroSub}>Расти с GAZE — курсы, гиды, практика</p>
         </div>
         <Card className={styles.emptyCard}>
           <BookOpen size={28} strokeWidth={1.5} className={styles.emptyIcon} />
-          <p className={styles.emptyTitle}>Пока нет статей.</p>
+          <p className={styles.emptyTitle}>Пока нет курсов.</p>
           <p className={styles.emptyText}>Материалы появятся здесь — следи за обновлениями.</p>
         </Card>
       </div>
@@ -229,21 +209,18 @@ export default function Knowledge() {
           </span>
           {isDemo && <Badge variant="demo">DEMO</Badge>}
         </div>
-        <h1 className={styles.heroTitle}>База знаний</h1>
-        <p className={styles.heroSub}>Расти с GAZE — практика, фишки, шаблоны</p>
+        <h1 className={styles.heroTitle}>Академия</h1>
+        <p className={styles.heroSub}>Курсы и гиды для роста мастера — понятно, богато, по шагам</p>
 
         <div className={styles.searchWrap}>
           <Search size={17} strokeWidth={2} className={styles.searchIcon} />
           <input
             className={styles.searchInput}
             type="text"
-            placeholder="Найти статью…"
+            placeholder="Найти курс или урок…"
             value={query}
-            onChange={(e) => {
-              setQuery(e.target.value)
-              if (expandedId) setExpandedId(null)
-            }}
-            aria-label="Поиск по статьям"
+            onChange={(e) => setQuery(e.target.value)}
+            aria-label="Поиск по курсам"
           />
           {query && (
             <button
@@ -264,7 +241,7 @@ export default function Knowledge() {
       <section aria-label="Категории" className={styles.section}>
         <div className={styles.sectionHead}>
           <h2 className={styles.sectionTitle}>Категории</h2>
-          <span className={styles.sectionMeta}>{articles.length} материалов</span>
+          <span className={styles.sectionMeta}>{courses.length} курсов</span>
         </div>
         <div className={cx('stagger', styles.tiles)}>
           {CATEGORIES.map((cat) => {
@@ -292,7 +269,7 @@ export default function Knowledge() {
         </div>
       </section>
 
-      {/* Свежие / Популярное */}
+      {/* Популярное */}
       {showPopular && (
         <section aria-label="Популярное" className={styles.section}>
           <div className={styles.sectionHead}>
@@ -300,30 +277,50 @@ export default function Knowledge() {
               <Flame size={16} strokeWidth={2.2} className={styles.sectionTitleIcon} />
               Популярное
             </h2>
-            <span className={styles.sectionMeta}>читают чаще всего</span>
+            <span className={styles.sectionMeta}>проходят чаще всего</span>
           </div>
           <div className={cx('stagger', styles.popularList)}>
-            {popular.map((article) => {
-              const Icon = article.is_premium ? Lock : ArrowRight
+            {popular.map((course) => {
+              const done = course.lessons.filter((l) => completedLessons[l.id]).length
+              const started = done > 0
               return (
                 <button
-                  key={article.id}
-                  className={cx(styles.popularCard, styles[`pop${article.category[0].toUpperCase()}${article.category.slice(1)}`])}
-                  onClick={() => toggle(article.id)}
+                  key={course.id}
+                  className={styles.popularCard}
+                  style={{ '--pop-accent': course.accent } as CSSProperties}
+                  onClick={() => {
+                    haptic('light')
+                    openCourse(course.id)
+                  }}
                 >
                   <span className={styles.popularTop}>
-                    <Badge variant="accent">{CATEGORY_LABEL[article.category]}</Badge>
-                    {article.readers ? (
-                      <span className={styles.popularReaders}>
-                        <Flame size={11} strokeWidth={2.4} />
-                        {article.readers}
-                      </span>
-                    ) : null}
+                    <span className={styles.popularEmoji}>{course.coverEmoji}</span>
+                    <span className={styles.popularTags}>
+                      <Badge variant="accent">{CATEGORY_LABEL[course.category]}</Badge>
+                      {course.is_premium && (
+                        <Badge variant="cta">
+                          <Lock size={10} strokeWidth={2.5} />
+                          PREMIUM
+                        </Badge>
+                      )}
+                    </span>
                   </span>
-                  <span className={styles.popularTitle}>{article.title}</span>
+                  <span className={styles.popularTitle}>{course.title}</span>
                   <span className={styles.popularMeta}>
-                    <span>{readMinutes(article.content) ? `${readMinutes(article.content)} мин чтения` : 'Скоро'}</span>
-                    <Icon size={16} strokeWidth={2} className={styles.popularArrow} />
+                    <span className={styles.popularMetaLeft}>
+                      {started ? (
+                        <>
+                          <Flame size={12} strokeWidth={2.4} className={styles.popularReaders} />
+                          {done}/{course.lessons.length} уроков
+                        </>
+                      ) : (
+                        <>
+                          <PlayCircle size={12} strokeWidth={2.2} />
+                          {course.lessons.length} уроков · {totalMinutes(course)} мин
+                        </>
+                      )}
+                    </span>
+                    <ArrowRight size={16} strokeWidth={2} className={styles.popularArrow} />
                   </span>
                 </button>
               )
@@ -332,48 +329,74 @@ export default function Knowledge() {
         </section>
       )}
 
-      {/* Список статей */}
-      <section ref={listRef} aria-label="Статьи" className={styles.section}>
+      {/* Список курсов */}
+      <section ref={listRef} aria-label="Курсы" className={styles.section}>
         <div className={styles.sectionHead}>
           <h2 className={styles.sectionTitle}>
-            {filter === 'all' ? 'Все статьи' : CATEGORY_LABEL[filter]}
+            {filter === 'all' ? 'Все курсы' : CATEGORY_LABEL[filter]}
           </h2>
           <span className={styles.sectionMeta}>{filtered.length}</span>
         </div>
 
         {filtered.length > 0 ? (
           <div className={cx('stagger', styles.list)}>
-            {filtered.map((article) => {
-              const expanded = expandedId === article.id
-              const mins = readMinutes(article.content)
+            {filtered.map((course) => {
+              const done = course.lessons.filter((l) => completedLessons[l.id]).length
+              const pct = course.lessons.length > 0 ? Math.round((done / course.lessons.length) * 100) : 0
+              const started = done > 0
               return (
-                <Card key={article.id} className={styles.article} onClick={() => toggle(article.id)}>
-                  <div className={styles.articleTop}>
-                    <Badge variant="accent">{CATEGORY_LABEL[article.category]}</Badge>
-                    {article.is_premium && (
-                      <Badge variant="cta">
-                        <Lock size={10} strokeWidth={2.5} />
-                        PREMIUM
-                      </Badge>
-                    )}
-                  </div>
-                  <h3 className={styles.articleTitle}>{article.title}</h3>
-                  <p className={styles.articlePreview}>{previewOf(article)}</p>
-                  {expanded && article.content && (
-                    <div className={styles.articleBody}>
-                      <p className={styles.articleContent}>{formatContent(article.content)}</p>
+                <Card
+                  key={course.id}
+                  className={styles.course}
+                  onClick={() => {
+                    haptic('light')
+                    openCourse(course.id)
+                  }}
+                >
+                  <div className={styles.courseCover} style={{ '--course-accent': course.accent } as CSSProperties}>
+                    <span className={styles.courseEmoji}>{course.coverEmoji}</span>
+                    <div className={styles.courseTags}>
+                      <Badge variant="accent">{CATEGORY_LABEL[course.category]}</Badge>
+                      {course.is_premium && (
+                        <Badge variant="cta">
+                          <Lock size={10} strokeWidth={2.5} />
+                          PREMIUM
+                        </Badge>
+                      )}
                     </div>
-                  )}
-                  <div className={styles.articleBottom}>
-                    <span className={styles.articleMeta}>
-                      <Clock size={12} strokeWidth={2} />
-                      {mins ? `${mins} мин` : 'Скоро'}
-                      <span className={styles.articleDot}>·</span>
-                      {formatDate(article.created_at.slice(0, 10))}
-                    </span>
-                    <span className={cx(styles.articleToggle, expanded && styles.articleToggleOpen)}>
-                      {article.content ? (expanded ? 'Свернуть' : 'Читать') : 'Скоро'}
-                      <ChevronDown size={14} strokeWidth={2.2} className={cx(styles.chevron, expanded && styles.chevronOpen)} />
+                  </div>
+                  <div className={styles.courseBody}>
+                    <h3 className={styles.courseTitle}>{course.title}</h3>
+                    <p className={styles.courseSub}>{course.subtitle}</p>
+                    <div className={styles.courseMeta}>
+                      <span className={styles.courseMetaItem}>
+                        <GraduationCap size={13} strokeWidth={2} />
+                        {LEVEL_LABEL[course.level]}
+                      </span>
+                      <span className={styles.courseMetaItem}>
+                        <PlayCircle size={13} strokeWidth={2} />
+                        {course.lessons.length > 0 ? `${course.lessons.length} уроков · ${totalMinutes(course)} мин` : 'Скоро'}
+                      </span>
+                      {course.readers ? (
+                        <span className={styles.courseMetaItem}>
+                          <Flame size={13} strokeWidth={2} />
+                          {course.readers}
+                        </span>
+                      ) : null}
+                    </div>
+                    {started && (
+                      <div className={styles.courseProgress}>
+                        <span className={styles.courseProgressText}>
+                          {done} из {course.lessons.length} уроков · {pct}%
+                        </span>
+                        <span className={styles.courseProgressTrack}>
+                          <span className={styles.courseProgressFill} style={{ width: `${pct}%` }} />
+                        </span>
+                      </div>
+                    )}
+                    <span className={styles.courseCta}>
+                      {started ? 'Продолжить' : course.lessons.length > 0 ? 'Открыть курс' : 'Скоро'}
+                      <ArrowRight size={15} strokeWidth={2.2} />
                     </span>
                   </div>
                 </Card>
@@ -384,7 +407,7 @@ export default function Knowledge() {
           <Card className={styles.emptyCard}>
             <Search size={26} strokeWidth={1.5} className={styles.emptyIcon} />
             <p className={styles.emptyText}>
-              {query ? 'По запросу ничего не нашлось. Попробуй другое слово.' : 'В этой категории пока нет статей.'}
+              {query ? 'По запросу ничего не нашлось. Попробуй другое слово.' : 'В этой категории пока нет курсов.'}
             </p>
           </Card>
         )}

@@ -1,0 +1,269 @@
+/* ============================================================
+   T10 — Страница курса: обложка, прогресс, список уроков
+   ============================================================ */
+
+.screen {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding-bottom: 8px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 0;
+}
+
+.backBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  color: var(--app-text);
+  box-shadow: var(--app-shadow);
+  transition: transform 0.15s ease-out;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.backBtn:active {
+  transform: scale(0.92);
+}
+
+.headerTitle {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 18px;
+  color: var(--app-text);
+}
+
+/* ---------- Обложка ---------- */
+
+.cover {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 18px;
+  border-radius: 22px;
+  border: 1px solid color-mix(in srgb, var(--course-accent, #8a6d9a) 30%, transparent);
+  background:
+    radial-gradient(130% 180% at 90% -10%, color-mix(in srgb, var(--course-accent, #8a6d9a) 22%, transparent) 0%, rgba(255, 255, 255, 0) 55%),
+    linear-gradient(165deg, #ffffff 0%, color-mix(in srgb, var(--course-accent, #8a6d9a) 12%, #f9f8f6) 100%);
+  box-shadow: var(--app-shadow);
+}
+
+.coverGlow {
+  position: absolute;
+  top: -70px;
+  right: -50px;
+  width: 190px;
+  height: 190px;
+  border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--course-accent, #8a6d9a) 30%, transparent) 0%, rgba(255, 255, 255, 0) 70%);
+  pointer-events: none;
+}
+
+.coverTop {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.coverBadges {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.coverEmoji {
+  position: relative;
+  z-index: 1;
+  font-size: 56px;
+  line-height: 1;
+  margin-top: 6px;
+}
+
+.coverTitle {
+  position: relative;
+  z-index: 1;
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.015em;
+  color: var(--app-text);
+  margin: 0;
+}
+
+.coverSub {
+  position: relative;
+  z-index: 1;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--app-text-2);
+}
+
+.coverMeta {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 2px;
+}
+
+.coverMetaItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--app-text-2);
+}
+
+/* ---------- Прогресс ---------- */
+
+.progress {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  border-radius: 16px;
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  box-shadow: var(--app-shadow);
+}
+
+.progressHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.progressLabel {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--app-text);
+}
+
+.progressPct {
+  font-size: 12px;
+  color: var(--app-text-3);
+  font-family: var(--font-mono);
+}
+
+.progressTrack {
+  height: 8px;
+  border-radius: 100px;
+  background: rgba(224, 199, 192, 0.35);
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  border-radius: 100px;
+  background: linear-gradient(90deg, var(--app-accent), var(--app-cta));
+  transition: width 0.4s ease-out;
+}
+
+/* ---------- Список уроков ---------- */
+
+.lessons {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.lessonsTitle {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--app-text);
+}
+
+.lessonList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.lesson {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 14px;
+  border-radius: var(--radius-card);
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  box-shadow: var(--app-shadow);
+  text-align: left;
+  transition: transform 0.15s ease-out, border-color 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.lesson:active {
+  transform: scale(0.98);
+}
+
+.lessonDone {
+  border-color: rgba(139, 168, 136, 0.45);
+  background: linear-gradient(135deg, #ffffff 0%, rgba(139, 168, 136, 0.08) 100%);
+}
+
+.lessonNum {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
+  background: rgba(224, 199, 192, 0.4);
+  color: var(--app-cta);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.lessonDoneIcon {
+  color: var(--app-success);
+}
+
+.lessonBody {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  flex: 1;
+}
+
+.lessonTitle {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--app-text);
+}
+
+.lessonDone .lessonTitle {
+  color: var(--app-text-2);
+}
+
+.lessonMeta {
+  font-size: 12px;
+  color: var(--app-text-3);
+}
+
+.lessonArrow {
+  flex: none;
+  color: var(--app-cta);
+  opacity: 0.7;
+}

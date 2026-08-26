@@ -6,11 +6,12 @@
  * Без Supabase Auth (этап 3) анонимные вставки/чтения под RLS будут падать —
  * ошибки переводятся в человекочитаемый вид (см. friendlyError).
  */
-import type { Article, Client, Master, Procedure } from './mock'
+import type { Article, Client, Course, Master, Procedure } from './mock'
 import {
   demoArticles,
   demoBonuses,
   demoClients,
+  demoCourses,
   demoMaster,
   demoProcedures,
 } from './dev-data'
@@ -20,6 +21,7 @@ import {
   type ArticleRow,
   type BonusRow,
   type ClientRow,
+  type CourseRow,
   type MasterRow,
   type ProcedureRow,
 } from './supabase'
@@ -155,6 +157,26 @@ function mapBonus(row: BonusRow): Bonus {
     description: row.description ?? '',
     is_active: row.is_active ?? true,
     expires_at: row.expires_at ?? null,
+  }
+}
+
+/**
+ * T10 — Курс академии из строки БД. Уроки пока приходят только из демо-данных
+ * (таблицы lessons нет) — из БД курс отдаётся с пустым списком уроков.
+ */
+function mapCourse(row: CourseRow): Course {
+  return {
+    id: row.id,
+    title: row.title ?? '',
+    subtitle: row.subtitle ?? '',
+    category: (row.category as Course['category']) ?? 'promotion',
+    level: (row.level as Course['level']) ?? 'beginner',
+    coverEmoji: row.cover_emoji ?? '🎓',
+    accent: row.accent ?? '#8a6d9a',
+    lessons: [],
+    is_premium: row.is_premium ?? false,
+    readers: row.readers ?? undefined,
+    created_at: row.created_at ?? '',
   }
 }
 
@@ -460,6 +482,31 @@ export async function fetchArticles(): Promise<Article[]> {
     if (isAccessError(err)) {
       demoMode = true
       return [...demoArticles]
+    }
+    throw err
+  }
+}
+
+/**
+ * T10 — Курсы академии. Таблицы courses в БД пока нет (этап 3) — любой сбой
+ * чтения/RLS отдаёт демо-курсы с уроками, как и остальные данные.
+ */
+export async function fetchCourses(): Promise<Course[]> {
+  try {
+    const { data, error } = await supabase
+      .from('courses')
+      .select('*')
+      .order('created_at', { ascending: false })
+
+    if (error) throw error
+
+    const courses = (data ?? []).map(mapCourse)
+    if (demoMode && courses.length === 0) return [...demoCourses]
+    return courses
+  } catch (err) {
+    if (isAccessError(err)) {
+      demoMode = true
+      return [...demoCourses]
     }
     throw err
   }

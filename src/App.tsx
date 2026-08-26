@@ -10,8 +10,10 @@ import Bonuses from './screens/Bonuses'
 import Chat from './screens/Chat'
 import Clients from './screens/Clients'
 import ClientProfile from './screens/ClientProfile'
+import Course from './screens/Course'
 import Dashboard from './screens/Dashboard'
 import Knowledge from './screens/Knowledge'
+import Lesson from './screens/Lesson'
 import Profile from './screens/Profile'
 import './App.css'
 
@@ -28,7 +30,9 @@ export default function App() {
   const isClientProfile = screen === 'clientProfile'
   const isAddProcedure = screen === 'addProcedure'
   const isAddClient = screen === 'addClient'
-  const hideTabbar = isClientProfile || isAddProcedure || isAddClient
+  const isCourse = screen === 'course'
+  const isLesson = screen === 'lesson'
+  const hideTabbar = isClientProfile || isAddProcedure || isAddClient || isCourse || isLesson
 
   return (
     <div className={cx('app', hideTabbar && 'app--no-tabbar')}>
@@ -40,6 +44,8 @@ export default function App() {
         {screen === 'addClient' && <AddClient />}
         {screen === 'analytics' && <Analytics />}
         {screen === 'knowledge' && <Knowledge />}
+        {screen === 'course' && <Course />}
+        {screen === 'lesson' && <Lesson />}
         {screen === 'bonuses' && <Bonuses />}
         {screen === 'chat' && <Chat />}
         {screen === 'profile' && <Profile />}

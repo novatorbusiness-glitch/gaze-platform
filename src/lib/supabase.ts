@@ -93,3 +93,17 @@ export interface BonusRow {
   is_active: boolean | null
   expires_at: string | null
 }
+
+/** T10 — Курс академии (структура под реальные таблицы, пока в демо не используется) */
+export interface CourseRow {
+  id: string
+  title: string | null
+  subtitle: string | null
+  category: string | null
+  level: string | null
+  cover_emoji: string | null
+  accent: string | null
+  is_premium: boolean | null
+  readers: number | null
+  created_at: string | null
+}
