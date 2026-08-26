@@ -22,14 +22,13 @@ import SkeletonLoader from '../components/SkeletonLoader'
 import { useAsync } from '../hooks/useAsync'
 import { useCountUp } from '../hooks/useCountUp'
 import { fetchClientProfile, type Bonus } from '../lib/api'
-import { copyText, haptic, hapticSuccess } from '../lib/telegram'
+import { copyText, haptic } from '../lib/telegram'
 import {
   buildTgChatUrl,
   isReminderSent,
   markReminderSent,
   openTelegramLink,
   parseClientLink,
-  sendViaBot,
 } from '../lib/reminders'
 import { cx, daysSince, formatDate, formatMoney } from '../lib/utils'
 import { useAppStore } from '../store/useAppStore'
@@ -180,10 +179,9 @@ export default function ClientProfile({ clientId }: ClientProfileProps) {
     toastTimer.current = window.setTimeout(() => setToast(null), 2400)
   }
 
-  /* T14 — «Отправить»: РЕАЛЬНАЯ доставка, а не тост «Отправлено ✓» в никуда.
-   * 1) Есть Telegram-ссылка → пробуем бота (/api/send-reminder, если настроен
-   *    VITE_REMINDER_API); если бот недоступен или клиент не в боте → deep-link
-   *    t.me/<username>?text=… (Telegram открывает чат и подставляет текст).
+  /* T14 — «Отправить»: РУЧНАЯ отправка (клиенты не в боте — sendViaBot НЕ вызываем).
+   * 1) Есть Telegram-ссылка → СРАЗУ открываем deep-link t.me/<username>?text=…
+   *    (Telegram открывает чат и подставляет текст в поле ввода) + «Скопировать текст».
    * 2) Нет ссылки, но есть телефон → копируем номер.
    * 3) Ничего нет → подсказка добавить ссылку. */
   const sendMessage = async () => {
@@ -194,16 +192,10 @@ export default function ClientProfile({ clientId }: ClientProfileProps) {
     const templateId = activeTemplate ?? 'custom'
 
     if (delivery) {
-      const botRes = await sendViaBot(delivery.username, text)
+      // сразу открываем чат с готовым текстом — мастеру остаётся нажать «Отправить»
+      openTelegramLink(buildTgChatUrl(delivery.username, text))
       markReminderSent(client.id, templateId)
       setSent(true)
-      if (botRes.delivered) {
-        hapticSuccess()
-        showToast(`Отправлено через бота → ${delivery.display} ✓`)
-        return
-      }
-      // бот недоступен / клиент не в боте → deep-link с готовым текстом
-      openTelegramLink(buildTgChatUrl(delivery.username, text))
       showToast(`Чат с ${delivery.display} открыт — текст уже в поле ввода`)
       return
     }

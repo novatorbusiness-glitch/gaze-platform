@@ -198,19 +198,21 @@ export default function Dashboard() {
     toastTimer.current = window.setTimeout(() => setToast(null), 2400)
   }
 
-  // T2 — «Отправить напоминание»: T14 — РЕАЛЬНАЯ доставка, а не тост в никуда.
-  // Есть Telegram-ссылка → текст напоминания сразу в буфер, в карточке появляются
-  // кнопки «Написать клиенту в Telegram» (deep-link t.me/<username>?text=… — Telegram
-  // сам подставит текст) и «Скопировать текст». Нет ссылки → «Скопировать телефон».
+  // T2 — «Отправить напоминание»: T14 — РУЧНАЯ отправка (клиенты не в боте,
+  // sendViaBot не вызываем). Есть Telegram-ссылка → СРАЗУ открываем deep-link
+  // t.me/<username>?text=… (Telegram сам подставит текст), в карточке появляются
+  // кнопки «Написать клиенту в Telegram» и «Скопировать текст».
+  // Нет ссылки → «Скопировать телефон».
   const sendReminder = async (client: Client & { days?: number }) => {
     haptic('medium')
     const target = parseClientLink(client.link)
     const reminderText = buildReminderText(client.name)
     if (target) {
-      await copyText(reminderText)
+      // сразу открываем чат с готовым текстом — мастеру остаётся нажать «Отправить»
+      openTelegramLink(buildTgChatUrl(target.username, reminderText))
       setReminded((prev) => new Set(prev).add(client.id))
       markReminderSent(client.id, 'return')
-      showToast(`Текст готов — нажмите «Написать в Telegram» (${target.display})`)
+      showToast(`Чат с ${client.name} открыт — текст уже в поле ввода`)
     } else if (client.phone) {
       await copyText(client.phone)
       setReminded((prev) => new Set(prev).add(client.id))
