@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ArrowLeft, Check, Heart, PenLine } from 'lucide-react'
+import { ArrowLeft, Check, Crown, Heart, PenLine } from 'lucide-react'
 import Avatar from '../components/Avatar'
 import Badge from '../components/Badge'
 import Button from '../components/Button'
@@ -29,6 +29,9 @@ import styles from './CommunityProfile.module.css'
 export default function CommunityProfile() {
   const masterId = useAppStore((s) => s.communityMasterId) ?? 'me'
   const goBack = useAppStore((s) => s.goBack)
+  // G2 — премиум-бейдж у своего профиля-блога
+  const plan = useAppStore((s) => s.plan)
+  const isPremium = plan === 'premium'
   const displayName = useMasterStore((s) => s.master?.name ?? 'Мой блог')
 
   const isMe = masterId === 'me'
@@ -94,7 +97,15 @@ export default function CommunityProfile() {
         <div className={styles.profileHead}>
           <Avatar name={name} size="xl" />
           <div className={styles.profileInfo}>
-            <h2 className={styles.profileName}>{name}</h2>
+            <h2 className={styles.profileName}>
+              {name}
+              {isMe && isPremium && (
+                <Badge variant="cta" className={styles.profilePremiumBadge}>
+                  <Crown size={10} strokeWidth={2.5} />
+                  PREMIUM
+                </Badge>
+              )}
+            </h2>
             {niche && <Badge variant="accent">{niche}</Badge>}
           </div>
         </div>

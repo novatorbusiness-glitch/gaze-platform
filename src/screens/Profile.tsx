@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { Bell, Building2, Camera, ChevronRight, Copy, ExternalLink, Gift, Info, LogOut, MessageCircle, Tag, User, X } from 'lucide-react'
+import { Bell, Building2, Camera, ChevronRight, Copy, Crown, ExternalLink, Gift, Info, LogOut, MessageCircle, Sparkles, Tag, User, X } from 'lucide-react'
 import Avatar from '../components/Avatar'
 import Badge from '../components/Badge'
 import Button from '../components/Button'
@@ -69,6 +69,10 @@ function writeNotifications(next: NotificationSettings): void {
 /* ------------------------------------------------------------------ */
 
 function SubscriptionCard({ onManage }: { onManage: () => void }) {
+  const plan = useAppStore((s) => s.plan)
+  const navigate = useAppStore((s) => s.navigate)
+  const isPremium = plan === 'premium'
+  const price = isPremium ? 1500 : demoSubscription.price
   const progress = Math.round((demoSubscription.daysLeft / demoSubscription.daysTotal) * 100)
 
   return (
@@ -84,10 +88,12 @@ function SubscriptionCard({ onManage }: { onManage: () => void }) {
       <div className={styles.subBody}>
         <div>
           <span className={styles.subTariff}>
-            <span className={styles.subPrice}>{demoSubscription.price}</span> ₽/мес
+            <span className={styles.subPrice}>{price}</span> ₽/мес
           </span>
         </div>
-        <span className={styles.subLabel}>Тариф GAZE Platform</span>
+        <span className={styles.subLabel}>
+          Тариф GAZE Platform · {isPremium ? 'Премиум' : 'Базовый'}
+        </span>
       </div>
 
       {/* Прогресс-бар дней (демо: осталось 23 из 30) */}
@@ -99,6 +105,19 @@ function SubscriptionCard({ onManage }: { onManage: () => void }) {
           осталось {demoSubscription.daysLeft} из {demoSubscription.daysTotal} дней
         </span>
       </div>
+
+      {/* G2 — Премиум-функции: вход в AI-маркетолог / переход на Премиум */}
+      {isPremium ? (
+        <Button variant="ghost" fullWidth size="md" onClick={() => navigate('aiMarketer')}>
+          <Sparkles size={15} strokeWidth={2} />
+          AI-маркетолог ✨
+        </Button>
+      ) : (
+        <Button fullWidth size="md" onClick={() => navigate('premium')}>
+          <Crown size={15} strokeWidth={2} />
+          Перейти на Премиум — 1 500 ₽/мес
+        </Button>
+      )}
 
       <Button variant="ghost" fullWidth size="md" onClick={onManage}>
         Управлять подпиской
@@ -269,6 +288,9 @@ export default function Profile() {
   const isDemo = useMasterStore((s) => s.isDemo)
   const master = useMasterStore((s) => s.master)
   const navigate = useAppStore((s) => s.navigate)
+  // G2 — тариф: премиум-бейдж, цена подписки, вход в AI-маркетолог
+  const plan = useAppStore((s) => s.plan)
+  const isPremium = plan === 'premium'
 
   const fallbackName = getDisplayName(master)
   const [savedName, setSavedName] = useState(readProfileName)
@@ -405,6 +427,12 @@ export default function Profile() {
             <Badge key={s}>{s}</Badge>
           ))}
           <Badge variant="accent">GAZE. ARCH выпускница</Badge>
+          {isPremium && (
+            <Badge variant="cta">
+              <Crown size={11} strokeWidth={2.5} />
+              PREMIUM
+            </Badge>
+          )}
         </div>
       </div>
 
@@ -440,6 +468,11 @@ export default function Profile() {
           icon={<Gift size={16} strokeWidth={1.75} />}
           label="Бонусы и скидки"
           onClick={() => navigate('bonuses')}
+        />
+        <SettingsRow
+          icon={<Sparkles size={16} strokeWidth={1.75} />}
+          label="AI-маркетолог ✨"
+          onClick={() => navigate('aiMarketer')}
         />
         <SettingsRow
           icon={<MessageCircle size={16} strokeWidth={1.75} />}
@@ -622,11 +655,13 @@ export default function Profile() {
         <Sheet title="Подписка" onClose={() => setSubOpen(false)}>
           <div className={styles.subSheetCard}>
             <div className={styles.subSheetHead}>
-              <span className={styles.subSheetPlan}>Тариф GAZE Platform</span>
+              <span className={styles.subSheetPlan}>
+                Тариф GAZE Platform · {isPremium ? 'Премиум' : 'Базовый'}
+              </span>
               <Badge variant="success">Активна</Badge>
             </div>
             <div className={styles.subSheetPrice}>
-              {demoSubscription.price}
+              {isPremium ? 1500 : demoSubscription.price}
               <span className={styles.subSheetPer}> ₽/мес</span>
             </div>
             <div className={styles.subSheetRows}>
@@ -646,7 +681,18 @@ export default function Profile() {
               </div>
             </div>
           </div>
-          <Button size="lg" fullWidth onClick={extendSub}>
+          {isPremium ? (
+            <Button size="lg" fullWidth onClick={() => navigate('aiMarketer')}>
+              <Sparkles size={16} strokeWidth={2} />
+              Открыть AI-маркетолог ✨
+            </Button>
+          ) : (
+            <Button size="lg" fullWidth onClick={() => navigate('premium')}>
+              <Crown size={16} strokeWidth={2} />
+              Перейти на Премиум — 1 500 ₽/мес
+            </Button>
+          )}
+          <Button variant="ghost" size="md" fullWidth onClick={extendSub}>
             Продлить подписку
           </Button>
           <Button variant="ghost" size="md" fullWidth onClick={cancelSub}>

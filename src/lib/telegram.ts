@@ -1,29 +1,118 @@
 /**
- * Telegram Web App SDK хелперы (ТЗ, Часть 2 — lib/telegram.ts, Часть 5)
+ * GAZE Platform — Telegram Web App SDK хелперы (ТЗ, Часть 2 — lib/telegram.ts, Часть 5)
+ *
+ * G4 — ВАЖНО про initData: @twa-dev/sdk v8 парсит initData ТОЛЬКО из URL-hash
+ * (`#tgWebAppData=...`, старый формат Telegram Games). Современный Telegram
+ * открывает Mini App с initData в QUERY-строке (`?tgWebAppData=...`), которую
+ * SDK не видит: initDataUnsafe пустой, getTelegramUserId() возвращал null, и
+ * мастер уходил в демо-режим ДАЖЕ при открытии через WebApp-кнопку из бота
+ * (это и была причина бага персонального входа Ани, telegram_id 451301535).
+ *
+ * Все геттеры ниже читают initData из ВСЕХ источников — query → hash → SDK —
+ * и достают user напрямую, так что вход работает при любом формате Telegram.
  */
 import WebApp from '@twa-dev/sdk'
 
+export interface TelegramUser {
+  id: number
+  first_name?: string
+  last_name?: string
+  username?: string
+}
+
 export interface TelegramInitResult {
-  user: {
-    id: number
-    first_name?: string
-    last_name?: string
-    username?: string
-  } | null
+  user: TelegramUser | null
   colorScheme: 'light'
   platform: string
   /** true, если окружение Telegram WebView доступно и SDK отвечает */
   isTelegram: boolean
 }
 
-/** Безопасное чтение user из initDataUnsafe (вне Telegram — null) */
-function getWebAppUser(): TelegramInitResult['user'] {
+/* ------------------------------------------------------------------ */
+/* initData: чтение из всех источников (G4)                            */
+/* ------------------------------------------------------------------ */
+
+/** Сырое initData из URL query (?tgWebAppData=...) — современный формат Telegram Mini Apps */
+function initDataFromQuery(): string {
   try {
-    return WebApp.initDataUnsafe?.user ?? null
+    const v = new URLSearchParams(window.location.search).get('tgWebAppData')
+    return v && v.length ? v : ''
+  } catch {
+    return ''
+  }
+}
+
+/** Сырое initData из URL hash (#tgWebAppData=...) — старый формат Telegram Games */
+function initDataFromHash(): string {
+  try {
+    const hash = window.location.hash.replace(/^#/, '')
+    if (!hash) return ''
+    const v = new URLSearchParams(hash).get('tgWebAppData')
+    return v && v.length ? v : ''
+  } catch {
+    return ''
+  }
+}
+
+/** Сырое initData из самого SDK (если он его распарсил из hash) */
+function initDataFromSdk(): string {
+  try {
+    const d = WebApp.initData
+    return d && d.length ? d : ''
+  } catch {
+    return ''
+  }
+}
+
+/**
+ * Сырое initData из всех источников (query → hash → SDK).
+ * Пустая строка — вне Telegram.
+ */
+export function getTelegramInitData(): string {
+  return initDataFromQuery() || initDataFromHash() || initDataFromSdk()
+}
+
+/** true, если Telegram передал initData (приложение открыто из Telegram) */
+export function hasTelegramInitData(): boolean {
+  return getTelegramInitData().length > 0
+}
+
+/** true, когда приложение открыто из Telegram (initData передан). */
+export function isTelegramContext(): boolean {
+  return hasTelegramInitData()
+}
+
+/** Парсинг user из сырого initData (поле user = JSON внутри query-строки) */
+export function parseInitDataUser(raw: string): TelegramUser | null {
+  if (!raw) return null
+  try {
+    const userJson = new URLSearchParams(raw).get('user')
+    if (!userJson) return null
+    const u = JSON.parse(userJson) as TelegramUser
+    return u && typeof u.id === 'number' ? u : null
   } catch {
     return null
   }
 }
+
+/**
+ * Безопасное чтение user из initData.
+ * Сначала SDK (hash-формат), затем прямой парсинг query/hash (G4 — чинит
+ * современный формат Telegram, который SDK не видит).
+ */
+function getWebAppUser(): TelegramUser | null {
+  try {
+    const sdkUser = WebApp.initDataUnsafe?.user
+    if (sdkUser && typeof sdkUser.id === 'number') return sdkUser as TelegramUser
+  } catch {
+    /* вне Telegram SDK может кидать — молча */
+  }
+  return parseInitDataUser(getTelegramInitData())
+}
+
+/* ------------------------------------------------------------------ */
+/* Инициализация                                                       */
+/* ------------------------------------------------------------------ */
 
 /**
  * Инициализация Telegram Web App.
@@ -80,26 +169,46 @@ export function initTelegram(): TelegramInitResult {
 
 export type HapticStyle = 'light' | 'medium' | 'heavy'
 
-/** telegram_id текущего пользователя (вне Telegram — null) */
+/**
+ * telegram_id текущего пользователя (вне Telegram — null).
+ * G4: раньше читался только WebApp.initDataUnsafe.user.id (hash-формат SDK) —
+ * в современном формате Telegram (query-строка) возвращал null и мастер
+ * уходил в демо. Теперь + прямой парсинг query/hash initData.
+ */
 export function getTelegramUserId(): number | null {
-  try {
-    return WebApp.initDataUnsafe?.user?.id ?? null
-  } catch {
-    return null
-  }
+  const u = getWebAppUser()
+  return u ? u.id : null
 }
 
 /** Имя пользователя из Telegram (для создания записи мастера) */
 export function getTelegramUserName(): string | null {
-  try {
-    const user = WebApp.initDataUnsafe?.user
-    if (!user) return null
-    const first = user.first_name ?? ''
-    const last = user.last_name ?? ''
-    return (first + ' ' + last).trim() || null
-  } catch {
-    return null
+  const u = getWebAppUser()
+  if (!u) return null
+  const first = u.first_name ?? ''
+  const last = u.last_name ?? ''
+  return (first + ' ' + last).trim() || null
+}
+
+/**
+ * G4 — дождаться telegram_id, если Telegram передал initData, но user ещё не
+ * распарсен (гонка при холодном старте WebView/iframe-клиентов). Вне Telegram
+ * (нет initData) возвращает null сразу — демо-режим не задерживается.
+ */
+export async function resolveTelegramUserId(opts?: {
+  waitIfPending?: boolean
+  timeoutMs?: number
+}): Promise<number | null> {
+  const immediate = getTelegramUserId()
+  if (immediate !== null) return immediate
+  if (!opts?.waitIfPending || !hasTelegramInitData()) return null
+
+  const deadline = Date.now() + (opts.timeoutMs ?? 2500)
+  while (Date.now() < deadline) {
+    await new Promise((r) => setTimeout(r, 100))
+    const id = getTelegramUserId()
+    if (id !== null) return id
   }
+  return getTelegramUserId()
 }
 
 /** Тактильная отдача (ТЗ: haptic feedback на тапах) */

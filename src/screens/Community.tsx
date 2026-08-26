@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Flame, Heart, PenLine } from 'lucide-react'
+import { Crown, Flame, Heart, PenLine } from 'lucide-react'
 import Avatar from '../components/Avatar'
 import Badge from '../components/Badge'
 import Button from '../components/Button'
@@ -28,9 +28,11 @@ import styles from './Community.module.css'
 function PostCard({
   post,
   onOpenProfile,
+  isPremium,
 }: {
   post: CommunityPost
   onOpenProfile: (masterId: string) => void
+  isPremium: boolean
 }) {
   const master = getMasterById(post.masterId)
   const [liked, setLiked] = useState(() => isLiked(post.id))
@@ -51,7 +53,15 @@ function PostCard({
       <button className={styles.postHead} onClick={() => onOpenProfile(post.masterId)}>
         <Avatar name={name} size="md" />
         <span className={styles.postMeta}>
-          <span className={styles.postName}>{name}</span>
+          <span className={styles.postName}>
+            {name}
+            {post.masterId === 'me' && isPremium && (
+              <Badge variant="cta" className={styles.postPremiumBadge}>
+                <Crown size={10} strokeWidth={2.5} />
+                PREMIUM
+              </Badge>
+            )}
+          </span>
           <span className={styles.postNiche}>{niche} · {formatDate(post.date)}</span>
         </span>
       </button>
@@ -98,6 +108,9 @@ function ChallengeCard({ c }: { c: Challenge }) {
 
 export default function Community() {
   const openCommunityProfile = useAppStore((s) => s.openCommunityProfile)
+  // G2 — премиум-бейдж: у мастера с премиум-тарифом (пользователь = 'me')
+  const plan = useAppStore((s) => s.plan)
+  const isPremium = plan === 'premium'
   const posts = getAllPosts()
 
   // Подписанные мастеры — сверху в ленте
@@ -119,6 +132,12 @@ export default function Community() {
         <div className={styles.badgeRow}>
           <Badge>GAZE</Badge>
           <Badge variant="accent">мастера</Badge>
+          {isPremium && (
+            <Badge variant="cta">
+              <Crown size={11} strokeWidth={2.5} />
+              PREMIUM
+            </Badge>
+          )}
         </div>
       </header>
 
@@ -148,7 +167,7 @@ export default function Community() {
       </div>
       <div className={styles.feed}>
         {sorted.map((p) => (
-          <PostCard key={p.id} post={p} onOpenProfile={openProfile} />
+          <PostCard key={p.id} post={p} onOpenProfile={openProfile} isPremium={isPremium} />
         ))}
       </div>
     </div>

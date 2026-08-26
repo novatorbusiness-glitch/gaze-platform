@@ -1,0 +1,394 @@
+/* G1b — Экран «Путь роста»: карта 6 уровней (тёплый премиум-стиль GAZE) */
+
+.screen {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Шапка: назад + заголовок + бейдж GAZE PATH */
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 2px 2px;
+}
+
+.back {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  border: 1px solid var(--app-border);
+  background: var(--app-surface);
+  color: var(--app-text);
+  box-shadow: var(--app-shadow);
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.15s ease-out;
+}
+
+.back:active {
+  transform: scale(0.95);
+}
+
+.headerText {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.title {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--app-text);
+}
+
+.subtitle {
+  font-size: 12.5px;
+  color: var(--app-text-2);
+}
+
+.headerBadge {
+  flex: none;
+}
+
+/* ===================== ГЕРОЙ: текущий уровень ===================== */
+
+.hero {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background:
+    radial-gradient(120% 150% at 100% 0%, rgba(224, 199, 192, 0.55) 0%, rgba(224, 199, 192, 0) 55%),
+    linear-gradient(165deg, #ffffff 0%, rgba(224, 199, 192, 0.18) 100%);
+}
+
+.heroTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.heroPct {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--app-cta);
+}
+
+.heroEmoji {
+  font-size: 40px;
+  line-height: 1;
+}
+
+.heroName {
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--app-text);
+}
+
+.heroGoal {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--app-cta);
+}
+
+.heroDesc {
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--app-text-2);
+}
+
+/* Доход к цели уровня */
+.metricRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.metricLabel {
+  font-size: 12.5px;
+  color: var(--app-text-2);
+}
+
+.metricValue {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--app-text);
+}
+
+/* Шкалы */
+.track {
+  display: block;
+  height: 8px;
+  border-radius: 100px;
+  background: rgba(107, 94, 83, 0.12);
+  overflow: hidden;
+}
+
+.fill {
+  display: block;
+  height: 100%;
+  border-radius: 100px;
+  background: linear-gradient(90deg, #8ba888, #6b9a68);
+  transition: width 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Чекпоинты текущего уровня: ✓ / ○ */
+.checkpoints {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid var(--app-border);
+}
+
+.checkpoint {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.checkpointIcon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(107, 94, 83, 0.35);
+  color: var(--app-text-3);
+}
+
+.checkpointDone {
+  border-color: #8ba888;
+  background: #8ba888;
+  color: #ffffff;
+}
+
+.checkpointText {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.checkpointLabel {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--app-text);
+}
+
+.checkpointHint {
+  font-size: 12px;
+  color: var(--app-text-3);
+  line-height: 1.35;
+}
+
+/* Кнопка «Обновить прогресс»: иконка крутится при пересчёте */
+.spin {
+  animation: path-spin 0.9s linear infinite;
+}
+
+@keyframes path-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ===================== КАРТА ПУТИ (дорога из 6 ступеней) ===================== */
+
+.roadTitle {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--app-text);
+  margin-top: 4px;
+}
+
+.road {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* Ступень уровня: рельса (точка + линия) слева, тело справа */
+.level {
+  display: flex;
+  gap: 14px;
+  padding: 14px 0;
+}
+
+.levelRail {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 30px;
+}
+
+.levelDot {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--app-surface);
+  border: 2px solid var(--app-border);
+  color: var(--app-text-3);
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 13px;
+  flex: none;
+  transition: all 0.3s ease;
+}
+
+.dotDone {
+  background: #8ba888;
+  border-color: #8ba888;
+  color: #ffffff;
+}
+
+.dotCurrent {
+  background: var(--app-cta);
+  border-color: var(--app-cta);
+  color: #ffffff;
+  box-shadow: 0 0 0 4px rgba(107, 94, 83, 0.18);
+}
+
+.levelLine {
+  flex: 1;
+  width: 2px;
+  min-height: 26px;
+  background: rgba(107, 94, 83, 0.14);
+}
+
+.lineActive {
+  background: #8ba888;
+}
+
+.levelBody {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding-bottom: 4px;
+}
+
+/* Пройденные уровни — приглушены */
+.levelDone .levelBody {
+  opacity: 0.72;
+}
+
+/* Будущие уровни — ещё тише, без контраста */
+.levelNext .levelBody {
+  opacity: 0.55;
+}
+
+.levelTop {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.levelName {
+  font-size: 15.5px;
+  font-weight: 700;
+  color: var(--app-text);
+}
+
+.levelGoal {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--app-text-2);
+  white-space: nowrap;
+}
+
+.levelDesc {
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--app-text-2);
+}
+
+/* Чекпоинты уровня: компактные бейджи ✓/○ */
+.levelChecks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.levelCheck {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 9px;
+  border-radius: 100px;
+  background: rgba(107, 94, 83, 0.06);
+  color: var(--app-text-2);
+  font-size: 11.5px;
+  font-weight: 600;
+}
+
+.levelCheckDone {
+  background: rgba(139, 168, 136, 0.16);
+  color: #5f7a5c;
+}
+
+.levelCheckO {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  border: 1.5px solid currentColor;
+  opacity: 0.55;
+}
+
+.levelStatus {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 18px;
+}
+
+/* Тост-уведомление «Уровень пройден» */
+.toast {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: calc(24px + env(safe-area-inset-bottom));
+  z-index: 90;
+  max-width: calc(100vw - 48px);
+  background: #5f7a5c;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 12px 18px;
+  border-radius: var(--radius-pill);
+  box-shadow: 0 10px 30px rgba(107, 94, 83, 0.3);
+  pointer-events: none;
+  animation: path-toast-in 0.22s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes path-toast-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 14px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}

@@ -34,7 +34,8 @@ export default function TabBar() {
     screen === 'tips' ||
     screen === 'tipsPay' ||
     screen === 'expenses' ||
-    screen === 'communityProfile'
+    screen === 'communityProfile' ||
+    screen === 'path'
   )
     return null
 

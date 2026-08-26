@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { resolveMaster } from '../lib/api'
+import { getTelegramUserId, hasTelegramInitData } from '../lib/telegram'
 import type { Master } from '../lib/mock'
 
 type MasterStatus = 'idle' | 'loading' | 'ready' | 'error'
@@ -30,6 +31,23 @@ export const useMasterStore = create<MasterState>((set) => ({
     set({ status: 'loading', error: null })
 
     const res = await resolveMaster(force)
+
+    // G4 — страховка от гонки инициализации initData: если первый прогон ушёл
+    // в демо, но приложение на самом деле открыто из Telegram (initData пришёл
+    // чуть позже) — делаем повторный прогон как для реального мастера.
+    if (!force && res.isDemo && hasTelegramInitData() && getTelegramUserId() !== null) {
+      const retry = await resolveMaster(true)
+      if (retry.master) {
+        set({
+          master: retry.master,
+          isDev: retry.isDev,
+          isDemo: retry.isDemo,
+          status: 'ready',
+          error: null,
+        })
+        return
+      }
+    }
 
     if (res.master) {
       set({

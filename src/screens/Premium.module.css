@@ -1,0 +1,368 @@
+/* ============================================================
+   G2 — ПРЕМИУМ-ТАРИФ: сравнение тарифов, преимущества, переход
+   ============================================================ */
+
+.screen {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-bottom: 8px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 0;
+}
+
+.backBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  color: var(--app-text);
+  box-shadow: var(--app-shadow);
+  transition: transform 0.15s ease-out;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.backBtn:active {
+  transform: scale(0.92);
+}
+
+.headerTitle {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 18px;
+  color: var(--app-text);
+}
+
+/* ---------- Герой ---------- */
+
+.hero {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 20px 18px;
+  border-radius: 22px;
+  border: 1px solid rgba(138, 109, 154, 0.3);
+  background:
+    radial-gradient(130% 180% at 90% -10%, rgba(138, 109, 154, 0.24) 0%, rgba(255, 255, 255, 0) 55%),
+    linear-gradient(165deg, #ffffff 0%, rgba(138, 109, 154, 0.1) 100%);
+  box-shadow: var(--app-shadow);
+}
+
+.heroGlow {
+  position: absolute;
+  top: -70px;
+  right: -50px;
+  width: 190px;
+  height: 190px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(138, 109, 154, 0.3) 0%, rgba(255, 255, 255, 0) 70%);
+  pointer-events: none;
+}
+
+.heroKicker {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--app-cta);
+  text-transform: uppercase;
+}
+
+.heroTitle {
+  position: relative;
+  z-index: 1;
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.015em;
+  color: var(--app-text);
+  margin: 0;
+}
+
+.heroTitle em {
+  font-style: normal;
+  background: linear-gradient(90deg, #8a6d9a, #b07a5a);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.heroSub {
+  position: relative;
+  z-index: 1;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--app-text-2);
+  margin: 0;
+}
+
+.heroBadges {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* ---------- Текущий тариф ---------- */
+
+.currentPlan {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  box-shadow: var(--app-shadow);
+}
+
+.currentPlanLabel {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.currentPlanTitle {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--app-text);
+}
+
+.currentPlanHint {
+  font-size: 12px;
+  color: var(--app-text-2);
+}
+
+/* ---------- Сравнение тарифов ---------- */
+
+.sectionTitle {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--app-text);
+  margin: 0;
+}
+
+.compare {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.plan {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px 14px;
+  border-radius: 18px;
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  box-shadow: var(--app-shadow);
+}
+
+.planPremium {
+  border-color: rgba(138, 109, 154, 0.5);
+  background:
+    linear-gradient(170deg, #ffffff 0%, rgba(138, 109, 154, 0.08) 100%);
+}
+
+.planName {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--app-text);
+}
+
+.planPrice {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.planPriceValue {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 24px;
+  letter-spacing: -0.02em;
+  color: var(--app-text);
+}
+
+.planPricePer {
+  font-size: 12px;
+  color: var(--app-text-2);
+}
+
+.planTag {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--app-success);
+}
+
+.planFeatures {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.planFeature {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: var(--app-text-2);
+}
+
+.planFeatureIcon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  margin-top: 1px;
+  border-radius: 50%;
+  color: var(--app-success);
+}
+
+.planFeatureIconOff {
+  color: var(--app-text-3);
+}
+
+/* ---------- Преимущества ---------- */
+
+.benefits {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.benefit {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 13px 14px;
+  border-radius: 14px;
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  box-shadow: var(--app-shadow);
+}
+
+.benefitIcon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: rgba(138, 109, 154, 0.12);
+  color: #8a6d9a;
+}
+
+.benefitBody {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.benefitTitle {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--app-text);
+}
+
+.benefitText {
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--app-text-2);
+}
+
+/* ---------- CTA ---------- */
+
+.ctaCard {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  border-radius: 18px;
+  background: linear-gradient(150deg, #8a6d9a 0%, #b07a5a 100%);
+  color: #ffffff;
+  box-shadow: 0 10px 30px rgba(138, 109, 154, 0.28);
+}
+
+.ctaCardTitle {
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.ctaCardText {
+  font-size: 13px;
+  line-height: 1.5;
+  opacity: 0.9;
+}
+
+.ctaCard .btnOnDark {
+  background: #ffffff;
+  color: #8a6d9a;
+}
+
+.hint {
+  font-size: 12px;
+  color: var(--app-text-3);
+  line-height: 1.45;
+  text-align: center;
+  margin: 0;
+}
+
+/* ---------- Тост ---------- */
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(24px + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  z-index: 200;
+  padding: 11px 18px;
+  border-radius: var(--radius-pill);
+  background: var(--app-cta);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: 0 8px 24px rgba(107, 94, 83, 0.3);
+  animation: toastIn 0.22s ease-out;
+  white-space: nowrap;
+}
+
+@keyframes toastIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}

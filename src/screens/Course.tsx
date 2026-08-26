@@ -1,6 +1,7 @@
 import type { CSSProperties } from 'react'
-import { ArrowLeft, ArrowRight, CheckCircle2, Clock, Lock, PlayCircle } from 'lucide-react'
+import { ArrowLeft, ArrowRight, CheckCircle2, Clock, Crown, Lock, PlayCircle } from 'lucide-react'
 import Badge from '../components/Badge'
+import Button from '../components/Button'
 import { demoCourses } from '../lib/dev-data'
 import { haptic } from '../lib/telegram'
 import { cx } from '../lib/utils'
@@ -31,6 +32,9 @@ export default function Course() {
   const openLesson = useAppStore((s) => s.openLesson)
   const completedLessons = useAppStore((s) => s.completedLessons)
   const assignments = useAppStore((s) => s.assignments)
+  // G2 — премиум-курс: на базовом тарифе недоступен (страховка от прямого входа)
+  const plan = useAppStore((s) => s.plan)
+  const navigate = useAppStore((s) => s.navigate)
 
   const course = demoCourses.find((c) => c.id === courseId) ?? null
 
@@ -50,6 +54,43 @@ export default function Course() {
           </button>
           <span className={styles.headerTitle}>Курс не найден</span>
         </header>
+      </div>
+    )
+  }
+
+  /* G2 — Премиум-курс закрыт на базовом тарифе: замок вместо уроков */
+  if (course.is_premium && plan !== 'premium') {
+    return (
+      <div className={styles.screen}>
+        <header className={styles.header}>
+          <button
+            className={styles.backBtn}
+            aria-label="Назад к академии"
+            onClick={() => {
+              haptic('light')
+              goBack()
+            }}
+          >
+            <ArrowLeft size={20} strokeWidth={1.75} />
+          </button>
+          <span className={styles.headerTitle}>Курс</span>
+        </header>
+
+        <div className={styles.lockedCard}>
+          <span className={styles.lockedIcon}>
+            <Lock size={28} strokeWidth={1.75} />
+          </span>
+          <span className={styles.lockedEmoji}>{course.coverEmoji}</span>
+          <h1 className={styles.lockedTitle}>{course.title}</h1>
+          <p className={styles.lockedText}>
+            Этот премиум-курс доступен на тарифе «Премиум» (1 500 ₽/мес) вместе с AI-маркетологом
+            и 15 чит-кодами из «Нейро-Воронки».
+          </p>
+          <Button size="lg" fullWidth onClick={() => navigate('premium')}>
+            <Crown size={16} strokeWidth={2} />
+            Перейти на Премиум
+          </Button>
+        </div>
       </div>
     )
   }

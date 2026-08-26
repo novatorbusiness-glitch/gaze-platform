@@ -1,0 +1,119 @@
+/* G1b — Виджет «Путь роста» на дашборде: тёплый премиум-стиль GAZE */
+
+.widget {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 14px 16px;
+  text-align: left;
+  background: linear-gradient(135deg, rgba(224, 199, 192, 0.4), rgba(224, 199, 192, 0.14));
+  border: 1px solid rgba(224, 199, 192, 0.65);
+  border-radius: var(--radius-card);
+  box-shadow: var(--app-shadow);
+  color: var(--app-text);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.15s ease-out;
+}
+
+.widget:active {
+  transform: scale(0.985);
+}
+
+.widgetIcon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: rgba(107, 94, 83, 0.1);
+  color: var(--app-cta);
+}
+
+.widgetBody {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.widgetTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.widgetTitle {
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--app-text);
+}
+
+.widgetPct {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--app-cta);
+}
+
+.widgetSub {
+  font-size: 12px;
+  color: var(--app-text-2);
+  line-height: 1.35;
+}
+
+/* Шкала прогресса */
+.track {
+  display: block;
+  height: 6px;
+  border-radius: 100px;
+  background: rgba(107, 94, 83, 0.12);
+  overflow: hidden;
+}
+
+.fill {
+  display: block;
+  height: 100%;
+  border-radius: 100px;
+  background: linear-gradient(90deg, #8ba888, #6b9a68);
+  transition: width 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.widgetArrow {
+  flex: none;
+  color: var(--app-text-3);
+}
+
+/* Тост-уведомление «Уровень пройден» — поверх tab-bar, по центру снизу */
+.toast {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: calc(86px + env(safe-area-inset-bottom));
+  z-index: 90;
+  max-width: calc(100vw - 48px);
+  background: #5f7a5c;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 12px 18px;
+  border-radius: var(--radius-pill);
+  box-shadow: 0 10px 30px rgba(107, 94, 83, 0.3);
+  pointer-events: none;
+  animation: widget-toast-in 0.22s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes widget-toast-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 14px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}

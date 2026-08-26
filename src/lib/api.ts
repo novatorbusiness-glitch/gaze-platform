@@ -25,7 +25,7 @@ import {
   type MasterRow,
   type ProcedureRow,
 } from './supabase'
-import { getTelegramUserId, getTelegramUserName } from './telegram'
+import { getTelegramUserName, hasTelegramInitData, resolveTelegramUserId } from './telegram'
 
 /* ------------------------------------------------------------------ */
 /* Модели                                                              */
@@ -331,7 +331,12 @@ async function ensureAnonymousUser(): Promise<string> {
 export async function resolveMaster(force = false): Promise<MasterResolution> {
   if (cachedResolution && !force) return cachedResolution
 
-  const tgId = getTelegramUserId()
+  // G4: telegram_id может прийти чуть позже старта WebView. Если Telegram
+  // передал initData (query или hash), но user ещё не распарсен — ждём его
+  // короткое время, прежде чем решать «вне Telegram → демо». Вне Telegram
+  // (нет initData) resolveTelegramUserId возвращает null сразу, без задержек.
+  const tgId = await resolveTelegramUserId({ waitIfPending: true })
+
   const isDev = tgId === null
   const telegramId = tgId ?? DEV_TELEGRAM_ID
   const tgName = getTelegramUserName()
@@ -373,6 +378,20 @@ export async function resolveMaster(force = false): Promise<MasterResolution> {
     // Вне Telegram (браузер, нет initData): аккаунта по сохранённой сессии нет →
     // демо (не создаём мусорного мастера с dev-телеграм id).
     if (isDev) {
+      // G4: если Telegram ВСЁ ЖЕ передал initData (например, user отсутствует в
+      // initData из-за ограничений приватности), но tgId не распарсился — это НЕ
+      // демо-ситуация. Возвращаем ошибку, а не демо: мастер не должен потерять
+      // свой аккаунт из-за молчаливого демо-фолбэка.
+      if (hasTelegramInitData()) {
+        return {
+          master: null,
+          telegramId,
+          isDev,
+          isDemo: false,
+          error:
+            'Не удалось получить данные аккаунта из Telegram. Закрой мини-апп и открой его снова через кнопку «Открыть GAZE Platform» в боте.',
+        }
+      }
       demoMode = true
       demoAllowed = true
       cachedResolution = {

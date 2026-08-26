@@ -1017,7 +1017,7 @@ export const demoCourses: Course[] = [
     level: 'intermediate',
     coverEmoji: '💬',
     accent: '#8b7b5f',
-    is_premium: false,
+    is_premium: true,
     readers: 405,
     created_at: '2026-08-18T10:00:00Z',
     lessons: [

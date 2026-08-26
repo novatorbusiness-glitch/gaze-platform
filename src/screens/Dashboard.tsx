@@ -7,6 +7,7 @@ import ClientRow from '../components/ClientRow'
 import ErrorState from '../components/ErrorState'
 import MetricCard from '../components/MetricCard'
 import OnboardingQuest from '../components/OnboardingQuest'
+import PathWidget from '../components/PathWidget'
 import SkeletonLoader from '../components/SkeletonLoader'
 import { useAsync } from '../hooks/useAsync'
 import { useCountUp } from '../hooks/useCountUp'
@@ -349,6 +350,9 @@ export default function Dashboard() {
 
       {/* T3 — онбординг-квест «Начни с 3 шагов» (сверху, перед метриками) */}
       {questBlock}
+
+      {/* G1b — Путь роста: виджет с текущим уровнем и прогрессом */}
+      <PathWidget masterId={masterId} clients={clients} procedures={procedures} isDemo={isDemo} />
 
       {/* Три метрики — горизонтальный скролл */}
       <div className={styles.metrics}>

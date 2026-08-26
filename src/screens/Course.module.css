@@ -179,6 +179,50 @@
 
 /* ---------- Список уроков ---------- */
 
+/* G2 — премиум-курс закрыт (базовый тариф): карточка-замок */
+.lockedCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 30px 22px;
+  border-radius: 20px;
+  background: var(--app-surface);
+  border: 1px solid rgba(138, 109, 154, 0.3);
+  box-shadow: var(--app-shadow);
+  text-align: center;
+}
+
+.lockedIcon {
+  display: grid;
+  place-items: center;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: rgba(138, 109, 154, 0.12);
+  color: #8a6d9a;
+}
+
+.lockedEmoji {
+  font-size: 44px;
+  line-height: 1;
+}
+
+.lockedTitle {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--app-text);
+  margin: 0;
+}
+
+.lockedText {
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--app-text-2);
+  margin: 0 0 4px;
+  max-width: 320px;
+}
+
 .lessons {
   display: flex;
   flex-direction: column;

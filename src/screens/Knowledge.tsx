@@ -25,6 +25,7 @@ import { demoCourses } from '../lib/dev-data'
 import type { Course } from '../lib/mock'
 import { haptic } from '../lib/telegram'
 import { cx } from '../lib/utils'
+import { getCurrentLevel, getPathLevel } from '../lib/path'
 import { useAppStore } from '../store/useAppStore'
 import { useMasterStore } from '../store/useMasterStore'
 import styles from './Knowledge.module.css'
@@ -102,6 +103,24 @@ export default function Knowledge() {
   const isDemo = useMasterStore((s) => s.isDemo)
   const openCourse = useAppStore((s) => s.openCourse)
   const completedLessons = useAppStore((s) => s.completedLessons)
+  // G1b — «Путь роста»: открывается из Академии
+  const openPath = useAppStore((s) => s.openPath)
+  const currentLevel = getCurrentLevel()
+  const currentPathLevel = getPathLevel(currentLevel)
+  // G2 — премиум-курсы: на базовом тарифе закрыты замком, ведут на «Премиум»
+  const plan = useAppStore((s) => s.plan)
+  const navigate = useAppStore((s) => s.navigate)
+  const isPremium = plan === 'premium'
+
+  /** G2 — Открыть курс: премиум-курс на базовом тарифе → экран «Премиум» */
+  const onOpenCourse = (course: Course) => {
+    haptic('light')
+    if (course.is_premium && !isPremium) {
+      navigate('premium')
+      return
+    }
+    openCourse(course.id)
+  }
 
   const state = useAsync(() => fetchCourses(), [attempt])
 
@@ -237,6 +256,27 @@ export default function Knowledge() {
         </div>
       </div>
 
+      {/* G1b — «Путь роста»: CTA-карточка с текущим уровнем */}
+      <button
+        className={styles.pathCta}
+        onClick={() => {
+          haptic('medium')
+          openPath('knowledge')
+        }}
+      >
+        <span className={styles.pathCtaEmoji}>{currentPathLevel.emoji}</span>
+        <span className={styles.pathCtaBody}>
+          <span className={styles.pathCtaKicker}>GAZE PATH</span>
+          <span className={styles.pathCtaTitle}>Путь роста · 6 уровней до 200к+</span>
+          <span className={styles.pathCtaSub}>
+            Уровень {currentLevel} · {currentPathLevel.name} — система сама ведёт тебя вперёд
+          </span>
+        </span>
+        <span className={styles.pathCtaArrow}>
+          <ArrowRight size={16} strokeWidth={2.2} />
+        </span>
+      </button>
+
       {/* Категории — большие карточки-плитки */}
       <section aria-label="Категории" className={styles.section}>
         <div className={styles.sectionHead}>
@@ -288,10 +328,7 @@ export default function Knowledge() {
                   key={course.id}
                   className={styles.popularCard}
                   style={{ '--pop-accent': course.accent } as CSSProperties}
-                  onClick={() => {
-                    haptic('light')
-                    openCourse(course.id)
-                  }}
+                  onClick={() => onOpenCourse(course)}
                 >
                   <span className={styles.popularTop}>
                     <span className={styles.popularEmoji}>{course.coverEmoji}</span>
@@ -348,10 +385,7 @@ export default function Knowledge() {
                 <Card
                   key={course.id}
                   className={styles.course}
-                  onClick={() => {
-                    haptic('light')
-                    openCourse(course.id)
-                  }}
+                  onClick={() => onOpenCourse(course)}
                 >
                   <div className={styles.courseCover} style={{ '--course-accent': course.accent } as CSSProperties}>
                     <span className={styles.courseEmoji}>{course.coverEmoji}</span>
@@ -395,7 +429,18 @@ export default function Knowledge() {
                       </div>
                     )}
                     <span className={styles.courseCta}>
-                      {started ? 'Продолжить' : course.lessons.length > 0 ? 'Открыть курс' : 'Скоро'}
+                      {course.is_premium && !isPremium ? (
+                        <>
+                          <Lock size={14} strokeWidth={2.4} />
+                          Доступно в Премиум
+                        </>
+                      ) : started ? (
+                        'Продолжить'
+                      ) : course.lessons.length > 0 ? (
+                        'Открыть курс'
+                      ) : (
+                        'Скоро'
+                      )}
                       <ArrowRight size={15} strokeWidth={2.2} />
                     </span>
                   </div>

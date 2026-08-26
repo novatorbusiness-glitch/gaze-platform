@@ -1,0 +1,426 @@
+/* ============================================================
+   G2 — AI-МАРКЕТОЛОГ: генератор контента по «Нейро-Воронке»
+   ============================================================ */
+
+.screen {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-bottom: 8px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 0;
+}
+
+.backBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  color: var(--app-text);
+  box-shadow: var(--app-shadow);
+  transition: transform 0.15s ease-out;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.backBtn:active {
+  transform: scale(0.92);
+}
+
+.headerTitle {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 18px;
+  color: var(--app-text);
+}
+
+/* ---------- Герой ---------- */
+
+.hero {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 20px 18px;
+  border-radius: 22px;
+  border: 1px solid rgba(138, 109, 154, 0.3);
+  background:
+    radial-gradient(130% 180% at 90% -10%, rgba(138, 109, 154, 0.24) 0%, rgba(255, 255, 255, 0) 55%),
+    linear-gradient(165deg, #ffffff 0%, rgba(138, 109, 154, 0.1) 100%);
+  box-shadow: var(--app-shadow);
+}
+
+.heroGlow {
+  position: absolute;
+  top: -70px;
+  right: -50px;
+  width: 190px;
+  height: 190px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(138, 109, 154, 0.3) 0%, rgba(255, 255, 255, 0) 70%);
+  pointer-events: none;
+}
+
+.heroKicker {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--app-cta);
+  text-transform: uppercase;
+}
+
+.heroTitle {
+  position: relative;
+  z-index: 1;
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.015em;
+  color: var(--app-text);
+  margin: 0;
+}
+
+.heroSub {
+  position: relative;
+  z-index: 1;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--app-text-2);
+  margin: 0;
+}
+
+.heroBadges {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* ---------- Форма ---------- */
+
+.formCard {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px;
+}
+
+.fieldLabel {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--app-text-2);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 13px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--app-border);
+  background: var(--app-bg);
+  color: var(--app-text);
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.15s ease-out;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.chip:active {
+  transform: scale(0.96);
+}
+
+.chipActive {
+  border-color: #8a6d9a;
+  background: rgba(138, 109, 154, 0.12);
+  color: #6a4f78;
+  font-weight: 600;
+}
+
+/* ---------- Результаты ---------- */
+
+.sectionTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--app-text);
+  margin: 0;
+}
+
+.sectionMeta {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--app-text-3);
+}
+
+.variantList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.variant {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  border-radius: var(--radius-card);
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  box-shadow: var(--app-shadow);
+}
+
+.variantHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.variantLabel {
+  font-size: 12px;
+  font-weight: 700;
+  color: #8a6d9a;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.variantText {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--app-text);
+  white-space: pre-wrap;
+  margin: 0;
+}
+
+.copyBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  align-self: flex-start;
+  padding: 8px 14px;
+  border-radius: var(--radius-pill);
+  background: var(--app-cta);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 600;
+  transition: transform 0.15s ease-out, background 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.copyBtn:active {
+  transform: scale(0.94);
+}
+
+.copyBtnDone {
+  background: var(--app-success);
+}
+
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 22px 16px;
+  text-align: center;
+}
+
+.emptyIcon {
+  color: var(--app-text-3);
+}
+
+.emptyTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--app-text);
+  margin: 0;
+}
+
+.emptyText {
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--app-text-2);
+  margin: 0;
+}
+
+/* ---------- Чит-коды ---------- */
+
+.cheatList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cheatGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.cheatGroupTitle {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--app-text-3);
+}
+
+.cheat {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  box-shadow: var(--app-shadow);
+}
+
+.cheatNum {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 8px;
+  background: rgba(138, 109, 154, 0.12);
+  color: #8a6d9a;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.cheatBody {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.cheatTitle {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--app-text);
+}
+
+.cheatText {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--app-text-2);
+}
+
+/* ---------- Замок (базовый тариф) ---------- */
+
+.lock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 34px 22px;
+  text-align: center;
+}
+
+.lockIcon {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: rgba(138, 109, 154, 0.12);
+  color: #8a6d9a;
+}
+
+.lockTitle {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--app-text);
+  margin: 0;
+}
+
+.lockText {
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--app-text-2);
+  margin: 0;
+  max-width: 320px;
+}
+
+.lockFeatures {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  max-width: 320px;
+  margin: 4px 0;
+  padding: 0;
+  list-style: none;
+}
+
+.lockFeature {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--app-text-2);
+  text-align: left;
+}
+
+.lockFeatureIcon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  margin-top: 1px;
+  border-radius: 50%;
+  background: rgba(139, 168, 136, 0.18);
+  color: var(--app-success);
+}
+
+.lockCta {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  max-width: 320px;
+  margin-top: 4px;
+}
+
+.lockHint {
+  font-size: 12px;
+  color: var(--app-text-3);
+  line-height: 1.45;
+  margin: 0;
+}

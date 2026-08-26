@@ -18,6 +18,12 @@ export type Screen =
   | 'expenses'
   | 'community'
   | 'communityProfile'
+  | 'path'
+  | 'premium'
+  | 'aiMarketer'
+
+/** G2 — Тариф подписки: базовый (990₽) или премиум (1500₽, + AI-маркетолог) */
+export type Plan = 'base' | 'premium'
 
 /** Фильтр списка клиентов (ЭКРАН 2: Все · Активные · Давно не был) */
 export type ClientFilter = 'all' | 'active' | 'stale'
@@ -27,6 +33,20 @@ const ACADEMY_PROGRESS_KEY = 'gaze-academy-progress'
 
 /** T11 — Ключ localStorage для заданий уроков: courseId_lessonId → { done, answer } */
 const ASSIGNMENTS_KEY = 'gaze_assignments'
+
+/** G2 — Ключ localStorage тарифа: 'base' | 'premium' (демо-переключение без бэкенда) */
+const SUBSCRIPTION_KEY = 'gaze_subscription'
+
+/** G2 — Загружаем тариф из localStorage при старте (по умолчанию — базовый) */
+function loadPlan(): Plan {
+  try {
+    const raw = localStorage.getItem(SUBSCRIPTION_KEY)
+    if (raw === 'premium') return 'premium'
+    return 'base'
+  } catch {
+    return 'base'
+  }
+}
 
 /** T11 — Состояние выполненного задания урока */
 export interface AssignmentState {
@@ -78,9 +98,17 @@ interface AppState {
   tipsAmount: number
   /** T20 — Сообщество: выбранный мастер для профиля (или 'me') */
   communityMasterId: string | null
+  /** G2 — Тариф: 'base' (990₽) или 'premium' (1500₽). Персистится в localStorage gaze_subscription. */
+  plan: Plan
+  /** G1b — Путь роста: откуда открыт экран «Путь» (для кнопки «Назад») */
+  pathOrigin: 'knowledge' | 'dashboard'
 
   navigate: (screen: Screen) => void
   openClient: (clientId: string) => void
+  /** G1b — Открыть экран «Путь роста» (карта 6 уровней) */
+  openPath: (origin?: 'knowledge' | 'dashboard') => void
+  /** G2 — Демо-переключение тарифа (без оплаты): сохраняет в localStorage */
+  setPlan: (plan: Plan) => void
   /** T20 — Открыть профиль мастера в сообществе */
   openCommunityProfile: (masterId: string) => void
   /** Открыть форму записи процедуры для клиента (или без клиента) */
@@ -115,8 +143,22 @@ export const useAppStore = create<AppState>((set) => ({
   assignments: loadAssignments(),
   tipsAmount: 100,
   communityMasterId: null,
+  plan: loadPlan(),
+  pathOrigin: 'knowledge',
 
   navigate: (screen) => set({ screen, direction: 'forward' }),
+
+  openPath: (origin = 'knowledge') =>
+    set({ screen: 'path', pathOrigin: origin, direction: 'forward' }),
+
+  setPlan: (plan) => {
+    try {
+      localStorage.setItem(SUBSCRIPTION_KEY, plan)
+    } catch {
+      /* localStorage недоступен — тариф живёт в памяти */
+    }
+    set({ plan })
+  },
 
   openCommunityProfile: (masterId) =>
     set({ screen: 'communityProfile', communityMasterId: masterId, direction: 'forward' }),
@@ -200,6 +242,14 @@ export const useAppStore = create<AppState>((set) => ({
       if (state.screen === 'expenses') {
         // T17 — назад — в аналитику (оттуда открывается экран «Расходы»)
         return { screen: 'analytics', direction: 'back' }
+      }
+      if (state.screen === 'premium' || state.screen === 'aiMarketer') {
+        // G2 — Премиум и AI-маркетолог открываются из профиля (главная точка входа)
+        return { screen: 'profile', direction: 'back' }
+      }
+      if (state.screen === 'path') {
+        // G1b — «Путь роста»: назад — туда, откуда открыт (Академия или Дашборд)
+        return { screen: state.pathOrigin, direction: 'back' }
       }
       return { screen: 'dashboard', direction: 'back' }
     }),
