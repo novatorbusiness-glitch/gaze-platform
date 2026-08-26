@@ -37,6 +37,7 @@ export default function AddProcedure() {
   const [clientId, setClientId] = useState(selectedClientId ?? '')
   const [serviceType, setServiceType] = useState('')
   const [price, setPrice] = useState('')
+  const [cost, setCost] = useState('')
   const [notes, setNotes] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
@@ -54,6 +55,8 @@ export default function AddProcedure() {
   const error = masterStatus === 'error' ? masterError : clientsState.status === 'error' ? clientsState.error : null
 
   const priceValue = Number(price)
+  // Расходы на материалы — необязательно; пустое поле = 0 (себестоимость не указана)
+  const costValue = cost.trim() === '' ? 0 : Number(cost)
   const canSubmit = Boolean(
     clientId && serviceType.trim() && priceValue > 0 && masterId && !submitting && !saved,
   )
@@ -68,6 +71,7 @@ export default function AddProcedure() {
         master_id: masterId,
         service_type: serviceType.trim(),
         price: priceValue,
+        cost: cost.trim() === '' ? undefined : costValue,
         notes: notes.trim() || undefined,
       }
       await addProcedure(input)
@@ -164,6 +168,19 @@ export default function AddProcedure() {
             onChange={(e) => setPrice(e.target.value)}
             disabled={submitting}
             placeholder="2500"
+          />
+
+          {/* Расходы на материалы (себестоимость) — необязательно */}
+          <Input
+            label="Расходы на материалы, ₽ (необязательно)"
+            mono
+            type="number"
+            inputMode="numeric"
+            min={0}
+            value={cost}
+            onChange={(e) => setCost(e.target.value)}
+            disabled={submitting}
+            placeholder="600"
           />
 
           {/* Заметка */}

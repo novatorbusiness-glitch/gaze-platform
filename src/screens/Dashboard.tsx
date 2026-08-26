@@ -13,6 +13,7 @@ import { useCountUp } from '../hooks/useCountUp'
 import { fetchDashboard } from '../lib/api'
 import { demoReminders, demoAnalytics, demoClients, demoMaster, demoProcedures, type ReminderStatus } from '../lib/dev-data'
 import type { Procedure } from '../lib/mock'
+import { useDisplayName } from '../lib/name'
 import {
   loadOnboarding,
   saveOnboarding,
@@ -81,6 +82,9 @@ export default function Dashboard() {
   const masterError = useMasterStore((s) => s.error)
   const isDemo = useMasterStore((s) => s.isDemo)
   const retryMaster = useMasterStore((s) => s.init)
+
+  // Единый источник имени: localStorage (gaze_profile_name) > master.name > 'Анна Казак'
+  const displayName = useDisplayName(master)
 
   const masterId = master?.id ?? null
   const [attempt, setAttempt] = useState(0)
@@ -233,7 +237,7 @@ export default function Dashboard() {
     return (
       <div className={styles.screen}>
         <header className={styles.header}>
-          <h1 className={styles.title}>{greeting()}, {master?.name ?? 'мастер'} 👋</h1>
+          <h1 className={styles.title}>{greeting()}, {displayName} 👋</h1>
           <div className={styles.badgeRow}>
             <Badge>GAZE PLATFORM</Badge>
             {demoBadge}
@@ -250,7 +254,7 @@ export default function Dashboard() {
       <div className={styles.screen}>
         <header className={styles.header}>
           <h1 className={styles.title}>
-            {greeting()}, {master?.name ?? 'мастер'} 👋
+            {greeting()}, {displayName} 👋
           </h1>
           <div className={styles.badgeRow}>
             <Badge>GAZE PLATFORM</Badge>
@@ -284,7 +288,7 @@ export default function Dashboard() {
     <div className={styles.screen}>
       <header className={styles.header}>
         <h1 className={styles.title}>
-          {greeting()}, {master?.name ?? 'мастер'} 👋
+          {greeting()}, {displayName} 👋
         </h1>
         <div className={styles.badgeRow}>
           <Badge>GAZE PLATFORM</Badge>

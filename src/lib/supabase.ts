@@ -67,6 +67,7 @@ export interface ProcedureRow {
   master_id: string
   service_type: string | null
   price: number | string | null
+  cost: number | string | null
   notes: string | null
   photos: string[] | null
   created_at: string

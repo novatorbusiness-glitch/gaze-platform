@@ -70,6 +70,8 @@ export interface NewProcedureInput {
   master_id: string
   service_type: string
   price: number
+  /** Себестоимость (расходы на материалы), ₽ — необязательно, по умолчанию 0 */
+  cost?: number
   notes?: string
 }
 
@@ -124,6 +126,7 @@ function mapProcedure(row: ProcedureRow): Procedure {
     master_id: row.master_id,
     service_type: row.service_type ?? '',
     price: Number(row.price ?? 0),
+    cost: Number(row.cost ?? 0),
     notes: row.notes ?? '',
     photos: row.photos ?? [],
     created_at: row.created_at,
@@ -479,6 +482,7 @@ function demoProcedureFromInput(input: NewProcedureInput): Procedure {
     master_id: input.master_id,
     service_type: input.service_type,
     price: input.price,
+    cost: input.cost ?? 0,
     notes: input.notes ?? '',
     photos: [],
     created_at: now.toISOString(),
@@ -504,6 +508,7 @@ export async function addProcedure(input: NewProcedureInput): Promise<Procedure>
         master_id: input.master_id,
         service_type: input.service_type,
         price: input.price,
+        cost: input.cost ?? 0,
         notes: input.notes ?? null,
         photos: [],
       })

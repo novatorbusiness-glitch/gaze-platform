@@ -165,17 +165,18 @@ export const demoClients: Client[] = [
 /* Процедуры: 40 за текущий месяц, сумма ровно 96 400 ₽ (средний 2 410) */
 /* ------------------------------------------------------------------ */
 
-// [услуга, цена, количество за месяц] — сумма 96 400, всего 40 процедур
-const MONTH_PROCEDURES: Array<[string, number, number]> = [
-  ['Ламинирование ресниц', 2500, 8],
-  ['Архитектура бровей', 2500, 8],
-  ['Коррекция бровей', 1800, 10],
-  ['Наращивание 2D', 4500, 4],
-  ['Ламинирование бровей', 3000, 4],
-  ['Окрашивание бровей', 1200, 1],
-  ['Снятие наращённых ресниц', 800, 1],
-  ['Коррекция + окрашивание', 2200, 2],
-  ['Оформление бровей хной', 1000, 2],
+// [услуга, цена, количество за месяц, себестоимость] — сумма 96 400, всего 40 процедур
+// cost ~20-35% от цены (реалистично для материалов бровей/ресниц)
+const MONTH_PROCEDURES: Array<[string, number, number, number]> = [
+  ['Ламинирование ресниц', 2500, 8, 600],
+  ['Архитектура бровей', 2500, 8, 600],
+  ['Коррекция бровей', 1800, 10, 450],
+  ['Наращивание 2D', 4500, 4, 1200],
+  ['Ламинирование бровей', 3000, 4, 800],
+  ['Окрашивание бровей', 1200, 1, 300],
+  ['Снятие наращённых ресниц', 800, 1, 200],
+  ['Коррекция + окрашивание', 2200, 2, 600],
+  ['Оформление бровей хной', 1000, 2, 250],
 ]
 
 const NOTES = [
@@ -190,11 +191,11 @@ const NOTES = [
 ]
 
 function buildProcedures(): Procedure[] {
-  const expanded: Array<[string, number]> = []
-  for (const [service, price, count] of MONTH_PROCEDURES) {
-    for (let i = 0; i < count; i++) expanded.push([service, price])
+  const expanded: Array<[string, number, number]> = []
+  for (const [service, price, count, cost] of MONTH_PROCEDURES) {
+    for (let i = 0; i < count; i++) expanded.push([service, price, cost])
   }
-  return expanded.map(([service, price], k) => {
+  return expanded.map(([service, price, cost], k) => {
     const client = demoClients[k % demoClients.length]
     return {
       id: `demo-p-${String(k + 1).padStart(2, '0')}`,
@@ -202,6 +203,7 @@ function buildProcedures(): Procedure[] {
       master_id: demoMaster.id,
       service_type: service,
       price,
+      cost,
       notes: NOTES[k % NOTES.length],
       photos: [],
       created_at: isoInCurrentMonth((k * 5) % 21 + 1, 10 + (k % 8)),

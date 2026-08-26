@@ -302,11 +302,7 @@ export default function Profile() {
     const next = nameDraft.trim()
     if (!next) return
     hapticSuccess()
-    try {
-      localStorage.setItem(NAME_KEY, next)
-    } catch {
-      /* ignore */
-    }
+    saveProfileName(next)
     setSavedName(next)
     setEditOpen(false)
     showToast('Имя сохранено ✓')
