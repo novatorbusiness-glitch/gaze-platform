@@ -264,6 +264,92 @@
   line-height: 1.5;
 }
 
+/* ---- T5: Умный наставник — FAQ аккордеон ---- */
+.faqSection {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.faqHead {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--app-cta);
+}
+
+.faqList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.faqItem {
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--app-shadow);
+  overflow: hidden;
+  transition: border-color 0.2s ease;
+  animation: fade-in-up 0.3s ease-out both;
+}
+
+.faqItemOpen {
+  border-color: var(--app-accent);
+}
+
+.faqTrigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 13px 14px;
+  text-align: left;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.faqQuestion {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--app-text);
+  line-height: 1.4;
+  flex: 1;
+  min-width: 0;
+}
+
+.faqIcon {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  font-size: 16px;
+  font-weight: 400;
+  color: var(--app-accent);
+  transition: transform 0.25s ease;
+  line-height: 1;
+}
+
+.faqIconOpen {
+  transform: rotate(45deg);
+}
+
+.faqAnswer {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+
+.faqAnswerInner {
+  padding: 0 14px 14px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--app-text-2);
+}
+
 /* ---- Инпут внизу (sticky над tab-bar) ---- */
 .inputBar {
   position: sticky;

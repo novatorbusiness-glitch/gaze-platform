@@ -1,13 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
-import { Pin, Send } from 'lucide-react'
+import { HelpCircle, Pin, Send } from 'lucide-react'
 import Avatar from '../components/Avatar'
 import Badge from '../components/Badge'
 import {
   demoCommunityMessages,
+  demoFaqItems,
   demoMentorMessages,
   demoMentorName,
   demoMentorRole,
   type CommunityMessage,
+  type FaqItem,
   type MentorMessage,
 } from '../lib/dev-data'
 import { haptic } from '../lib/telegram'
@@ -17,6 +19,71 @@ import { useMasterStore } from '../store/useMasterStore'
 import styles from './Chat.module.css'
 
 type ChatTab = 'mentor' | 'community'
+
+/** T5 — Умный наставник: подбор ответа из FAQ по совпадению ключевых слов */
+function findFaqAnswer(text: string): string | null {
+  const q = text.trim().toLowerCase()
+  if (!q) return null
+  // Простой матчинг: проверяем пересечение слов вопроса мастера с вопросом FAQ
+  const words = q.split(/\s+/).filter((w) => w.length > 3)
+  let best: { item: FaqItem; score: number } | null = null
+  for (const item of demoFaqItems) {
+    const fq = item.question.toLowerCase()
+    let score = 0
+    for (const w of words) {
+      if (fq.includes(w)) score++
+    }
+    if (score > 0 && (!best || score > best.score)) {
+      best = { item, score }
+    }
+  }
+  return best && best.score >= 1 ? best.item.answer : null
+}
+
+/** T5 — Аккордеон FAQ: один открытый элемент, + → × через rotate(45deg) */
+function FaqAccordion() {
+  const [openId, setOpenId] = useState<string | null>(null)
+
+  const toggle = (id: string) => {
+    haptic('light')
+    setOpenId((prev) => (prev === id ? null : id))
+  }
+
+  return (
+    <div className={styles.faqSection}>
+      <div className={styles.faqHead}>
+        <HelpCircle size={15} strokeWidth={2} />
+        <span>Частые вопросы</span>
+      </div>
+      <div className={styles.faqList}>
+        {demoFaqItems.map((item) => {
+          const open = openId === item.id
+          return (
+            <div
+              key={item.id}
+              className={cx(styles.faqItem, open && styles.faqItemOpen)}
+            >
+              <button
+                className={styles.faqTrigger}
+                onClick={() => toggle(item.id)}
+                aria-expanded={open}
+              >
+                <span className={styles.faqQuestion}>{item.question}</span>
+                <span className={cx(styles.faqIcon, open && styles.faqIconOpen)}>+</span>
+              </button>
+              <div
+                className={styles.faqAnswer}
+                style={{ maxHeight: open ? '300px' : '0' }}
+              >
+                <div className={styles.faqAnswerInner}>{item.answer}</div>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
 
 /** Пузырь чата: свои — --app-cta с белым текстом, чужие — --app-surface (ТЗ, ЭКРАН 7) */
 function Bubble({

@@ -21,6 +21,7 @@ export type Screen =
   | 'path'
   | 'premium'
   | 'aiMarketer'
+  | 'invite'
 
 /** G2 — Тариф подписки: базовый (990₽) или премиум (1500₽, + AI-маркетолог) */
 export type Plan = 'base' | 'premium'
@@ -250,6 +251,10 @@ export const useAppStore = create<AppState>((set) => ({
       if (state.screen === 'path') {
         // G1b — «Путь роста»: назад — туда, откуда открыт (Академия или Дашборд)
         return { screen: state.pathOrigin, direction: 'back' }
+      }
+      if (state.screen === 'invite') {
+        // T6 — «Пригласить»: назад — в профиль (оттуда открывается)
+        return { screen: 'profile', direction: 'back' }
       }
       return { screen: 'dashboard', direction: 'back' }
     }),
