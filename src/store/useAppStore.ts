@@ -26,7 +26,7 @@ export type Screen =
   | 'invite'
   | 'coverMaker'
 
-/** G2 — Тариф подписки: 'base' (нет подписки) или 'premium' (активна, 990 ₽/мес) */
+/** G2 — Тариф подписки: 'base' (нет тарифа) или 'premium' (активен, 1 500 ₽/мес) */
 export type Plan = 'base' | 'premium'
 
 /** Фильтр списка клиентов (ЭКРАН 2: Все · Активные · Давно не был) */
@@ -102,7 +102,7 @@ interface AppState {
   tipsAmount: number
   /** T20 — Сообщество: выбранный мастер для профиля (или 'me') */
   communityMasterId: string | null
-  /** G2 — Тариф: 'base' (подписка не активна) или 'premium' (активна, 990 ₽/мес). Производный от реальной подписки. */
+  /** G2 — Тариф: 'base' (тариф не активен) или 'premium' (активен, 1 500 ₽/мес). Производный от реальной подписки. */
   plan: Plan
   /** Реальная подписка из Supabase (masters.subscription_status: new/trial/active/trial_expired/expired) */
   subscriptionStatus: string
@@ -146,7 +146,7 @@ interface AppState {
   /**
    * Применить реальную подписку мастера (из Supabase). plan становится
    * производным: subscription_status='active' (и подписка не истекла) →
-   * 'premium' (полный доступ, 990 ₽/мес), иначе 'base' (пейволл).
+   * 'premium' (полный доступ, 1 500 ₽/мес), иначе 'base' (пейволл).
    * Вызывается после resolveMaster (в т.ч. после оплаты — force-обновлением).
    */
   applySubscription: (status: string, end: string) => void
@@ -179,7 +179,7 @@ export const useAppStore = create<AppState>((set) => ({
 
   openGrowth: () => set({ screen: 'growth', direction: 'forward' }),
 
-  /** Реальная подписка: 'active' и не истекла → план 'premium' (полный доступ, 990 ₽/мес). */
+  /** Реальная подписка: 'active' и не истекла → план 'premium' (полный доступ, 1 500 ₽/мес). */
   applySubscription: (status, end) => {
     let plan: Plan = 'base'
     if (status === 'active') {

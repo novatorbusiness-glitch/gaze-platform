@@ -88,18 +88,18 @@ function SubscriptionCard({ onManage }: { onManage: () => void }) {
         {isPremium && subscriptionEnd ? (
           <Badge variant="success">до {formatDateLong(subscriptionEnd)}</Badge>
         ) : (
-          <Badge variant="accent">990 ₽/мес</Badge>
+          <Badge variant="accent">1 500 ₽/мес</Badge>
         )}
       </div>
 
       <div className={styles.subBody}>
         <div>
           <span className={styles.subTariff}>
-            <span className={styles.subPrice}>990</span> ₽/мес
+            <span className={styles.subPrice}>1 500</span> ₽/мес
           </span>
         </div>
         <span className={styles.subLabel}>
-          Подписка GAZE Platform · {isPremium ? 'полный доступ' : 'все функции платформы'}
+          Премиум «AI-маркетолог» · {isPremium ? 'полный доступ' : 'все функции платформы'}
         </span>
       </div>
 
@@ -122,7 +122,7 @@ function SubscriptionCard({ onManage }: { onManage: () => void }) {
       ) : (
         <Button fullWidth size="md" onClick={() => navigate('premium')}>
           <Crown size={15} strokeWidth={2} />
-          Оплатить подписку — 990 ₽/мес
+          Оплатить премиум — 1 500 ₽/мес
         </Button>
       )}
 
@@ -378,7 +378,7 @@ export default function Profile() {
     setSubOpen(true)
   }
 
-  /** T13 — Продление: открываем оплату в боте (Telegram Stars, 990 ₽/мес) */
+  /** T13 — Продление: открываем оплату в боте (Telegram Stars, 1 500 ₽/мес) */
   const extendSub = () => {
     hapticSuccess()
     setSubOpen(false)
@@ -680,20 +680,20 @@ export default function Profile() {
 
       {/* T13 — Модалка «Подписка»: статус, срок, оплата/обновление */}
       {subOpen && (
-        <Sheet title="Подписка" onClose={() => setSubOpen(false)}>
+        <Sheet title="Премиум «AI-маркетолог»" onClose={() => setSubOpen(false)}>
           <div className={styles.subSheetCard}>
             <div className={styles.subSheetHead}>
               <span className={styles.subSheetPlan}>
-                Подписка GAZE Platform · {isPremium ? 'полный доступ' : 'не активна'}
+                Премиум «AI-маркетолог» · {isPremium ? 'полный доступ' : 'не активен'}
               </span>
               {isPremium ? (
-                <Badge variant="success">Активна</Badge>
+                <Badge variant="success">Активен</Badge>
               ) : (
-                <Badge variant="accent">990 ₽/мес</Badge>
+                <Badge variant="accent">1 500 ₽/мес</Badge>
               )}
             </div>
             <div className={styles.subSheetPrice}>
-              990
+              1 500
               <span className={styles.subSheetPer}> ₽/мес</span>
             </div>
             <div className={styles.subSheetRows}>
@@ -725,7 +725,7 @@ export default function Profile() {
           ) : (
             <Button size="lg" fullWidth onClick={() => navigate('premium')}>
               <Crown size={16} strokeWidth={2} />
-              Оплатить 990 ₽/мес
+              Оплатить 1 500 ₽/мес
             </Button>
           )}
           <Button variant="ghost" size="md" fullWidth onClick={extendSub}>

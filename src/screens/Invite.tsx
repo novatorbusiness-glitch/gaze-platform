@@ -101,7 +101,7 @@ export default function Invite() {
         </div>
         <h1 className={styles.heroTitle}>Дари месяц — получай месяц</h1>
         <p className={styles.heroText}>
-          Пригласи коллегу-мастера в GAZE. Когда он оформит подписку — ты получишь{' '}
+          Пригласи коллегу-мастера в GAZE. Когда он оформит доступ к курсу — ты получишь{' '}
           <strong>{demoReferral.bonusPerInvite}</strong>. Бонус суммируется, до{' '}
           {demoReferral.maxBonus}.
         </p>
@@ -169,7 +169,7 @@ export default function Invite() {
         <Card className={styles.stepCard}>
           <span className={styles.stepNum}>2</span>
           <div className={styles.stepBody}>
-            <span className={styles.stepTitle}>Он оформит подписку</span>
+            <span className={styles.stepTitle}>Он оформит доступ к курсу</span>
             <span className={styles.stepText}>
               Друг регистрируется в GAZE по твоей ссылке и активирует тариф.
             </span>

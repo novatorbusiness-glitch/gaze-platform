@@ -270,7 +270,7 @@ export default function Premium() {
       </div>
 
       <p className={styles.hint}>
-        Оплата проходит в боте GAZE через Telegram Stars: 495 ⭐ ≈ 990 ₽, 750 ⭐ ≈ 1 500 ₽.
+        Оплата проходит в боте GAZE через Telegram Stars: 500 ⭐ ≈ 990 ₽, 750 ⭐ ≈ 1 500 ₽.
         После оплаты вернитесь сюда и нажмите «Я оплатил — обновить статус».
       </p>
 

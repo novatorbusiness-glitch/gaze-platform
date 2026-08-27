@@ -34,6 +34,7 @@ const CONTENT_TYPES: Array<{ id: ContentType; label: string; emoji: string }> = 
   { id: 'post', label: 'Пост', emoji: '📝' },
   { id: 'stories', label: 'Сторис', emoji: '📱' },
   { id: 'offer', label: 'Оффер', emoji: '🎁' },
+  { id: 'welcome', label: 'Приветствие', emoji: '👋' },
   { id: 'script', label: 'Скрипт ответа', emoji: '💬' },
 ]
 
@@ -88,13 +89,14 @@ function PremiumLock() {
       </span>
       <h2 className={styles.lockTitle}>AI-маркетолог</h2>
       <p className={styles.lockText}>
-        Доступно по подписке GAZE (990 ₽/мес). Генератор пишет посты, сторис, офферы и скрипты
-        ответов по формуле «Нейро-Воронки» — 3-4 готовых варианта на выбор.
+        Доступно по премиум-тарифу GAZE (1 500 ₽/мес). Генератор пишет посты, сторис, офферы,
+        приветствия новым клиентам и скрипты ответов по формуле «Нейро-Воронки» —
+        4 готовых варианта на выбор.
       </p>
       <ul className={styles.lockFeatures}>
         {[
           'Посты для соцсетей по формуле «крючок → боль → решение → оффер → CTA»',
-          'Сторис, офферы и скрипты ответов клиентам',
+          'Офферы, приветствия новым клиентам и скрипты ответов',
           '15 чит-кодов из книги «Нейро-Воронка»',
         ].map((f) => (
           <li key={f} className={styles.lockFeature}>
@@ -108,10 +110,10 @@ function PremiumLock() {
       <div className={styles.lockCta}>
         <Button size="lg" fullWidth onClick={() => navigate('premium')}>
           <Crown size={16} strokeWidth={2} />
-          Оплатить подписку — 990 ₽/мес
+          Оплатить тариф — 1 500 ₽/мес
         </Button>
         <p className={styles.lockHint}>
-          Подписка GAZE открывает всю платформу: AI-маркетолог, премиум-курсы и все чит-коды.
+          Премиум-тариф «AI-маркетолог» открывает генератор контента, все чит-коды и премиум-курсы.
         </p>
       </div>
     </Card>
@@ -178,6 +180,7 @@ export default function AiMarketer() {
             <p className={styles.heroSub}>
               Напишите свою услугу и боль клиенток — получите готовые тексты
               по формуле «Нейро-Воронки»: крючок → боль → решение → оффер → CTA.
+              Посты, сторис, офферы, приветствия и скрипты — 4 варианта на выбор.
             </p>
             <div className={styles.heroBadges}>
               <Badge variant="cta">
@@ -274,7 +277,8 @@ export default function AiMarketer() {
               <p className={styles.emptyTitle}>Заполните форму и нажмите «Сгенерировать»</p>
               <p className={styles.emptyText}>
                 AI-маркетолог подставит вашу услугу и боль аудитории в формулу
-                «Нейро-Воронки» и соберёт 4 варианта: пост, сторис, оффер или скрипт.
+                «Нейро-Воронки» и соберёт 4 варианта: пост, сторис, оффер, приветствие
+                или скрипт ответа.
               </p>
             </Card>
           )}
