@@ -16,6 +16,7 @@ import CommunityProfile from './screens/CommunityProfile'
 import Course from './screens/Course'
 import Dashboard from './screens/Dashboard'
 import Expenses from './screens/Expenses'
+import Invite from './screens/Invite'
 import Knowledge from './screens/Knowledge'
 import Lesson from './screens/Lesson'
 import Path from './screens/Path'
@@ -50,8 +51,10 @@ export default function App() {
   const isPremiumScreens = screen === 'premium' || screen === 'aiMarketer'
   // G1b — «Путь роста» открывается поверх (из Академии или с дашборда), без таббара
   const isPath = screen === 'path'
+  // T6 — «Пригласить друга» открывается поверх (из профиля), без таббара
+  const isInvite = screen === 'invite'
   const hideTabbar =
-    isClientProfile || isAddProcedure || isAddClient || isCourse || isLesson || isTips || isExpenses || isCommunityProfile || isPremiumScreens || isPath
+    isClientProfile || isAddProcedure || isAddClient || isCourse || isLesson || isTips || isExpenses || isCommunityProfile || isPremiumScreens || isPath || isInvite
 
   return (
     <div className={cx('app', hideTabbar && 'app--no-tabbar')}>
@@ -71,6 +74,7 @@ export default function App() {
         {screen === 'tips' && <Tips />}
         {screen === 'tipsPay' && <TipsPay />}
         {screen === 'expenses' && <Expenses />}
+        {screen === 'invite' && <Invite />}
         {screen === 'community' && <Community />}
         {screen === 'communityProfile' && <CommunityProfile />}
         {screen === 'premium' && <Premium />}

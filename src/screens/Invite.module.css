@@ -1,0 +1,307 @@
+/* ============================================================
+   GAZE — ЭКРАН «ПРИГЛАСИТЬ» (T6): QR-код, шаринг, бонусы, история
+   Стиль: тёплый минимализм, дизайн-токены tokens.css
+   ============================================================ */
+
+.screen {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding-bottom: 12px;
+}
+
+/* Шапка: кнопка «Назад» + заголовок */
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 0;
+}
+
+.backBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  color: var(--app-text);
+  box-shadow: var(--app-shadow);
+  transition: transform 0.15s ease-out;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.backBtn:active {
+  transform: scale(0.92);
+}
+
+.headerTitle {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 20px;
+  color: var(--app-text);
+  flex: 1;
+}
+
+/* Герой-блок: «Дари месяц — получай месяц» */
+.heroCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+  padding: 24px 20px;
+  background: linear-gradient(160deg, #fdf7f1 0%, var(--app-surface) 70%);
+  border-color: var(--app-accent);
+}
+
+.heroIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--app-accent);
+  color: var(--app-cta);
+}
+
+.heroTitle {
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: 19px;
+  line-height: 1.3;
+  color: var(--app-text);
+}
+
+.heroText {
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--app-text-2);
+}
+
+.heroText strong {
+  color: var(--app-text);
+  font-weight: 700;
+}
+
+.heroBadges {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
+/* QR-код */
+.qrCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 22px 20px;
+}
+
+.qrCanvas {
+  width: 180px;
+  height: 180px;
+  max-width: 100%;
+  border-radius: 8px;
+}
+
+.qrHint {
+  font-size: 12px;
+  color: var(--app-text-3);
+  line-height: 1.45;
+  text-align: center;
+}
+
+/* Реферальный код + копирование */
+.codeRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 4px 0;
+}
+
+.code {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 22px;
+  letter-spacing: 1.5px;
+  color: var(--app-text);
+}
+
+.copyBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border-radius: var(--radius-pill);
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  box-shadow: var(--app-shadow);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--app-cta);
+  transition: transform 0.15s ease-out;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.copyBtn:active {
+  transform: scale(0.95);
+}
+
+/* Статистика: приглашено / активных / заработано */
+.statsRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--app-shadow);
+  padding: 18px 8px;
+}
+
+.stat {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  text-align: center;
+}
+
+.statValue {
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: 17px;
+  color: var(--app-text);
+}
+
+.statLabel {
+  font-size: 11px;
+  line-height: 1.35;
+  color: var(--app-text-3);
+}
+
+.statDivider {
+  width: 1px;
+  height: 30px;
+  background: var(--app-border);
+}
+
+/* Как это работает: 3 шага */
+.sectionTitle {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 16px;
+  color: var(--app-text);
+}
+
+.steps {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.stepCard {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+}
+
+.stepNum {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--app-accent);
+  color: var(--app-cta);
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.stepBody {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.stepTitle {
+  font-weight: 600;
+  font-size: 13.5px;
+  color: var(--app-text);
+}
+
+.stepText {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--app-text-2);
+}
+
+/* История приглашений */
+.historyCard {
+  display: flex;
+  flex-direction: column;
+  padding: 6px 4px;
+}
+
+.historyRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 12px;
+}
+
+.historyRowBorder {
+  border-top: 1px solid var(--app-border);
+}
+
+.historyAvatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--app-bg);
+  border: 1px solid var(--app-border);
+  color: var(--app-cta);
+  flex-shrink: 0;
+}
+
+.historyInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.historyName {
+  font-weight: 600;
+  font-size: 13.5px;
+  color: var(--app-text);
+}
+
+.historyDate {
+  font-size: 11.5px;
+  color: var(--app-text-3);
+}
+
+/* Демо-подсказка */
+.hint {
+  font-size: 12px;
+  color: var(--app-text-3);
+  line-height: 1.55;
+  text-align: center;
+  padding: 0 8px 8px;
+}

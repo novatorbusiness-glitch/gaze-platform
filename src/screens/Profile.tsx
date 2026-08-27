@@ -131,6 +131,7 @@ function SubscriptionCard({ onManage }: { onManage: () => void }) {
 /* ------------------------------------------------------------------ */
 
 function ReferralCard() {
+  const navigate = useAppStore((s) => s.navigate)
   const [copiedCode, setCopiedCode] = useState(false)
   const [copiedLink, setCopiedLink] = useState(false)
 
@@ -185,6 +186,19 @@ function ReferralCard() {
         {copiedLink ? 'Ссылка скопирована ✓' : 'Скопировать ссылку'}
       </Button>
       <span className={styles.refLink}>{demoReferral.link}</span>
+      {/* T6 — полный экран приглашения: QR-код, шаринг, шаги и история */}
+      <Button
+        variant="ghost"
+        fullWidth
+        size="md"
+        onClick={() => {
+          haptic('medium')
+          navigate('invite')
+        }}
+      >
+        <Gift size={15} strokeWidth={2} />
+        QR-код, шаги и история
+      </Button>
     </Card>
   )
 }

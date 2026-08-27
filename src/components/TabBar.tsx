@@ -24,7 +24,8 @@ export default function TabBar() {
   const screen = useAppStore((s) => s.screen)
   const navigate = useAppStore((s) => s.navigate)
 
-  // На экранах профиля клиента, форм, академии (курс/урок) и чаевых (QR/оплата) tab-bar скрыт
+  // На экранах профиля клиента, форм, академии (курс/урок), чаевых (QR/оплата),
+  // премиума/AI-маркетолога (G2) и приглашения (T6) tab-bar скрыт — это оверлеи
   if (
     screen === 'clientProfile' ||
     screen === 'addProcedure' ||
@@ -35,7 +36,10 @@ export default function TabBar() {
     screen === 'tipsPay' ||
     screen === 'expenses' ||
     screen === 'communityProfile' ||
-    screen === 'path'
+    screen === 'path' ||
+    screen === 'premium' ||
+    screen === 'aiMarketer' ||
+    screen === 'invite'
   )
     return null
 

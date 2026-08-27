@@ -150,7 +150,7 @@ export default function Invite() {
         <div className={styles.statDivider} />
         <div className={styles.stat}>
           <span className={styles.statValue}>{formatMoney(demoReferral.earned)}</span>
-          <span className={styles.statLabel}>заработано, ₽</span>
+          <span className={styles.statLabel}>заработано</span>
         </div>
       </div>
 
