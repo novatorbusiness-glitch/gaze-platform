@@ -68,7 +68,8 @@ export function ensureTipsSeeded(): void {
 }
 
 export function loadTips(): TipRecord[] {
-  ensureTipsSeeded()
+  // ВАЖНО: не сидируем демо-чаевые (1200₽) — иначе аналитика врёт новому
+  // пользователю. Только реальные записи.
   return readAll()
 }
 

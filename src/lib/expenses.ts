@@ -82,7 +82,8 @@ export function ensureExpensesSeeded(): void {
 }
 
 export function loadExpenses(): ExpenseRecord[] {
-  ensureExpensesSeeded()
+  // ВАЖНО: не сидируем демо-расходы — иначе «прочие расходы» 25к попадают
+  // в аналитику как реальные и отпугивают пользователя. Только реальные записи.
   return readAll()
 }
 
