@@ -382,6 +382,44 @@
   animation: path-toast-in 0.22s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
+/* Баннер ошибки обновления: данные остаются на экране, но причина видна */
+.errorBanner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 12px;
+  padding: 10px 14px;
+  border: 1px solid rgba(201, 106, 93, 0.45);
+  border-radius: var(--radius-m);
+  background: rgba(201, 106, 93, 0.08);
+  color: var(--app-danger);
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.errorBannerText {
+  flex: 1;
+}
+
+.errorBannerRetry {
+  flex: none;
+  border: none;
+  background: var(--app-danger);
+  color: #ffffff;
+  font: inherit;
+  font-weight: 600;
+  font-size: 12.5px;
+  padding: 7px 14px;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.errorBannerRetry:active {
+  opacity: 0.85;
+}
+
 @keyframes path-toast-in {
   from {
     opacity: 0;

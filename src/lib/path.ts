@@ -13,7 +13,7 @@
  * Контент (уроки) зальют отдельно — здесь только механика.
  */
 import type { Client, Procedure } from './mock'
-import { fetchDashboard, isDemoMode } from './api'
+import { fetchDashboard, friendlyError, isDemoMode } from './api'
 import { demoReferral, demoReminders } from './dev-data'
 import { listSentClientIds } from './reminders'
 import { getTipsStats } from './tips'
@@ -133,6 +133,8 @@ export interface PathEvaluation {
   toLevel: number
   /** true — данные не удалось получить (прогресс не перезаписан) */
   error?: boolean
+  /** Человекочитаемое описание ошибки (для UI), когда error === true */
+  errorMessage?: string
 }
 
 /* ------------------------------------------------------------------ */
@@ -547,14 +549,17 @@ export async function checkLevelProgress(masterId: string): Promise<PathEvaluati
   let procedures: Procedure[] = []
   let isDemo = isDemoMode()
   let ok = false
+  let fetchError: string | null = null
   try {
     const dash = await fetchDashboard(masterId)
     clients = dash.clients ?? []
     procedures = dash.procedures ?? []
     isDemo = dash.isDemo ?? isDemo
     ok = true
-  } catch {
-    /* сеть/RLS упали — не трогаем сохранённый прогресс */
+  } catch (err) {
+    /* сеть/RLS упали — не трогаем сохранённый прогресс, но сохраняем
+       человекочитаемую причину для экрана (Path показывает её с повтором) */
+    fetchError = friendlyError(err)
   }
 
   if (ok) return syncPathProgress(masterId, clients, procedures, isDemo)
@@ -568,5 +573,6 @@ export async function checkLevelProgress(masterId: string): Promise<PathEvaluati
     fromLevel: prev.level,
     toLevel: prev.level,
     error: true,
+    errorMessage: fetchError ?? 'Не удалось получить данные. Проверь интернет и попробуй ещё раз.',
   }
 }

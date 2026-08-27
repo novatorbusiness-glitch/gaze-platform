@@ -3,7 +3,9 @@ import { ArrowLeft, Check, CircleDot, RefreshCw } from 'lucide-react'
 import Badge from '../components/Badge'
 import Button from '../components/Button'
 import Card from '../components/Card'
+import ErrorState from '../components/ErrorState'
 import SkeletonLoader from '../components/SkeletonLoader'
+import { friendlyError } from '../lib/api'
 import {
   checkLevelProgress,
   getPathLevel,
@@ -51,9 +53,13 @@ function checkpointValue(id: string, m: PathMetrics | undefined): string | null 
 export default function Path() {
   const goBack = useAppStore((s) => s.goBack)
   const master = useMasterStore((s) => s.master)
+  const masterStatus = useMasterStore((s) => s.status)
+  const masterError = useMasterStore((s) => s.error)
+  const initMaster = useMasterStore((s) => s.init)
 
   const [evaluation, setEvaluation] = useState<PathEvaluation | null>(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [toast, setToast] = useState<string | null>(null)
   const toastTimer = useRef<number | undefined>(undefined)
 
@@ -66,19 +72,23 @@ export default function Path() {
   const refresh = useCallback(
     async (silent = false) => {
       if (!master?.id) {
+        // Мастер не определился — ошибку покажет гейт ниже (с повтором initMaster)
         setLoading(false)
+        setError(null)
         return
       }
       if (!silent) setLoading(true)
       try {
         const ev = await checkLevelProgress(master.id)
         setEvaluation(ev)
+        setError(ev.error ? (ev.errorMessage ?? 'Не удалось получить данные. Проверь интернет и попробуй ещё раз.') : null)
         if (ev.advanced) {
           hapticSuccess()
           showToast(`🎉 Уровень пройден: «${getPathLevel(ev.toLevel).name}»!`)
         }
-      } catch {
-        /* сеть/RLS упали — экран просто не обновится */
+      } catch (err) {
+        /* сеть/RLS упали — показываем причину и даём повторить */
+        setError(friendlyError(err))
       } finally {
         setLoading(false)
       }
@@ -90,7 +100,55 @@ export default function Path() {
     refresh(true)
   }, [refresh])
 
-  /* Загрузка при первом открытии */
+  const retryMaster = () => {
+    setLoading(true)
+    setError(null)
+    initMaster(true).then(() => refresh(true))
+  }
+
+  /* Мастер ещё определяется — скелетон */
+  if (!master && masterStatus === 'loading') {
+    return (
+      <div className={styles.screen}>
+        <header className={styles.header}>
+          <button className={styles.back} onClick={goBack} aria-label="Назад">
+            <ArrowLeft size={20} strokeWidth={2} />
+          </button>
+          <div className={styles.headerText}>
+            <h1 className={styles.title}>Путь роста</h1>
+            <p className={styles.subtitle}>6 уровней до 200к+ в месяц</p>
+          </div>
+        </header>
+        <SkeletonLoader shape="card" height={150} />
+        <SkeletonLoader shape="card" height={120} />
+        <SkeletonLoader shape="card" height={120} />
+        <SkeletonLoader shape="card" height={120} />
+      </div>
+    )
+  }
+
+  /* Мастер не определился (RLS/сеть/auth) — ошибка с повтором вместо пустого уровня 1 */
+  if (!master) {
+    return (
+      <div className={styles.screen}>
+        <header className={styles.header}>
+          <button className={styles.back} onClick={goBack} aria-label="Назад">
+            <ArrowLeft size={20} strokeWidth={2} />
+          </button>
+          <div className={styles.headerText}>
+            <h1 className={styles.title}>Путь роста</h1>
+            <p className={styles.subtitle}>6 уровней до 200к+ в месяц</p>
+          </div>
+        </header>
+        <ErrorState
+          message={masterError ?? 'Не удалось загрузить аккаунт. Проверь интернет и попробуй ещё раз.'}
+          onRetry={retryMaster}
+        />
+      </div>
+    )
+  }
+
+  /* Первая загрузка данных пути */
   if (loading && !evaluation) {
     return (
       <div className={styles.screen}>
@@ -107,6 +165,24 @@ export default function Path() {
         <SkeletonLoader shape="card" height={120} />
         <SkeletonLoader shape="card" height={120} />
         <SkeletonLoader shape="card" height={120} />
+      </div>
+    )
+  }
+
+  /* Ошибка при первой загрузке (данных для показа ещё нет) — вместо вечного скелетона */
+  if (error && !evaluation) {
+    return (
+      <div className={styles.screen}>
+        <header className={styles.header}>
+          <button className={styles.back} onClick={goBack} aria-label="Назад">
+            <ArrowLeft size={20} strokeWidth={2} />
+          </button>
+          <div className={styles.headerText}>
+            <h1 className={styles.title}>Путь роста</h1>
+            <p className={styles.subtitle}>6 уровней до 200к+ в месяц</p>
+          </div>
+        </header>
+        <ErrorState message={error} onRetry={() => refresh(false)} />
       </div>
     )
   }
@@ -137,6 +213,16 @@ export default function Path() {
           GAZE PATH
         </Badge>
       </header>
+
+      {/* Ошибка обновления при уже показанных данных — баннер, данные остаются на экране */}
+      {error && (
+        <div className={styles.errorBanner} role="alert">
+          <span className={styles.errorBannerText}>{error}</span>
+          <button className={styles.errorBannerRetry} onClick={() => refresh(false)}>
+            Повторить
+          </button>
+        </div>
+      )}
 
       {/* Текущий уровень: статус + прогресс + чекпоинты + обновление */}
       <Card className={styles.hero}>
@@ -180,7 +266,7 @@ export default function Path() {
           </div>
         )}
 
-        <Button fullWidth size="lg" onClick={() => refresh(true)} disabled={loading}>
+        <Button fullWidth size="lg" onClick={() => refresh(false)} disabled={loading}>
           <RefreshCw size={16} strokeWidth={2.2} className={cx(loading && styles.spin)} />
           {loading ? 'Считаем…' : 'Обновить прогресс'}
         </Button>

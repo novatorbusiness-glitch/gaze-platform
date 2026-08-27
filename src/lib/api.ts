@@ -205,7 +205,7 @@ export function friendlyError(err: unknown): string {
   if (code.length > 0 || /row-level security|violates row-level|permission denied|duplicate key/i.test(message)) {
     return 'Нет доступа к данным (RLS). Вход через Supabase Auth подключим на этапе 3 — сейчас данные читаются только под своим master_id.'
   }
-  if (/fetch|network|Failed to fetch|ERR_/i.test(message)) {
+  if (/fetch|network|Failed to fetch|ERR_|timed out|timeout|aborted/i.test(message)) {
     return 'Нет связи с сервером. Проверь интернет и попробуй ещё раз.'
   }
   return message
@@ -228,6 +228,23 @@ let demoMode = false
  * демо-фолбэк НЕ применяется: любая ошибка RLS отдаётся как ошибка.
  */
 let demoAllowed = false
+
+/**
+ * true, когда ошибка значит «таблицы в БД ещё нет» (PGRST205 / Could not find
+ * the table). Для таких таблиц контент пока живёт в демо-данных — фолбэк
+ * нужен и реальным пользователям (например, courses: таблица появится на этапе 3).
+ */
+function isMissingTableError(err: unknown): boolean {
+  const isObj = typeof err === 'object' && err !== null
+  const code = isObj && 'code' in err ? String((err as { code: unknown }).code) : ''
+  const message =
+    err instanceof Error
+      ? err.message
+      : isObj && 'message' in err
+        ? String((err as { message: unknown }).message)
+        : ''
+  return code === 'PGRST205' || /could not find the table/i.test(message)
+}
 
 /** Текущий режим: true — отдаём демо-данные */
 export function isDemoMode(): boolean {
@@ -600,6 +617,10 @@ export async function fetchCourses(): Promise<Course[]> {
       demoMode = true
       return [...demoCourses]
     }
+    // Таблицы courses ещё нет в БД (PGRST205) — контентом академии служат
+    // демо-курсы и для реальных пользователей (иначе Академия — мёртвый
+    // экран ошибки, и до «Пути роста» не добраться).
+    if (isMissingTableError(err)) return [...demoCourses]
     throw err
   }
 }

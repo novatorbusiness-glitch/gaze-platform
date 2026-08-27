@@ -18,6 +18,44 @@ const supabaseAnonKey: string | undefined = import.meta.env.VITE_SUPABASE_ANON_K
 /** true, когда в .env есть и URL, и anon-ключ */
 export const isSupabaseReady = Boolean(supabaseUrl && supabaseAnonKey)
 
+/** Лимит ожидания ответа Supabase (мс). 15с — компромисс для мобильной сети. */
+const FETCH_TIMEOUT_MS = 15_000
+
+/**
+ * fetch с таймаутом для клиента Supabase. supabase-js по умолчанию НЕ ставит
+ * таймаут на запросы: при зависшей сети (обрыв, DNS висит, соединение глохнет)
+ * промис не завершается НИКОГДА, и экраны (Путь, Дашборд, Академия, …) зависают
+ * в состоянии loading навсегда. Здесь запрос отменяется через FETCH_TIMEOUT_MS
+ * (ошибка переводится friendlyError в «Нет связи с сервером»), а отмена от
+ * вызывающего кода (supabase передаёт свой signal при unmount) пробрасывается.
+ */
+function fetchWithTimeout(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
+  const controller = new AbortController()
+  const external = init?.signal
+
+  const onExternalAbort = () => controller.abort()
+  if (external) {
+    if (external.aborted) controller.abort()
+    else external.addEventListener('abort', onExternalAbort, { once: true })
+  }
+
+  const timer = setTimeout(
+    () =>
+      // name='AbortError' важно: supabase-js НЕ ретраит ошибки с именем AbortError
+      // (иначе каждый ретрай перезапускал бы таймаут заново — см. postgrest-js).
+      // friendlyError переводит это в «Нет связи с сервером».
+      controller.abort(
+        new DOMException('Запрос к серверу занял слишком много времени (timeout)', 'AbortError'),
+      ),
+    FETCH_TIMEOUT_MS,
+  )
+
+  return fetch(input, { ...init, signal: controller.signal }).finally(() => {
+    clearTimeout(timer)
+    if (external) external.removeEventListener('abort', onExternalAbort)
+  })
+}
+
 export const supabase = createClient(
   supabaseUrl ?? 'https://placeholder.supabase.co',
   supabaseAnonKey ?? 'placeholder-anon-key',
@@ -26,6 +64,9 @@ export const supabase = createClient(
       persistSession: true,
       autoRefreshToken: true,
       detectSessionInUrl: false,
+    },
+    global: {
+      fetch: fetchWithTimeout,
     },
   },
 )
