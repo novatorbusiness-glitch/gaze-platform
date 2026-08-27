@@ -179,6 +179,9 @@ export default function Chat() {
       ])
       // Наставник «печатает» и отвечает
       setTyping(true)
+      // T5: сначала ищем ответ в базе FAQ (умный подбор по ключевым словам),
+      // иначе — общая подсказка.
+      const faqAnswer = findFaqAnswer(text)
       replyTimer.current = setTimeout(() => {
         setTyping(false)
         setMentorMessages((prev) => [
@@ -186,7 +189,9 @@ export default function Chat() {
           {
             id: `mentor-${Date.now()}`,
             from: 'mentor',
-            text: 'Приняла! 💛 Загляну в твою аналитику и вернусь с подсказкой.',
+            text: faqAnswer
+              ? `${faqAnswer}\n\nЕсли нужно — уточни, помогу подробнее. 💛`
+              : 'Приняла! 💛 Загляну в твою аналитику и вернусь с подсказкой.',
             time: new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }),
           },
         ])
@@ -263,6 +268,9 @@ export default function Chat() {
             )}
             <div ref={endRef} />
           </div>
+
+          {/* T5: частые вопросы — аккордеон под чатом наставника */}
+          <FaqAccordion />
         </div>
       )}
 
