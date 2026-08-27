@@ -3,10 +3,16 @@ import { Receipt } from 'lucide-react'
 import Badge from '../components/Badge'
 import Button from '../components/Button'
 import Card from '../components/Card'
+import ErrorState from '../components/ErrorState'
+import SkeletonLoader from '../components/SkeletonLoader'
+import { useAsync } from '../hooks/useAsync'
 import { useCountUp } from '../hooks/useCountUp'
+import { fetchDashboard } from '../lib/api'
+import { buildAnalyticsPeriods } from '../lib/analytics'
 import {
   demoAnalyticsPeriods,
   demoClients,
+  demoProcedures,
   type AnalyticsPeriodData,
   type TrendDir,
 } from '../lib/dev-data'
@@ -83,14 +89,52 @@ function pluralClients(n: number): string {
 
 export default function Analytics() {
   const isDemo = useMasterStore((s) => s.isDemo)
+  const master = useMasterStore((s) => s.master)
+  const masterStatus = useMasterStore((s) => s.status)
+  const masterError = useMasterStore((s) => s.error)
+  const retryMaster = useMasterStore((s) => s.init)
   const openClientsWithFilter = useAppStore((s) => s.openClientsWithFilter)
   const navigate = useAppStore((s) => s.navigate)
 
   const [periodId, setPeriodId] = useState<AnalyticsPeriodData['id']>('month')
   const [activeBar, setActiveBar] = useState<number | null>(null)
+  const [attempt, setAttempt] = useState(0)
 
-  const period =
-    demoAnalyticsPeriods.find((p) => p.id === periodId) ?? demoAnalyticsPeriods[1]
+  const masterId = master?.id ?? null
+
+  // Реальные данные мастера (Supabase): как на дашборде. В демо-режиме
+  // fetchDashboard вернёт демо-массивы — периоды оставляем из demoAnalyticsPeriods.
+  const dash = useAsync(
+    () => (masterId ? fetchDashboard(masterId) : Promise.resolve({ clients: [], procedures: [] })),
+    [masterId, attempt],
+  )
+
+  const clients = useMemo(
+    () => (isDemo && dash.status === 'error' ? demoClients : dash.data?.clients ?? []),
+    [isDemo, dash.status, dash.data],
+  )
+  const procedures = useMemo(
+    () => (isDemo && dash.status === 'error' ? demoProcedures : dash.data?.procedures ?? []),
+    [isDemo, dash.status, dash.data],
+  )
+
+  // FIX: в реальном режиме периоды считаются из процедур мастера, а не из
+  // демо-массивов dev-data. Демо-периоды остаются только в демо-режиме (по ТЗ).
+  const realPeriods = useMemo(() => buildAnalyticsPeriods(procedures), [procedures])
+  const periods = isDemo ? demoAnalyticsPeriods : realPeriods
+
+  const period = periods.find((p) => p.id === periodId) ?? periods[1]
+
+  const loading = masterStatus === 'loading' || (masterStatus === 'ready' && dash.status === 'loading')
+  const error = masterStatus === 'error' ? masterError : dash.status === 'error' ? dash.error : null
+
+  const retry = () => {
+    if (masterStatus === 'error') {
+      retryMaster(true)
+    } else {
+      setAttempt((a) => a + 1)
+    }
+  }
 
   // T17 — отдельные расходы (gaze_expenses): за период по диапазону дат.
   // Неделя — последние 7 дней, квартал — последние 90, месяц — календарный месяц.
@@ -124,10 +168,11 @@ export default function Analytics() {
   const tips = useMemo(() => getTipsStats(), [])
   const tipsAnimated = useCountUp(tips.monthSum)
 
-  // Инсайт: сколько клиентов не были 30+ дней (считается из реального списка)
+  // Инсайт: сколько клиентов не были 30+ дней (FIX: из реального списка мастера,
+  // а не demoClients — в реальном режиме инсайт считался от чужих данных)
   const staleCount = useMemo(
-    () => demoClients.filter((c) => daysSince(c.last_visit) >= STALE_DAYS).length,
-    [],
+    () => clients.filter((c) => daysSince(c.last_visit) >= STALE_DAYS).length,
+    [clients],
   )
 
   const maxBar = Math.max(...period.daily.map((d) => d.value), 1)
@@ -139,6 +184,31 @@ export default function Analytics() {
     setActiveBar(null)
   }
 
+  /* Загрузка (реальный мастер — данные ещё тянутся из Supabase) */
+  if (loading) {
+    return (
+      <div className={styles.screen}>
+        <SkeletonLoader shape="title" width={160} height={28} />
+        <div className={styles.metrics}>
+          <SkeletonLoader shape="card" width={140} height={90} />
+          <SkeletonLoader shape="card" width={150} height={90} />
+          <SkeletonLoader shape="card" width={140} height={90} />
+          <SkeletonLoader shape="card" width={150} height={90} />
+        </div>
+      </div>
+    )
+  }
+
+  /* Ошибка (RLS / сеть). В демо-режиме не показываем: демо-данные уже отданы */
+  if (error && !isDemo) {
+    return (
+      <div className={styles.screen}>
+        <h1 className={styles.title}>Аналитика</h1>
+        <ErrorState message={error} onRetry={retry} />
+      </div>
+    )
+  }
+
   return (
     <div className={styles.screen}>
       <div className={styles.titleRow}>
@@ -148,7 +218,7 @@ export default function Analytics() {
 
       {/* Период — pill-табы: Неделя · Месяц · Квартал */}
       <div className={styles.filters}>
-        {demoAnalyticsPeriods.map((p) => (
+        {periods.map((p) => (
           <button
             key={p.id}
             className={cx(styles.filterBtn, periodId === p.id && styles.filterActive)}
