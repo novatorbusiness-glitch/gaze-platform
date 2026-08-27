@@ -1,0 +1,293 @@
+/* ============================================================
+   GAZE — ГЕНЕРАТОР ОБЛОЖЕК: текст + шаблон → SVG → PNG
+   Стиль: тёплый минимализм, дизайн-токены tokens.css
+   ============================================================ */
+
+.screen {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-bottom: 8px;
+}
+
+/* ---------- Шапка ---------- */
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 0;
+}
+
+.backBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  color: var(--app-text);
+  box-shadow: var(--app-shadow);
+  transition: transform 0.15s ease-out;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.backBtn:active {
+  transform: scale(0.92);
+}
+
+.headerTitle {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 18px;
+  color: var(--app-text);
+}
+
+/* ---------- Герой ---------- */
+
+.hero {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 20px 18px;
+  border-radius: 22px;
+  border: 1px solid var(--app-accent);
+  background:
+    radial-gradient(130% 180% at 90% -10%, rgba(224, 199, 192, 0.45) 0%, rgba(255, 255, 255, 0) 55%),
+    linear-gradient(165deg, #ffffff 0%, rgba(224, 199, 192, 0.16) 100%);
+  box-shadow: var(--app-shadow);
+}
+
+.heroGlow {
+  position: absolute;
+  top: -70px;
+  right: -50px;
+  width: 190px;
+  height: 190px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(224, 199, 192, 0.5) 0%, rgba(255, 255, 255, 0) 70%);
+  pointer-events: none;
+}
+
+.heroKicker {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--app-cta);
+  text-transform: uppercase;
+}
+
+.heroTitle {
+  position: relative;
+  z-index: 1;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.015em;
+  color: var(--app-text);
+  margin: 0;
+}
+
+.heroSub {
+  position: relative;
+  z-index: 1;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--app-text-2);
+  margin: 0;
+}
+
+.heroBadges {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* ---------- Форма: формат / шаблон / текст ---------- */
+
+.formCard {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px;
+}
+
+.fieldLabel {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--app-text-2);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  display: block;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--app-border);
+  background: var(--app-bg);
+  color: var(--app-text);
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.15s ease-out;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.chip:active {
+  transform: scale(0.96);
+}
+
+.chipActive {
+  border-color: var(--app-cta);
+  background: rgba(224, 199, 192, 0.28);
+  color: var(--app-cta);
+  font-weight: 600;
+}
+
+.chipLabel {
+  font-weight: 600;
+}
+
+.chipShort {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--app-text-3);
+}
+
+/* ---------- Шаблоны: 3 мини-превью ---------- */
+
+.templates {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.template {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 8px 12px;
+  border-radius: 14px;
+  border: 1.5px solid var(--app-border);
+  background: var(--app-bg);
+  transition: all 0.15s ease-out;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.template:active {
+  transform: scale(0.97);
+}
+
+.templateActive {
+  border-color: var(--app-cta);
+  background: rgba(224, 199, 192, 0.16);
+  box-shadow: 0 0 0 1px var(--app-cta);
+}
+
+.templatePreview {
+  display: block;
+  width: 100%;
+  border-radius: 10px;
+  overflow: hidden;
+  line-height: 0;
+}
+
+.templatePreview svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.templateLabel {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--app-text);
+  text-align: center;
+}
+
+.templateHint {
+  font-size: 10.5px;
+  line-height: 1.35;
+  color: var(--app-text-3);
+  text-align: center;
+}
+
+/* ---------- Превью ---------- */
+
+.sectionTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--app-text);
+  margin: 0 0 10px;
+}
+
+.sectionMeta {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--app-text-3);
+}
+
+.previewCard {
+  padding: 12px;
+  background: var(--app-bg);
+  border-color: var(--app-accent);
+}
+
+.previewCard svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 14px;
+  box-shadow: 0 10px 30px rgba(107, 94, 83, 0.14);
+}
+
+/* ---------- Ошибка / подсказка ---------- */
+
+.error {
+  font-size: 12.5px;
+  color: var(--app-danger);
+  text-align: center;
+  margin: 0;
+}
+
+.hint {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--app-text-3);
+  line-height: 1.5;
+  text-align: center;
+  padding: 0 8px 8px;
+}
+
+.hintIcon {
+  flex: none;
+  color: var(--app-cta);
+}
