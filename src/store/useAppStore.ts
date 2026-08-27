@@ -19,11 +19,14 @@ export type Screen =
   | 'community'
   | 'communityProfile'
   | 'path'
+  | 'growth'
+  | 'certificate'
   | 'premium'
   | 'aiMarketer'
   | 'invite'
+  | 'coverMaker'
 
-/** G2 — Тариф подписки: базовый (990₽) или премиум (1500₽, + AI-маркетолог) */
+/** G2 — Тариф подписки: 'base' (нет подписки) или 'premium' (активна, 990 ₽/мес) */
 export type Plan = 'base' | 'premium'
 
 /** Фильтр списка клиентов (ЭКРАН 2: Все · Активные · Давно не был) */
@@ -99,15 +102,25 @@ interface AppState {
   tipsAmount: number
   /** T20 — Сообщество: выбранный мастер для профиля (или 'me') */
   communityMasterId: string | null
-  /** G2 — Тариф: 'base' (990₽) или 'premium' (1500₽). Персистится в localStorage gaze_subscription. */
+  /** G2 — Тариф: 'base' (подписка не активна) или 'premium' (активна, 990 ₽/мес). Производный от реальной подписки. */
   plan: Plan
+  /** Реальная подписка из Supabase (masters.subscription_status: new/trial/active/trial_expired/expired) */
+  subscriptionStatus: string
+  /** Дата окончания подписки (ISO), '' если нет */
+  subscriptionEnd: string
   /** G1b — Путь роста: откуда открыт экран «Путь» (для кнопки «Назад») */
   pathOrigin: 'knowledge' | 'dashboard'
+  /** G1c — Сертификат: достигнутый уровень, на который выдан сертификат */
+  certificateLevel: number
 
   navigate: (screen: Screen) => void
   openClient: (clientId: string) => void
   /** G1b — Открыть экран «Путь роста» (карта 6 уровней) */
   openPath: (origin?: 'knowledge' | 'dashboard') => void
+  /** G1c — Открыть экран «Сертификат» (уровень = достигнутый уровень мастера) */
+  openCertificate: (level: number) => void
+  /** G3 — Открыть экран «3 рычага роста мастера» (стартовый блок обучения) */
+  openGrowth: () => void
   /** G2 — Демо-переключение тарифа (без оплаты): сохраняет в localStorage */
   setPlan: (plan: Plan) => void
   /** T20 — Открыть профиль мастера в сообществе */
@@ -130,6 +143,13 @@ interface AppState {
   markLessonCompleted: (lessonId: string) => void
   /** T11 — Сохранить ответ/выполнение задания урока (courseId_lessonId → state) */
   saveAssignment: (courseId: string, lessonId: string, data: Partial<AssignmentState>) => void
+  /**
+   * Применить реальную подписку мастера (из Supabase). plan становится
+   * производным: subscription_status='active' (и подписка не истекла) →
+   * 'premium' (полный доступ, 990 ₽/мес), иначе 'base' (пейволл).
+   * Вызывается после resolveMaster (в т.ч. после оплаты — force-обновлением).
+   */
+  applySubscription: (status: string, end: string) => void
   goBack: () => void
 }
 
@@ -145,12 +165,29 @@ export const useAppStore = create<AppState>((set) => ({
   tipsAmount: 100,
   communityMasterId: null,
   plan: loadPlan(),
+  subscriptionStatus: '',
+  subscriptionEnd: '',
   pathOrigin: 'knowledge',
+  certificateLevel: 1,
 
   navigate: (screen) => set({ screen, direction: 'forward' }),
 
   openPath: (origin = 'knowledge') =>
     set({ screen: 'path', pathOrigin: origin, direction: 'forward' }),
+
+  openCertificate: (level) => set({ screen: 'certificate', certificateLevel: level, direction: 'forward' }),
+
+  openGrowth: () => set({ screen: 'growth', direction: 'forward' }),
+
+  /** Реальная подписка: 'active' и не истекла → план 'premium' (полный доступ, 990 ₽/мес). */
+  applySubscription: (status, end) => {
+    let plan: Plan = 'base'
+    if (status === 'active') {
+      const expired = end && new Date(end + 'T00:00:00').getTime() < Date.now()
+      if (!expired) plan = 'premium'
+    }
+    set({ plan, subscriptionStatus: status || '', subscriptionEnd: end || '' })
+  },
 
   setPlan: (plan) => {
     try {
@@ -252,8 +289,20 @@ export const useAppStore = create<AppState>((set) => ({
         // G1b — «Путь роста»: назад — туда, откуда открыт (Академия или Дашборд)
         return { screen: state.pathOrigin, direction: 'back' }
       }
+      if (state.screen === 'growth') {
+        // G3 — «3 рычага роста»: назад — в академию (хаб обучения)
+        return { screen: 'knowledge', direction: 'back' }
+      }
+      if (state.screen === 'certificate') {
+        // G1c — «Сертификат»: назад — в «Путь роста» (оттуда открывается)
+        return { screen: 'path', direction: 'back' }
+      }
       if (state.screen === 'invite') {
         // T6 — «Пригласить»: назад — в профиль (оттуда открывается)
+        return { screen: 'profile', direction: 'back' }
+      }
+      if (state.screen === 'coverMaker') {
+        // Генератор обложек: назад — в профиль (оттуда открывается)
         return { screen: 'profile', direction: 'back' }
       }
       return { screen: 'dashboard', direction: 'back' }

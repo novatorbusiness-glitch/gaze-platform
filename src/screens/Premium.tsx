@@ -9,24 +9,27 @@ import {
   Gem,
   GraduationCap,
   MessageSquareText,
+  RefreshCw,
   Sparkles,
-  X,
 } from 'lucide-react'
 import Badge from '../components/Badge'
 import Button from '../components/Button'
-import { haptic, hapticSuccess } from '../lib/telegram'
-import { cx } from '../lib/utils'
+import { haptic, hapticSuccess, openSubscriptionPayment } from '../lib/telegram'
+import { cx, formatDateLong } from '../lib/utils'
 import { useAppStore } from '../store/useAppStore'
+import { useMasterStore } from '../store/useMasterStore'
 import styles from './Premium.module.css'
 
 /* ------------------------------------------------------------------ */
-/* G2 — ЭКРАН «ПРЕМИУМ»: сравнение тарифов, преимущества, переход       */
+/* G2 — ЭКРАН «ПОДПИСКА GAZE»: реальная подписка 990 ₽/мес             */
+/* Статус читается из Supabase (masters.subscription_status/end),      */
+/* оплата — Telegram Stars через бота (deep-link start=pay),           */
+/* после оплаты «Обновить статус» перечитывает мастера.                */
 /* ------------------------------------------------------------------ */
 
-const BASE_PRICE = 990
-const PREMIUM_PRICE = 1500
+const PRICE = 990
 
-/** Преимущества премиума (для карточек-списка) */
+/** Что входит в подписку GAZE (990 ₽/мес — полный доступ) */
 const BENEFITS = [
   {
     icon: Bot,
@@ -55,51 +58,53 @@ const BENEFITS = [
   },
 ]
 
-/** Строка сравнения тарифов: базовая фича / премиум-фича */
-const COMPARE_ROWS: Array<{ label: string; base: boolean; premium: boolean }> = [
-  { label: 'Все функции платформы GAZE', base: true, premium: true },
-  { label: 'Учёт клиентов и визитов', base: true, premium: true },
-  { label: 'Аналитика и напоминания', base: true, premium: true },
-  { label: 'AI-маркетолог', base: false, premium: true },
-  { label: 'Премиум-курсы академии', base: false, premium: true },
-  { label: '15 чит-кодов из «Нейро-Воронки»', base: false, premium: true },
-  { label: 'Премиум-бейдж в сообществе', base: false, premium: true },
-  { label: 'Приоритетная поддержка', base: false, premium: true },
+const PLAN_FEATURES = [
+  'Учёт клиентов, визитов, доходов и себестоимости',
+  'Аналитика, напоминания и возврат клиентов',
+  'AI-маркетолог и 15 чит-кодов из книги',
+  'Премиум-курсы академии без замков',
+  'Премиум-бейдж в сообществе',
 ]
-
-function FeatureMark({ on }: { on: boolean }) {
-  return (
-    <span className={cx(styles.planFeatureIcon, !on && styles.planFeatureIconOff)}>
-      {on ? <Check size={11} strokeWidth={3} /> : <X size={11} strokeWidth={2.5} />}
-    </span>
-  )
-}
 
 export default function Premium() {
   const goBack = useAppStore((s) => s.goBack)
+  const navigate = useAppStore((s) => s.navigate)
   const plan = useAppStore((s) => s.plan)
-  const setPlan = useAppStore((s) => s.setPlan)
+  const subscriptionStatus = useAppStore((s) => s.subscriptionStatus)
+  const subscriptionEnd = useAppStore((s) => s.subscriptionEnd)
+  const initMaster = useMasterStore((s) => s.init)
 
   const isPremium = plan === 'premium'
+  const isTrial = subscriptionStatus === 'trial'
 
+  const [refreshing, setRefreshing] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
   const toastTimer = useRef<number | null>(null)
   const showToast = (message: string) => {
     setToast(message)
     if (toastTimer.current) window.clearTimeout(toastTimer.current)
-    toastTimer.current = window.setTimeout(() => setToast(null), 2200)
+    toastTimer.current = window.setTimeout(() => setToast(null), 2400)
   }
 
-  const onUpgrade = () => {
+  /** Оплатить 990 ₽/мес: открываем бота (start=pay) → инвойс Telegram Stars */
+  const onPay = () => {
     hapticSuccess()
-    setPlan('premium')
-    showToast('Премиум активирован ✨')
+    openSubscriptionPayment()
+    showToast('Открываем оплату в боте…')
   }
 
-  const onDowngrade = () => {
+  /** После оплаты — перечитать мастера из Supabase и обновить статус */
+  const onRefresh = async () => {
     haptic('medium')
-    setPlan('base')
-    showToast('Возвращено на тариф «Базовый»')
+    setRefreshing(true)
+    try {
+      await initMaster(true)
+      showToast(useAppStore.getState().plan === 'premium' ? 'Подписка активна ✨' : 'Статус обновлён')
+    } catch {
+      showToast('Не удалось обновить статус')
+    } finally {
+      setRefreshing(false)
+    }
   }
 
   return (
@@ -116,7 +121,7 @@ export default function Premium() {
         >
           <ArrowLeft size={20} strokeWidth={1.75} />
         </button>
-        <span className={styles.headerTitle}>Премиум</span>
+        <span className={styles.headerTitle}>Подписка</span>
       </header>
 
       {/* Герой */}
@@ -124,81 +129,71 @@ export default function Premium() {
         <div className={styles.heroGlow} />
         <span className={styles.heroKicker}>
           <Sparkles size={12} strokeWidth={2.5} />
-          GAZE PREMIUM
+          GAZE PLATFORM
         </span>
         <h1 className={styles.heroTitle}>
-          Больше, чем учёт — <em>ваш AI-маркетолог</em>
+          Весь GAZE для вашего <em>роста</em>
         </h1>
         <p className={styles.heroSub}>
-          Готовые тексты для постов, сторис и офферов по формуле «Нейро-Воронки»,
-          премиум-курсы и чит-коды из книги — всё для роста вашего дохода.
+          Подписка открывает всю платформу: учёт, аналитику, AI-маркетолога,
+          премиум-курсы и чит-коды из «Нейро-Воронки».
         </p>
         <div className={styles.heroBadges}>
           <Badge variant="cta">
             <Crown size={11} strokeWidth={2.5} />
-            PREMIUM
+            990 ₽/мес
           </Badge>
-          {isPremium && <Badge variant="success">активен у вас</Badge>}
+          {isPremium && <Badge variant="success">активна у вас</Badge>}
+          {isTrial && <Badge variant="accent">пробный период</Badge>}
         </div>
       </div>
 
-      {/* Текущий тариф */}
+      {/* Текущий статус подписки */}
       <div className={styles.currentPlan}>
         <div className={styles.currentPlanLabel}>
           <span className={styles.currentPlanTitle}>
-            Ваш тариф: {isPremium ? 'Премиум' : 'Базовый'}
+            {isPremium
+              ? 'Подписка активна'
+              : isTrial
+                ? 'Пробный период (7 дней)'
+                : 'Подписка не активна'}
           </span>
           <span className={styles.currentPlanHint}>
             {isPremium
-              ? `${PREMIUM_PRICE.toLocaleString('ru-RU')} ₽/мес · всё открыто`
-              : `${BASE_PRICE.toLocaleString('ru-RU')} ₽/мес · без AI-маркетолога`}
+              ? `Полный доступ до ${subscriptionEnd ? formatDateLong(subscriptionEnd) : '—'}`
+              : isTrial
+                ? 'Сейчас открыто всё — после триала понадобится подписка'
+                : `${PRICE.toLocaleString('ru-RU')} ₽/мес · полный доступ`}
           </span>
         </div>
-        <Badge variant={isPremium ? 'success' : 'accent'}>
-          {isPremium ? 'PREMIUM ✓' : 'Базовый'}
-        </Badge>
+        {isPremium && <Badge variant="success">PREMIUM ✓</Badge>}
+        {isTrial && <Badge variant="accent">TRIAL</Badge>}
+        {!isPremium && !isTrial && <Badge variant="accent">доступ закрыт</Badge>}
       </div>
 
-      {/* Сравнение тарифов */}
-      <h2 className={styles.sectionTitle}>Сравнение тарифов</h2>
-      <div className={styles.compare}>
-        <div className={styles.plan}>
-          <span className={styles.planName}>Базовый</span>
-          <div className={styles.planPrice}>
-            <span className={styles.planPriceValue}>{BASE_PRICE.toLocaleString('ru-RU')}</span>
-            <span className={styles.planPricePer}>₽/мес</span>
-          </div>
-          <span className={styles.planTag}>всё для учёта</span>
-          <ul className={styles.planFeatures}>
-            {COMPARE_ROWS.map((row) => (
-              <li key={row.label} className={styles.planFeature}>
-                <FeatureMark on={row.base} />
-                {row.label}
-              </li>
-            ))}
-          </ul>
+      {/* План (полный доступ, одна цена) */}
+      <h2 className={styles.sectionTitle}>Подписка GAZE</h2>
+      <div className={cx(styles.plan, styles.planPremium)}>
+        <span className={styles.planName}>GAZE Platform</span>
+        <div className={styles.planPrice}>
+          <span className={styles.planPriceValue}>{PRICE.toLocaleString('ru-RU')}</span>
+          <span className={styles.planPricePer}>₽/мес</span>
         </div>
-
-        <div className={cx(styles.plan, styles.planPremium)}>
-          <span className={styles.planName}>Премиум</span>
-          <div className={styles.planPrice}>
-            <span className={styles.planPriceValue}>{PREMIUM_PRICE.toLocaleString('ru-RU')}</span>
-            <span className={styles.planPricePer}>₽/мес</span>
-          </div>
-          <span className={styles.planTag}>+ AI-маркетолог</span>
-          <ul className={styles.planFeatures}>
-            {COMPARE_ROWS.map((row) => (
-              <li key={row.label} className={styles.planFeature}>
-                <FeatureMark on={row.premium} />
-                {row.label}
-              </li>
-            ))}
-          </ul>
-        </div>
+        <span className={styles.planTag}>полный доступ · всё включено</span>
+        <ul className={styles.planFeatures}>
+          {PLAN_FEATURES.map((f) => (
+            <li key={f} className={styles.planFeature}>
+              <span className={styles.planFeatureIcon}>
+                <Check size={11} strokeWidth={3} />
+              </span>
+              {f}
+            </li>
+          ))}
+        </ul>
       </div>
 
       {/* Преимущества */}
-      <h2 className={styles.sectionTitle}>Что входит в Премиум</h2>
+      <h2 className={styles.sectionTitle}>Что входит</h2>
       <div className={styles.benefits}>
         {BENEFITS.map((b) => {
           const Icon = b.icon
@@ -219,26 +214,39 @@ export default function Premium() {
       {/* CTA */}
       <div className={styles.ctaCard}>
         <span className={styles.ctaCardTitle}>
-          {isPremium ? 'Премиум активен у вас ✨' : 'Перейти на Премиум'}
+          {isPremium ? 'Всё открыто у вас ✨' : `Подписка — ${PRICE.toLocaleString('ru-RU')} ₽/мес`}
         </span>
         <span className={styles.ctaCardText}>
           {isPremium
             ? 'AI-маркетолог, премиум-курсы и все чит-коды открыты. Наслаждайтесь ростом!'
-            : `Всё из базового тарифа + AI-маркетолог и премиум-курсы за ${PREMIUM_PRICE.toLocaleString('ru-RU')} ₽/мес.`}
+            : 'Оплата в один шаг через Telegram Stars — прямо в боте GAZE. Подписка активируется сразу на 30 дней.'}
         </span>
-        <Button size="lg" fullWidth className={styles.btnOnDark} disabled={isPremium} onClick={onUpgrade}>
-          <Gem size={16} strokeWidth={2} />
-          {isPremium ? 'Премиум активен ✓' : `Перейти на Премиум — ${PREMIUM_PRICE.toLocaleString('ru-RU')} ₽/мес`}
+        {isPremium ? (
+          <Button size="lg" fullWidth className={styles.btnOnDark} disabled>
+            <Crown size={16} strokeWidth={2} />
+            Подписка активна ✓
+          </Button>
+        ) : (
+          <Button size="lg" fullWidth className={styles.btnOnDark} onClick={onPay}>
+            <Gem size={16} strokeWidth={2} />
+            Оплатить {PRICE.toLocaleString('ru-RU')} ₽/мес
+          </Button>
+        )}
+        <Button variant="ghost" size="md" fullWidth className={styles.btnOnDark} onClick={onRefresh} disabled={refreshing}>
+          <RefreshCw size={15} strokeWidth={2} />
+          {refreshing ? 'Обновляем…' : 'Я оплатил — обновить статус'}
         </Button>
-        {isPremium && (
-          <Button variant="ghost" size="md" fullWidth className={styles.btnOnDark} onClick={onDowngrade}>
-            Вернуться на тариф «Базовый» (990 ₽/мес)
+        {!isPremium && (
+          <Button variant="ghost" size="md" fullWidth className={styles.btnOnDark} onClick={() => navigate('aiMarketer')}>
+            <Sparkles size={15} strokeWidth={2} />
+            Что даёт AI-маркетолог
           </Button>
         )}
       </div>
 
       <p className={styles.hint}>
-        Демо-режим: оплата не выполняется, тариф переключается сразу и сохраняется на этом устройстве.
+        Оплата проходит в боте GAZE через Telegram Stars (500 ⭐ ≈ 990 ₽). После оплаты вернитесь
+        сюда и нажмите «Обновить статус».
       </p>
 
       {/* Тост */}

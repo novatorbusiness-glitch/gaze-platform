@@ -1,11 +1,11 @@
 import { useRef, useState } from 'react'
-import { Bell, Building2, Camera, ChevronRight, Copy, Crown, ExternalLink, Gift, Info, LogOut, MessageCircle, Sparkles, Tag, User, X } from 'lucide-react'
+import { Bell, Building2, Camera, ChevronRight, Copy, Crown, ExternalLink, Gift, Images, Info, LogOut, MessageCircle, Sparkles, Tag, User, X } from 'lucide-react'
 import Avatar from '../components/Avatar'
 import Badge from '../components/Badge'
 import Button from '../components/Button'
 import Card from '../components/Card'
 import { Input } from '../components/Input'
-import { demoReferral, demoSubscription } from '../lib/dev-data'
+import { demoReferral } from '../lib/dev-data'
 import { getDisplayName, readProfileName, saveProfileName } from '../lib/name'
 import {
   DEFAULT_SPECIALTY,
@@ -13,7 +13,7 @@ import {
   saveSpecialty,
   SPECIALTY_OPTIONS,
 } from '../lib/specialty'
-import { copyText, haptic, hapticSuccess } from '../lib/telegram'
+import { copyText, haptic, hapticSuccess, openSubscriptionPayment } from '../lib/telegram'
 import { cx, formatDateLong, formatMoney } from '../lib/utils'
 import { getSalonSettings, setSalonSettings, type SalonSettings } from '../lib/salon'
 import { useAppStore } from '../store/useAppStore'
@@ -70,43 +70,50 @@ function writeNotifications(next: NotificationSettings): void {
 
 function SubscriptionCard({ onManage }: { onManage: () => void }) {
   const plan = useAppStore((s) => s.plan)
+  const subscriptionEnd = useAppStore((s) => s.subscriptionEnd)
   const navigate = useAppStore((s) => s.navigate)
   const isPremium = plan === 'premium'
-  const price = isPremium ? 1500 : demoSubscription.price
-  const progress = Math.round((demoSubscription.daysLeft / demoSubscription.daysTotal) * 100)
+  const daysLeft = subscriptionEnd
+    ? Math.max(0, Math.ceil((new Date(subscriptionEnd + 'T00:00:00').getTime() - Date.now()) / 86400000))
+    : 0
+  const progress = subscriptionEnd ? Math.min(100, Math.round((daysLeft / 30) * 100)) : 0
 
   return (
     <Card className={styles.subCard}>
       <div className={styles.subHead}>
         <span className={styles.subStatus}>
           <span className={styles.subDot} />
-          Активна
+          {isPremium ? 'Активна' : 'Не активна'}
         </span>
-        <Badge variant="success">до {formatDateLong(demoSubscription.endDate)}</Badge>
+        {isPremium && subscriptionEnd ? (
+          <Badge variant="success">до {formatDateLong(subscriptionEnd)}</Badge>
+        ) : (
+          <Badge variant="accent">990 ₽/мес</Badge>
+        )}
       </div>
 
       <div className={styles.subBody}>
         <div>
           <span className={styles.subTariff}>
-            <span className={styles.subPrice}>{price}</span> ₽/мес
+            <span className={styles.subPrice}>990</span> ₽/мес
           </span>
         </div>
         <span className={styles.subLabel}>
-          Тариф GAZE Platform · {isPremium ? 'Премиум' : 'Базовый'}
+          Подписка GAZE Platform · {isPremium ? 'полный доступ' : 'все функции платформы'}
         </span>
       </div>
 
-      {/* Прогресс-бар дней (демо: осталось 23 из 30) */}
+      {/* Прогресс-бар дней оплаченного периода (30 дней) */}
       <div className={styles.subProgress}>
         <div className={styles.subProgressTrack}>
           <div className={styles.subProgressFill} style={{ width: `${progress}%` }} />
         </div>
         <span className={styles.subProgressText}>
-          осталось {demoSubscription.daysLeft} из {demoSubscription.daysTotal} дней
+          {isPremium ? `осталось ${daysLeft} из 30 дней` : 'подписка не оплачена'}
         </span>
       </div>
 
-      {/* G2 — Премиум-функции: вход в AI-маркетолог / переход на Премиум */}
+      {/* G2 — Премиум-функции: вход в AI-маркетолог / переход на подписку */}
       {isPremium ? (
         <Button variant="ghost" fullWidth size="md" onClick={() => navigate('aiMarketer')}>
           <Sparkles size={15} strokeWidth={2} />
@@ -115,7 +122,7 @@ function SubscriptionCard({ onManage }: { onManage: () => void }) {
       ) : (
         <Button fullWidth size="md" onClick={() => navigate('premium')}>
           <Crown size={15} strokeWidth={2} />
-          Перейти на Премиум — 1 500 ₽/мес
+          Оплатить подписку — 990 ₽/мес
         </Button>
       )}
 
@@ -304,6 +311,7 @@ export default function Profile() {
   const navigate = useAppStore((s) => s.navigate)
   // G2 — тариф: премиум-бейдж, цена подписки, вход в AI-маркетолог
   const plan = useAppStore((s) => s.plan)
+  const subscriptionEnd = useAppStore((s) => s.subscriptionEnd)
   const isPremium = plan === 'premium'
 
   const fallbackName = getDisplayName(master)
@@ -370,18 +378,19 @@ export default function Profile() {
     setSubOpen(true)
   }
 
-  /** T13 — Продление (демо): закрываем модалку и показываем тост */
+  /** T13 — Продление: открываем оплату в боте (Telegram Stars, 990 ₽/мес) */
   const extendSub = () => {
     hapticSuccess()
     setSubOpen(false)
-    showToast('Подписка продлена на 30 дней ✓')
+    openSubscriptionPayment()
+    showToast('Открываем оплату в боте…')
   }
 
-  /** T13 — Отмена (демо): оплата недоступна, только уведомление */
+  /** T13 — Отмена: подписка продлевается автоматически каждый месяц */
   const cancelSub = () => {
     haptic('medium')
     setSubOpen(false)
-    showToast('В демо-режиме недоступно')
+    showToast('Отмена — через /stop в боте GAZE')
   }
 
   const openSpecialty = () => {
@@ -487,6 +496,11 @@ export default function Profile() {
           icon={<Sparkles size={16} strokeWidth={1.75} />}
           label="AI-маркетолог ✨"
           onClick={() => navigate('aiMarketer')}
+        />
+        <SettingsRow
+          icon={<Images size={16} strokeWidth={1.75} />}
+          label="Генератор обложек"
+          onClick={() => navigate('coverMaker')}
         />
         <SettingsRow
           icon={<MessageCircle size={16} strokeWidth={1.75} />}
@@ -664,29 +678,37 @@ export default function Profile() {
         </Sheet>
       )}
 
-      {/* T13 — Модалка «Подписка»: тариф, срок, продление/отмена (демо) */}
+      {/* T13 — Модалка «Подписка»: статус, срок, оплата/обновление */}
       {subOpen && (
         <Sheet title="Подписка" onClose={() => setSubOpen(false)}>
           <div className={styles.subSheetCard}>
             <div className={styles.subSheetHead}>
               <span className={styles.subSheetPlan}>
-                Тариф GAZE Platform · {isPremium ? 'Премиум' : 'Базовый'}
+                Подписка GAZE Platform · {isPremium ? 'полный доступ' : 'не активна'}
               </span>
-              <Badge variant="success">Активна</Badge>
+              {isPremium ? (
+                <Badge variant="success">Активна</Badge>
+              ) : (
+                <Badge variant="accent">990 ₽/мес</Badge>
+              )}
             </div>
             <div className={styles.subSheetPrice}>
-              {isPremium ? 1500 : demoSubscription.price}
+              990
               <span className={styles.subSheetPer}> ₽/мес</span>
             </div>
             <div className={styles.subSheetRows}>
               <div className={styles.subSheetRow}>
                 <span className={styles.subSheetLabel}>Действует до</span>
-                <span className={styles.subSheetValue}>{formatDateLong(demoSubscription.endDate)}</span>
+                <span className={styles.subSheetValue}>
+                  {isPremium && subscriptionEnd ? formatDateLong(subscriptionEnd) : '— (нет подписки)'}
+                </span>
               </div>
               <div className={styles.subSheetRow}>
                 <span className={styles.subSheetLabel}>Осталось дней</span>
                 <span className={styles.subSheetValue}>
-                  {demoSubscription.daysLeft} из {demoSubscription.daysTotal}
+                  {isPremium && subscriptionEnd
+                    ? `${Math.max(0, Math.ceil((new Date(subscriptionEnd + 'T00:00:00').getTime() - Date.now()) / 86400000))} из 30`
+                    : '—'}
                 </span>
               </div>
               <div className={styles.subSheetRow}>
@@ -703,7 +725,7 @@ export default function Profile() {
           ) : (
             <Button size="lg" fullWidth onClick={() => navigate('premium')}>
               <Crown size={16} strokeWidth={2} />
-              Перейти на Премиум — 1 500 ₽/мес
+              Оплатить 990 ₽/мес
             </Button>
           )}
           <Button variant="ghost" size="md" fullWidth onClick={extendSub}>
@@ -713,7 +735,7 @@ export default function Profile() {
             Отменить подписку
           </Button>
           <p className={styles.hint}>
-            В демо-режиме оплата не выполняется — показываем только уведомления.
+            Оплата через Telegram Stars в боте GAZE. Подписка продлевается автоматически каждый месяц.
           </p>
         </Sheet>
       )}

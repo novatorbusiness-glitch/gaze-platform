@@ -237,3 +237,42 @@ export async function copyText(text: string): Promise<void> {
     /* ignore */
   }
 }
+
+/* ------------------------------------------------------------------ */
+/* Оплата подписки 990 ₽/мес: deep-link в бота (Telegram Stars)        */
+/* ------------------------------------------------------------------ */
+
+/** Юзернейм бота GAZE (без @) — из .env (VITE_BOT_USERNAME) или фолбэк */
+export function botUsername(): string {
+  const fromEnv = (import.meta.env.VITE_BOT_USERNAME as string | undefined) ?? ''
+  return fromEnv.replace(/^@/, '').trim() || 'gaze_arch_bot'
+}
+
+/** Ссылка оплаты: t.me/<bot>?start=pay — бот сразу присылает инвойс Stars (990 ₽/мес) */
+export function subscriptionPayUrl(): string {
+  return `https://t.me/${botUsername()}?start=pay`
+}
+
+/**
+ * Открыть оплату подписки: открывает чат с ботом с payload start=pay,
+ * бот немедленно присылает инвойс Telegram Stars. В Telegram WebView
+ * используем WebApp.openTelegramLink (чат открывается поверх мини-аппа,
+ * не выходя из него), вне Telegram — window.open.
+ */
+export function openSubscriptionPayment(): void {
+  const url = subscriptionPayUrl()
+  try {
+    const sdk = WebApp as unknown as { openTelegramLink?: (u: string) => void }
+    if (typeof sdk.openTelegramLink === 'function') {
+      sdk.openTelegramLink(url)
+      return
+    }
+  } catch {
+    /* SDK недоступен — fallback ниже */
+  }
+  try {
+    window.open(url, '_blank')
+  } catch {
+    window.location.href = url
+  }
+}

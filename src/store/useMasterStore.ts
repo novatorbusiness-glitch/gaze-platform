@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { resolveMaster } from '../lib/api'
 import { getTelegramUserId, hasTelegramInitData } from '../lib/telegram'
 import type { Master } from '../lib/mock'
+import { useAppStore } from './useAppStore'
 
 type MasterStatus = 'idle' | 'loading' | 'ready' | 'error'
 
@@ -17,6 +18,12 @@ interface MasterState {
 }
 
 let started = false
+
+/** Записать мастера в стор + синхронизировать реальную подписку в app-стор (G2-реал). */
+function commitMaster(master: Master, isDev: boolean, isDemo: boolean) {
+  useAppStore.getState().applySubscription(master.subscription_status, master.subscription_end)
+  return { master, isDev, isDemo, status: 'ready' as const, error: null }
+}
 
 export const useMasterStore = create<MasterState>((set) => ({
   master: null,
@@ -38,25 +45,13 @@ export const useMasterStore = create<MasterState>((set) => ({
     if (!force && res.isDemo && hasTelegramInitData() && getTelegramUserId() !== null) {
       const retry = await resolveMaster(true)
       if (retry.master) {
-        set({
-          master: retry.master,
-          isDev: retry.isDev,
-          isDemo: retry.isDemo,
-          status: 'ready',
-          error: null,
-        })
+        set(commitMaster(retry.master, retry.isDev, retry.isDemo))
         return
       }
     }
 
     if (res.master) {
-      set({
-        master: res.master,
-        isDev: res.isDev,
-        isDemo: res.isDemo,
-        status: 'ready',
-        error: null,
-      })
+      set(commitMaster(res.master, res.isDev, res.isDemo))
     } else {
       set({
         master: null,

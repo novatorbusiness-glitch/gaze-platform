@@ -88,8 +88,8 @@ function PremiumLock() {
       </span>
       <h2 className={styles.lockTitle}>AI-маркетолог</h2>
       <p className={styles.lockText}>
-        Доступно в Премиум. Генератор пишет посты, сторис, офферы и скрипты ответов
-        по формуле «Нейро-Воронки» — 3-4 готовых варианта на выбор.
+        Доступно по подписке GAZE (990 ₽/мес). Генератор пишет посты, сторис, офферы и скрипты
+        ответов по формуле «Нейро-Воронки» — 3-4 готовых варианта на выбор.
       </p>
       <ul className={styles.lockFeatures}>
         {[
@@ -108,10 +108,10 @@ function PremiumLock() {
       <div className={styles.lockCta}>
         <Button size="lg" fullWidth onClick={() => navigate('premium')}>
           <Crown size={16} strokeWidth={2} />
-          Перейти на Премиум
+          Оплатить подписку — 990 ₽/мес
         </Button>
         <p className={styles.lockHint}>
-          Премиум — 1 500 ₽/мес, включает всё из базового тарифа (990 ₽/мес).
+          Подписка GAZE открывает всю платформу: AI-маркетолог, премиум-курсы и все чит-коды.
         </p>
       </div>
     </Card>

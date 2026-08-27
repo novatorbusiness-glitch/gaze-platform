@@ -83,12 +83,12 @@ export default function Course() {
           <span className={styles.lockedEmoji}>{course.coverEmoji}</span>
           <h1 className={styles.lockedTitle}>{course.title}</h1>
           <p className={styles.lockedText}>
-            Этот премиум-курс доступен на тарифе «Премиум» (1 500 ₽/мес) вместе с AI-маркетологом
+            Этот премиум-курс доступен по подписке GAZE (990 ₽/мес) вместе с AI-маркетологом
             и 15 чит-кодами из «Нейро-Воронки».
           </p>
           <Button size="lg" fullWidth onClick={() => navigate('premium')}>
             <Crown size={16} strokeWidth={2} />
-            Перейти на Премиум
+            Оплатить подписку — 990 ₽/мес
           </Button>
         </div>
       </div>
