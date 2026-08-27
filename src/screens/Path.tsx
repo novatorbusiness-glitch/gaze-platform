@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { ArrowLeft, Check, CircleDot, RefreshCw } from 'lucide-react'
+import { ArrowLeft, Award, Check, CircleDot, RefreshCw } from 'lucide-react'
 import Badge from '../components/Badge'
 import Button from '../components/Button'
 import Card from '../components/Card'
@@ -52,6 +52,7 @@ function checkpointValue(id: string, m: PathMetrics | undefined): string | null 
  */
 export default function Path() {
   const goBack = useAppStore((s) => s.goBack)
+  const openCertificate = useAppStore((s) => s.openCertificate)
   const master = useMasterStore((s) => s.master)
   const masterStatus = useMasterStore((s) => s.status)
   const masterError = useMasterStore((s) => s.error)
@@ -270,6 +271,14 @@ export default function Path() {
           <RefreshCw size={16} strokeWidth={2.2} className={cx(loading && styles.spin)} />
           {loading ? 'Считаем…' : 'Обновить прогресс'}
         </Button>
+
+        {/* G1c — сертификат становится доступен, когда пройден хотя бы один уровень */}
+        {level > 1 && (
+          <Button variant="ghost" fullWidth size="lg" onClick={() => openCertificate(level)}>
+            <Award size={16} strokeWidth={2.2} />
+            Получить сертификат
+          </Button>
+        )}
       </Card>
 
       {/* Карта уровней — дорога из 6 ступеней */}

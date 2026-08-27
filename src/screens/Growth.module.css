@@ -1,0 +1,420 @@
+/* G3 — Экран «3 рычага роста мастера»: формула дохода + практика (тёплый GAZE) */
+
+.screen {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Шапка: назад + заголовок + бейдж GAZE GROWTH */
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 2px 2px;
+}
+
+.back {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  border: 1px solid var(--app-border);
+  background: var(--app-surface);
+  color: var(--app-text);
+  box-shadow: var(--app-shadow);
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.15s ease-out;
+}
+
+.back:active {
+  transform: scale(0.95);
+}
+
+.headerText {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.title {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--app-text);
+}
+
+.subtitle {
+  font-size: 12.5px;
+  color: var(--app-text-2);
+}
+
+.headerBadge {
+  flex: none;
+}
+
+/* ===================== ГЕРОЙ: формула дохода ===================== */
+
+.hero {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 20px 18px;
+  border-radius: 20px;
+  border: 1px solid var(--app-border);
+  background:
+    radial-gradient(120% 150% at 100% 0%, rgba(224, 199, 192, 0.55) 0%, rgba(224, 199, 192, 0) 55%),
+    linear-gradient(165deg, #ffffff 0%, rgba(224, 199, 192, 0.18) 100%);
+  box-shadow: var(--app-shadow);
+}
+
+/* Декоративный круг-blush за контентом */
+.hero::after {
+  content: '';
+  position: absolute;
+  top: -46px;
+  right: -38px;
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(224, 199, 192, 0.5) 0%, rgba(224, 199, 192, 0) 70%);
+  pointer-events: none;
+}
+
+.heroKicker {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--app-cta);
+}
+
+.heroTitle {
+  position: relative;
+  z-index: 1;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--app-text);
+}
+
+.heroSub {
+  position: relative;
+  z-index: 1;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--app-text-2);
+}
+
+/* Формула «Клиенты × Чек × Возвраты = Доход» */
+.formula {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 2px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid var(--app-border);
+}
+
+.formulaItem {
+  padding: 6px 11px;
+  border-radius: 100px;
+  background: rgba(224, 199, 192, 0.45);
+  color: var(--app-text);
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.formulaOp,
+.formulaEq {
+  font-family: var(--font-mono);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--app-text-3);
+}
+
+.formulaResult {
+  padding: 6px 13px;
+  border-radius: 100px;
+  background: var(--app-cta);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+/* Заголовок секции */
+.sectionTitle {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--app-text);
+  margin-top: 4px;
+}
+
+/* ===================== КАРТОЧКИ РЫЧАГОВ ===================== */
+
+.levers {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.lever {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  border-top: 3px solid var(--app-accent);
+}
+
+.lever_clients {
+  border-top-color: var(--app-accent);
+}
+
+.lever_check {
+  border-top-color: var(--app-warning);
+}
+
+.lever_returns {
+  border-top-color: var(--app-success);
+}
+
+.leverHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.leverNum {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--app-text-3);
+}
+
+.leverEmoji {
+  font-size: 26px;
+  line-height: 1;
+}
+
+.leverTitle {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--app-text);
+}
+
+.leverFormula {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--app-cta);
+}
+
+.leverDesc {
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--app-text-2);
+}
+
+/* Блок «В GAZE это уже работает» */
+.leverGaze {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(107, 94, 83, 0.05);
+  border: 1px solid var(--app-border);
+}
+
+.leverGazeLabel {
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--app-text-3);
+}
+
+.leverGazeText {
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--app-text-2);
+}
+
+/* Цель рычага */
+.leverGoal {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.leverGoalText {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--app-text);
+}
+
+/* ===================== ПРАКТИЧЕСКОЕ ЗАДАНИЕ ===================== */
+
+.assignment {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border-radius: var(--radius-card);
+  border: 1px solid var(--app-border);
+  background: var(--app-surface);
+  box-shadow: var(--app-shadow);
+}
+
+.assignmentDone {
+  border-color: rgba(139, 168, 136, 0.55);
+  background: rgba(139, 168, 136, 0.06);
+}
+
+.assignmentHead {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.assignmentIcon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: rgba(224, 199, 192, 0.45);
+  color: var(--app-cta);
+}
+
+.assignmentHeadText {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.assignmentKicker {
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--app-text-3);
+}
+
+.assignmentTitle {
+  font-size: 15.5px;
+  font-weight: 700;
+  color: var(--app-text);
+}
+
+.assignmentTask {
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--app-text-2);
+}
+
+.assignmentList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.assignmentItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid var(--app-border);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.assignmentCheck {
+  flex: none;
+  margin-top: 2px;
+  width: 17px;
+  height: 17px;
+  accent-color: #8ba888;
+  cursor: pointer;
+}
+
+.assignmentItemText {
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--app-text);
+}
+
+.assignmentBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 13px 18px;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: var(--app-cta);
+  color: #ffffff;
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.15s ease-out, opacity 0.15s ease-out;
+}
+
+.assignmentBtn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.assignmentBtn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.assignmentSuccess {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(139, 168, 136, 0.14);
+  color: #4f6b4d;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+/* CTA в «Путь роста» и подсказка под ним */
+.hint {
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--app-text-3);
+  text-align: center;
+  padding: 0 12px 4px;
+}

@@ -8,14 +8,17 @@ import AddProcedure from './screens/AddProcedure'
 import AiMarketer from './screens/AiMarketer'
 import Analytics from './screens/Analytics'
 import Bonuses from './screens/Bonuses'
+import Certificate from './screens/Certificate'
 import Chat from './screens/Chat'
 import Clients from './screens/Clients'
 import ClientProfile from './screens/ClientProfile'
 import Community from './screens/Community'
 import CommunityProfile from './screens/CommunityProfile'
 import Course from './screens/Course'
+import CoverMaker from './screens/CoverMaker'
 import Dashboard from './screens/Dashboard'
 import Expenses from './screens/Expenses'
+import Growth from './screens/Growth'
 import Invite from './screens/Invite'
 import Knowledge from './screens/Knowledge'
 import Lesson from './screens/Lesson'
@@ -51,10 +54,16 @@ export default function App() {
   const isPremiumScreens = screen === 'premium' || screen === 'aiMarketer'
   // G1b — «Путь роста» открывается поверх (из Академии или с дашборда), без таббара
   const isPath = screen === 'path'
+  // G3 — «3 рычага роста» открывается поверх (из Академии), без таббара
+  const isGrowth = screen === 'growth'
+  // G1c — «Сертификат» открывается поверх (из «Пути роста»), без таббара
+  const isCertificate = screen === 'certificate'
   // T6 — «Пригласить друга» открывается поверх (из профиля), без таббара
   const isInvite = screen === 'invite'
+  // Генератор обложек открывается поверх (из профиля), без таббара
+  const isCoverMaker = screen === 'coverMaker'
   const hideTabbar =
-    isClientProfile || isAddProcedure || isAddClient || isCourse || isLesson || isTips || isExpenses || isCommunityProfile || isPremiumScreens || isPath || isInvite
+    isClientProfile || isAddProcedure || isAddClient || isCourse || isLesson || isTips || isExpenses || isCommunityProfile || isPremiumScreens || isPath || isGrowth || isCertificate || isInvite || isCoverMaker
 
   return (
     <div className={cx('app', hideTabbar && 'app--no-tabbar')}>
@@ -80,6 +89,9 @@ export default function App() {
         {screen === 'premium' && <Premium />}
         {screen === 'aiMarketer' && <AiMarketer />}
         {screen === 'path' && <Path />}
+        {screen === 'coverMaker' && <CoverMaker />}
+        {screen === 'growth' && <Growth />}
+        {screen === 'certificate' && <Certificate />}
       </main>
       <TabBar />
     </div>

@@ -590,3 +590,79 @@
   background: var(--app-cta);
   color: #ffffff;
 }
+
+/* ===================== G3 — «3 РЫЧАГА РОСТА» CTA ===================== */
+
+.growthCta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 14px 16px;
+  text-align: left;
+  background:
+    radial-gradient(120% 150% at 0% 0%, rgba(224, 199, 192, 0.6) 0%, rgba(224, 199, 192, 0) 55%),
+    linear-gradient(165deg, #ffffff 0%, rgba(224, 199, 192, 0.28) 100%);
+  border: 1px solid rgba(224, 199, 192, 0.8);
+  border-radius: var(--radius-card);
+  box-shadow: var(--app-shadow);
+  color: var(--app-text);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.15s ease-out;
+}
+
+.growthCta:active {
+  transform: scale(0.985);
+}
+
+.growthCtaEmoji {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 13px;
+  background: rgba(224, 199, 192, 0.55);
+  font-size: 22px;
+}
+
+.growthCtaBody {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.growthCtaKicker {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--app-cta);
+}
+
+.growthCtaTitle {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--app-text);
+}
+
+.growthCtaSub {
+  font-size: 12px;
+  color: var(--app-text-2);
+  line-height: 1.35;
+}
+
+.growthCtaArrow {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--app-cta);
+  color: #ffffff;
+}

@@ -105,6 +105,8 @@ export default function Knowledge() {
   const completedLessons = useAppStore((s) => s.completedLessons)
   // G1b — «Путь роста»: открывается из Академии
   const openPath = useAppStore((s) => s.openPath)
+  // G3 — «3 рычага роста»: стартовый блок обучения, открывается из Академии
+  const openGrowth = useAppStore((s) => s.openGrowth)
   const currentLevel = getCurrentLevel()
   const currentPathLevel = getPathLevel(currentLevel)
   // G2 — премиум-курсы: на базовом тарифе закрыты замком, ведут на «Премиум»
@@ -255,6 +257,25 @@ export default function Knowledge() {
           )}
         </div>
       </div>
+
+      {/* G3 — «3 рычага роста»: CTA-карточка со стартом обучения */}
+      <button
+        className={styles.growthCta}
+        onClick={() => {
+          haptic('medium')
+          openGrowth()
+        }}
+      >
+        <span className={styles.growthCtaEmoji}>🧮</span>
+        <span className={styles.growthCtaBody}>
+          <span className={styles.growthCtaKicker}>Клиенты × Чек × Возвраты</span>
+          <span className={styles.growthCtaTitle}>3 рычага роста мастера</span>
+          <span className={styles.growthCtaSub}>Старт: пойми, из чего складывается твой доход</span>
+        </span>
+        <span className={styles.growthCtaArrow}>
+          <ArrowRight size={16} strokeWidth={2.2} />
+        </span>
+      </button>
 
       {/* G1b — «Путь роста»: CTA-карточка с текущим уровнем */}
       <button

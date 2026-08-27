@@ -1,0 +1,119 @@
+/* G1c — Экран «Сертификат»: SVG-сертификат GAZE PATH + скачивание PNG */
+
+.screen {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Шапка: назад + заголовок + бейдж (тот же паттерн, что у «Пути роста») */
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 2px 2px;
+}
+
+.back {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  border: 1px solid var(--app-border);
+  background: var(--app-surface);
+  color: var(--app-text);
+  box-shadow: var(--app-shadow);
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.15s ease-out;
+}
+
+.back:active {
+  transform: scale(0.95);
+}
+
+.headerText {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.title {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--app-text);
+}
+
+.subtitle {
+  font-size: 12.5px;
+  color: var(--app-text-2);
+}
+
+.headerBadge {
+  flex: none;
+}
+
+/* Сертификат: карточка с SVG (растягивается по ширине, высота от пропорции) */
+.certWrap {
+  overflow: hidden;
+  border-radius: 18px;
+  border: 1px solid var(--app-border);
+  box-shadow: 0 10px 30px rgba(107, 94, 83, 0.14);
+  background: #f9f8f6;
+  animation: cert-in 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.certWrap svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+@keyframes cert-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Действия: скачивание + подсказка */
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.hint {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 12.5px;
+  color: var(--app-text-3);
+  text-align: center;
+  line-height: 1.45;
+}
+
+/* Ссылка «Назад к пути» под кнопкой */
+.closeBtn {
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--app-text-2);
+  padding: 8px;
+  border-radius: var(--radius-btn);
+  -webkit-tap-highlight-color: transparent;
+  transition: opacity 0.15s ease-out;
+}
+
+.closeBtn:active {
+  opacity: 0.6;
+}
