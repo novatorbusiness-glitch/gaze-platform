@@ -239,7 +239,7 @@ export async function copyText(text: string): Promise<void> {
 }
 
 /* ------------------------------------------------------------------ */
-/* Оплата подписки 990 ₽/мес: deep-link в бота (Telegram Stars)        */
+/* Оплата тарифа GAZE: deep-link в бота (Telegram Stars)               */
 /* ------------------------------------------------------------------ */
 
 /** Юзернейм бота GAZE (без @) — из .env (VITE_BOT_USERNAME) или фолбэк */
@@ -248,19 +248,27 @@ export function botUsername(): string {
   return fromEnv.replace(/^@/, '').trim() || 'gaze_arch_bot'
 }
 
-/** Ссылка оплаты: t.me/<bot>?start=pay — бот сразу присылает инвойс Stars (990 ₽/мес) */
-export function subscriptionPayUrl(): string {
-  return `https://t.me/${botUsername()}?start=pay`
+/** Тариф GAZE: 'basic' — Базовый (курс «До 200к», 990 ₽/мес), 'premium' — Премиум (AI-маркетолог, 1 500 ₽/мес) */
+export type GazePlan = 'basic' | 'premium'
+
+/** Payload deep-link: бот шлёт инвойс Stars под нужный тариф (start=pay_basic / start=pay_premium) */
+export function subscriptionStartParam(plan: GazePlan = 'premium'): string {
+  return plan === 'premium' ? 'pay_premium' : 'pay_basic'
+}
+
+/** Ссылка оплаты: t.me/<bot>?start=pay_<plan> — бот сразу присылает инвойс Stars */
+export function subscriptionPayUrl(plan: GazePlan = 'premium'): string {
+  return `https://t.me/${botUsername()}?start=${subscriptionStartParam(plan)}`
 }
 
 /**
- * Открыть оплату подписки: открывает чат с ботом с payload start=pay,
+ * Открыть оплату тарифа GAZE: открывает чат с ботом с payload start=pay_<plan>,
  * бот немедленно присылает инвойс Telegram Stars. В Telegram WebView
  * используем WebApp.openTelegramLink (чат открывается поверх мини-аппа,
  * не выходя из него), вне Telegram — window.open.
  */
-export function openSubscriptionPayment(): void {
-  const url = subscriptionPayUrl()
+export function openSubscriptionPayment(plan: GazePlan = 'premium'): void {
+  const url = subscriptionPayUrl(plan)
   try {
     const sdk = WebApp as unknown as { openTelegramLink?: (u: string) => void }
     if (typeof sdk.openTelegramLink === 'function') {
