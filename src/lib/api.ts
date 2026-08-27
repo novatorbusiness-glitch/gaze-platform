@@ -199,6 +199,18 @@ export function friendlyError(err: unknown): string {
   const code = isObj && 'code' in err ? String((err as { code: unknown }).code) : ''
   const message = raw || String(err)
 
+  // Ошибки СХЕМЫ БД — это НЕ RLS и НЕ сеть: фронт пишет колонку/таблицу, которой
+  // ещё нет в живой БД (схема разошлась). Показываем понятную причину и ссылку на
+  // миграцию вместо вводящего в заблуждение «Нет доступа к данным (RLS)».
+  // PGRST204 — «Could not find the 'cost' column of 'procedures'…» (главный виновник
+  // зависания данных: процедуры не сохранялись), PGRST205 — таблицы нет вообще.
+  if (code === 'PGRST204' || /could not find the '[^']*' column/i.test(message)) {
+    return 'Ошибка схемы БД: колонка ещё не создана, данные не сохраняются. Владельцу нужно применить миграцию supabase-migration-fix.sql (Supabase → SQL Editor → Run).'
+  }
+  if (code === 'PGRST205' || /could not find the table/i.test(message)) {
+    return 'Таблица ещё не создана в БД. Владельцу нужно применить миграцию схемы (supabase-migration-fix.sql → Supabase → SQL Editor → Run).'
+  }
+
   // Любая ошибка Supabase/PostgREST (у неё есть .code: 42501 RLS, PGRST301/401
   // invalid key, 406 PGRST116, 22P02, 42P10 …) — до этапа 3 (Auth) приложение
   // работает в демо-режиме, данные из БД недоступны.

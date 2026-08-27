@@ -42,10 +42,12 @@ export default function AddProcedure() {
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [saved, setSaved] = useState(false)
+  // Повторная попытка загрузки списка клиентов после ошибки (кнопка «Повторить»)
+  const [clientsAttempt, setClientsAttempt] = useState(0)
 
   const clientsState = useAsync(
     () => (masterId ? fetchClients(masterId) : Promise.resolve([])),
-    [masterId],
+    [masterId, clientsAttempt],
   )
 
   const clients = clientsState.data ?? []
@@ -53,6 +55,11 @@ export default function AddProcedure() {
 
   const loading = masterStatus === 'loading' || (masterStatus === 'ready' && clientsState.status === 'loading')
   const error = masterStatus === 'error' ? masterError : clientsState.status === 'error' ? clientsState.error : null
+  const retryClients = () => {
+    // Если упал мастер — переопределяем аккаунт, иначе перезапрашиваем клиентов
+    if (masterStatus === 'error') useMasterStore.getState().init(true)
+    else setClientsAttempt((a) => a + 1)
+  }
 
   const priceValue = Number(price)
   // T19 — режим салона (перечитывается при каждом рендере, чтобы реагировать на изменения)
@@ -116,7 +123,7 @@ export default function AddProcedure() {
           <SkeletonLoader shape="button" height={52} />
         </div>
       ) : error ? (
-        <ErrorState message={error} />
+        <ErrorState message={error} onRetry={retryClients} />
       ) : saved ? (
         /* T16 — успех: сразу предложить чаевые клиенту (QR) */
         <Card className={styles.savedCard}>
