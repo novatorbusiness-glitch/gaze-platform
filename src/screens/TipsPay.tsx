@@ -162,8 +162,7 @@ export default function TipsPay() {
         </Button>
 
         <p className={styles.hint}>
-          Демо-имитация оплаты: нажимая «Отправить», вы записываете чаевые в счётчик GAZE
-          (localStorage <span className={styles.mono}>gaze_tips</span>).
+          Пока это тестовая оплата: чаевые записываются и сразу появляются в аналитике мастера (раздел «Чаевые»).
         </p>
       </section>
     </div>

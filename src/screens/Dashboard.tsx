@@ -15,7 +15,7 @@ import { fetchDashboard } from '../lib/api'
 import { demoReminders, demoAnalytics, demoClients, demoMaster, demoProcedures, type ReminderStatus } from '../lib/dev-data'
 import { masterExpenses, monthOtherExpenses, loadExpenses } from '../lib/expenses'
 import type { Client, Procedure } from '../lib/mock'
-import { getSalonSettings } from '../lib/salon'
+import { getSalonSettings, procedureMasterIncome } from '../lib/salon'
 import { useDisplayName } from '../lib/name'
 import {
   loadOnboarding,
@@ -72,13 +72,14 @@ function pluralDays(n: number): string {
   return 'дней'
 }
 
-/** Доход за текущий месяц (из процедур) */
-function monthIncome(procedures: Procedure[]): number {
+/** T20 — доход мастера за текущий месяц ПО КАЖДОЙ процедуре: салонный клиент → %,
+ *  свой клиент → 100%. У процедур без флага наследуется глобальный режим салона. */
+function monthMasterIncome(procedures: Procedure[]): number {
   const now = new Date()
   const ym = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
   return procedures
     .filter((p) => p.created_at.slice(0, 7) === ym)
-    .reduce((sum, p) => sum + p.price, 0)
+    .reduce((sum, p) => sum + procedureMasterIncome(p), 0)
 }
 
 /** Средний чек по всем процедурам */
@@ -131,16 +132,19 @@ export default function Dashboard() {
   const totalClients = isDemo ? (demoMaster.clients_count ?? clients.length) : clients.length
 
   // T9.2 — юнит-экономика: прибыль и маржа.
-  // T17 — прибыль = доход − материалы из процедур − прочие расходы (gaze_expenses):
-  // в демо: доход 96 400 − материалы 31 400 − прочие 25 000 = 40 000 ₽, маржа ~41%.
+  // T17 — прибыль = доход − материалы из процедур − прочие расходы (gaze_expenses).
+  // Прочие расходы больше НЕ сидируются (демо-25к убрано): у нового мастера они = 0,
+  // в демо-режиме показываются только демо-доход/материалы из demoProcedures.
   const procSet = isDemo ? demoProcedures : procedures
 
-  // T19 — режим салона: «твой доход» = доход × % мастера, «материалы салона» не вычитаются
+  // T19 — режим салона: «материалы салона» не вычитаются из дохода мастера
   const salon = getSalonSettings()
   const otherExpenses = salon.enabled ? masterExpenses(loadExpenses()) : monthOtherExpenses()
-  const rawIncome = isDemo ? demoAnalytics.incomeMonth : monthIncome(procedures)
+  // T20 — доход мастера ПО КАЖДОЙ процедуре: салонный клиент → %, свой → 100%.
+  // Демо-цифры (без флагов) считаем по глобальному режиму, как раньше.
+  const rawIncome = isDemo ? demoAnalytics.incomeMonth : monthMasterIncome(procedures)
   const rawMaterials = monthExpenses(procSet)
-  const incomeValue = salon.enabled ? Math.round((rawIncome * salon.percent) / 100) : rawIncome
+  const incomeValue = isDemo && salon.enabled ? Math.round((rawIncome * salon.percent) / 100) : rawIncome
   const profit = useCountUp(incomeValue - rawMaterials - otherExpenses)
   const margin = incomeValue > 0 ? Math.round(((incomeValue - rawMaterials - otherExpenses) / incomeValue) * 100) : 0
 
@@ -357,7 +361,7 @@ export default function Dashboard() {
       {/* Три метрики — горизонтальный скролл */}
       <div className={styles.metrics}>
         <MetricCard label="Клиентов всего" value={String(totalClients)} />
-        <MetricCard label={salon.enabled ? 'Твой доход за месяц' : 'Доход за месяц'} value={formatMoney(incomeValue)} />
+        <MetricCard label="Твой доход за месяц" value={formatMoney(incomeValue)} />
         <MetricCard label="Средний чек" value={formatMoney(avg)} />
         {/* T9.2 — прибыль за месяц: доход − расходы на материалы, с маржой */}
         <MetricCard label="Прибыль за месяц" value={formatMoney(profit)} caption={`маржа ${margin}%`} />

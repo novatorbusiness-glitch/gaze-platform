@@ -74,6 +74,11 @@ export interface NewProcedureInput {
   price: number
   /** Себестоимость (расходы на материалы), ₽ — необязательно, по умолчанию 0 */
   cost?: number
+  /**
+   * T20 — тип клиента: true — салонный (доход мастера = % от чека),
+   * false — свой (доход = 100%). Не указано → глобальный режим салона.
+   */
+  is_salon?: boolean
   notes?: string
 }
 
@@ -123,6 +128,7 @@ function mapClient(row: ClientRow): Client {
     total_visits: Number(row.total_visits ?? 0),
     total_spent: Number(row.total_spent ?? 0),
     bonus_points: Number(row.bonus_points ?? 0),
+    archived: row.archived ?? false,
     created_at: row.created_at ?? '',
   }
 }
@@ -135,6 +141,7 @@ function mapProcedure(row: ProcedureRow): Procedure {
     service_type: row.service_type ?? '',
     price: Number(row.price ?? 0),
     cost: Number(row.cost ?? 0),
+    is_salon: row.is_salon ?? undefined,
     notes: row.notes ?? '',
     photos: row.photos ?? [],
     created_at: row.created_at,
@@ -204,7 +211,7 @@ export function friendlyError(err: unknown): string {
   // миграцию вместо вводящего в заблуждение «Нет доступа к данным (RLS)».
   // PGRST204 — «Could not find the 'cost' column of 'procedures'…» (главный виновник
   // зависания данных: процедуры не сохранялись), PGRST205 — таблицы нет вообще.
-  if (code === 'PGRST204' || /could not find the '[^']*' column/i.test(message)) {
+  if (isMissingColumnError(err)) {
     return 'Ошибка схемы БД: колонка ещё не создана, данные не сохраняются. Владельцу нужно применить миграцию supabase-migration-fix.sql (Supabase → SQL Editor → Run).'
   }
   if (code === 'PGRST205' || /could not find the table/i.test(message)) {
@@ -258,6 +265,19 @@ function isMissingTableError(err: unknown): boolean {
   return code === 'PGRST205' || /could not find the table/i.test(message)
 }
 
+/** T20 — «колонки нет в живой БД» (PGRST204 / Could not find the '...' column) */
+function isMissingColumnError(err: unknown): boolean {
+  const isObj = typeof err === 'object' && err !== null
+  const code = isObj && 'code' in err ? String((err as { code: unknown }).code) : ''
+  const message =
+    err instanceof Error
+      ? err.message
+      : isObj && 'message' in err
+        ? String((err as { message: unknown }).message)
+        : ''
+  return code === 'PGRST204' || /could not find the '[^']*' column/i.test(message)
+}
+
 /** Текущий режим: true — отдаём демо-данные */
 export function isDemoMode(): boolean {
   return demoMode
@@ -307,11 +327,42 @@ function writeAddedClients(clients: Client[]): void {
   }
 }
 
+/**
+ * Архив в демо-режиме (этап 3: запись в БД заменит фолбэк). Рядом с
+ * локально добавленными клиентами храним id тех, кого убрали «в архив», —
+ * чтобы они не появлялись в списках, но данные не терялись.
+ */
+const ARCHIVED_CLIENTS_KEY = 'gaze_demo_archived_clients'
+
+function readArchivedIds(): Set<string> {
+  try {
+    const raw = localStorage.getItem(ARCHIVED_CLIENTS_KEY)
+    const arr = raw ? (JSON.parse(raw) as string[]) : []
+    return new Set(arr)
+  } catch {
+    return new Set()
+  }
+}
+
+function writeArchivedIds(ids: Set<string>): void {
+  try {
+    localStorage.setItem(ARCHIVED_CLIENTS_KEY, JSON.stringify([...ids]))
+  } catch {
+    /* localStorage недоступен — архив живёт в памяти */
+  }
+}
+
+/** Демо-клиенты без убранных в архив */
+function demoActiveClients(): Client[] {
+  const archived = readArchivedIds()
+  return [...readAddedClients(), ...demoClients].filter((c) => !archived.has(c.id))
+}
+
 /** Демо-дашборд: клиенты (вкл. добавленные в этой сессии) + процедуры с флагом isDemo */
 function demoDashboard(): DashboardData {
   demoMode = true
   return {
-    clients: [...readAddedClients(), ...demoClients],
+    clients: demoActiveClients(),
     procedures: [...demoProcedures],
     isDemo: true,
   }
@@ -462,6 +513,7 @@ export async function fetchDashboard(masterId: string): Promise<DashboardData> {
         .from('clients')
         .select('*')
         .eq('master_id', masterId)
+        .eq('archived', false)
         .order('last_visit', { ascending: false }),
       supabase
         .from('procedures')
@@ -493,17 +545,18 @@ export async function fetchClients(masterId: string): Promise<Client[]> {
       .from('clients')
       .select('*')
       .eq('master_id', masterId)
+      .eq('archived', false)
       .order('last_visit', { ascending: false })
 
     if (error) throw error
 
     const clients = (data ?? []).map(mapClient)
-    if (demoMode && clients.length === 0) return [...readAddedClients(), ...demoClients]
+    if (demoMode && clients.length === 0) return demoActiveClients()
     return clients
   } catch (err) {
     if (isAccessError(err) && demoAllowed) {
       demoMode = true
-      return [...readAddedClients(), ...demoClients]
+      return demoActiveClients()
     }
     throw err
   }
@@ -655,6 +708,7 @@ function demoProcedureFromInput(input: NewProcedureInput): Procedure {
     service_type: input.service_type,
     price: input.price,
     cost: input.cost ?? 0,
+    is_salon: input.is_salon,
     notes: input.notes ?? '',
     photos: [],
     created_at: now.toISOString(),
@@ -673,19 +727,27 @@ export async function addProcedure(input: NewProcedureInput): Promise<Procedure>
     return demoProcedureFromInput(input)
   }
   try {
-    const { data, error } = await supabase
-      .from('procedures')
-      .insert({
-        client_id: input.client_id,
-        master_id: input.master_id,
-        service_type: input.service_type,
-        price: input.price,
-        cost: input.cost ?? 0,
-        notes: input.notes ?? null,
-        photos: [],
-      })
-      .select()
-      .single()
+    // T20 — тип клиента (салонный/свой) пишется в колонку is_salon. Если колонки
+    // ещё нет в живой БД (миграция не применена) — повторяем вставку без неё,
+    // чтобы запись процедуры НЕ сломалась (как было с cost на этапе 2).
+    const payload: Record<string, unknown> = {
+      client_id: input.client_id,
+      master_id: input.master_id,
+      service_type: input.service_type,
+      price: input.price,
+      cost: input.cost ?? 0,
+      notes: input.notes ?? null,
+      photos: [],
+    }
+    if (input.is_salon !== undefined) payload.is_salon = input.is_salon
+
+    let { data, error } = await supabase.from('procedures').insert(payload).select().single()
+    if (error && isMissingColumnError(error) && 'is_salon' in payload) {
+      const { is_salon: _drop, ...rest } = payload
+      const retry = await supabase.from('procedures').insert(rest).select().single()
+      data = retry.data
+      error = retry.error
+    }
 
     if (error) throw error
     return mapProcedure(data)
@@ -764,4 +826,70 @@ export async function addClient(input: NewClientInput): Promise<Client> {
     }
     throw err
   }
+}
+
+/* ------------------------------------------------------------------ */
+/* Архив клиентов («в архив» — на дальнюю полку)                       */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Убирает клиента «в архив»: archived=true. Данные НЕ удаляются — клиент
+ * просто исчезает из списков (fetchClients/fetchDashboard фильтруют
+ * archived=false) и может быть возвращён через unarchiveClient.
+ * RLS разрешает UPDATE только СВОИХ клиентов (через своего мастера).
+ */
+export async function archiveClient(clientId: string): Promise<void> {
+  if (!isSupabaseReady) {
+    demoMode = true
+    demoSetArchived(clientId, true)
+    return
+  }
+  try {
+    const { error } = await supabase
+      .from('clients')
+      .update({ archived: true })
+      .eq('id', clientId)
+    if (error) throw error
+  } catch (err) {
+    if (isAccessError(err) && demoAllowed) {
+      demoMode = true
+      demoSetArchived(clientId, true)
+      return
+    }
+    throw err
+  }
+}
+
+/**
+ * Возвращает клиента из архива: archived=false (клиент снова виден в списках).
+ * Необязательная парная функция к archiveClient.
+ */
+export async function unarchiveClient(clientId: string): Promise<void> {
+  if (!isSupabaseReady) {
+    demoMode = true
+    demoSetArchived(clientId, false)
+    return
+  }
+  try {
+    const { error } = await supabase
+      .from('clients')
+      .update({ archived: false })
+      .eq('id', clientId)
+    if (error) throw error
+  } catch (err) {
+    if (isAccessError(err) && demoAllowed) {
+      demoMode = true
+      demoSetArchived(clientId, false)
+      return
+    }
+    throw err
+  }
+}
+
+/** Демо-фолбэк архива: id клиента помечается в localStorage (данные целы) */
+function demoSetArchived(clientId: string, archived: boolean): void {
+  const ids = readArchivedIds()
+  if (archived) ids.add(clientId)
+  else ids.delete(clientId)
+  writeArchivedIds(ids)
 }

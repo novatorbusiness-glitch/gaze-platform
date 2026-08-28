@@ -40,6 +40,8 @@ export interface Client {
   total_visits: number
   total_spent: number
   bonus_points: number
+  /** Архив: true — клиент убран из списков («в архив»), данные не удалены */
+  archived?: boolean
   created_at: string
 }
 
@@ -51,6 +53,12 @@ export interface Procedure {
   price: number
   /** Себестоимость (расходы на материалы), ₽. По умолчанию 0. */
   cost: number
+  /**
+   * T20 — тип клиента при записи: true — салонный (доход мастера = % от чека),
+   * false — свой (доход = 100% чека). undefined у старых процедур → наследуется
+   * глобальный режим салона.
+   */
+  is_salon?: boolean
   notes: string
   photos: string[]
   created_at: string

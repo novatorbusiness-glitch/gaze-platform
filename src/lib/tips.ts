@@ -1,11 +1,11 @@
 /**
  * T16 — ЧАЕВЫЕ ЧЕРЕЗ QR
  *
- * Демо-слой чаевых: статистика хранится в localStorage под ключом `gaze_tips`
- * (массив записей { amount, name, at }). На реальном этапе чаевые будут
- * проходить через платёжного провайдера, здесь — демо-имитация: страница
- * оплаты по QR «Отправить чаевые» просто добавляет запись в этот счётчик,
- * а аналитика показывает сумму за месяц.
+ * Реальная статистика чаевых хранится в localStorage под ключом `gaze_tips`
+ * (массив записей { amount, name, at }). Никакого демо-сидирования: если мастер
+ * ещё не получил чаевых, статистика пустая. Запись появляется через страницу
+ * оплаты по QR «Отправить чаевые» — на реальном этапе это будет платёжный
+ * провайдер, пока — имитация внутри приложения.
  */
 
 export interface TipRecord {
@@ -29,48 +29,54 @@ export interface TipsStats {
 }
 
 const TIPS_KEY = 'gaze_tips'
-const TIPS_SEEDED_KEY = 'gaze_tips_seeded'
 
-/** ISO в текущем месяце (день 1–28) — чтобы «демо-чаевые» попадали в месяц */
-function isoInCurrentMonth(day: number): string {
-  const now = new Date()
-  const m = String(now.getMonth() + 1).padStart(2, '0')
-  const d = String(Math.min(Math.max(day, 1), 28)).padStart(2, '0')
-  return `${now.getFullYear()}-${m}-${d}T${12 + (day % 8)}:00:00`
-}
-
-/** Демо-чаевые по умолчанию (+1 200 ₽ за месяц) — аналитика выглядит живой */
-const SEED_TIPS: TipRecord[] = [
-  { amount: 500, name: 'Марина Соколова', at: isoInCurrentMonth(3) },
-  { amount: 200, name: 'Ольга Виноградова', at: isoInCurrentMonth(9) },
-  { amount: 500, name: 'Алина Гусева', at: isoInCurrentMonth(14) },
+/**
+ * Легаси-демо-чаевые (сидировались в старых версиях: 500/Марина Соколова,
+ * 200/Ольга Виноградова, 500/Алина Гусева). Узнаём по паре «сумма + имя»
+ * и удаляем при загрузке — реальные чаевые мастера не трогаем.
+ */
+const LEGACY_DEMO_TIPS: ReadonlyArray<{ amount: number; name: string }> = [
+  { amount: 500, name: 'Марина Соколова' },
+  { amount: 200, name: 'Ольга Виноградова' },
+  { amount: 500, name: 'Алина Гусева' },
 ]
 
 function readAll(): TipRecord[] {
   try {
     const raw = localStorage.getItem(TIPS_KEY)
-    if (raw) return JSON.parse(raw) as TipRecord[]
+    if (raw) {
+      const parsed = JSON.parse(raw)
+      // Краевой случай: повреждённые/не-массивные данные не должны валить экран
+      if (Array.isArray(parsed)) return parsed as TipRecord[]
+    }
   } catch {
-    /* localStorage недоступен — пустой список */
+    /* localStorage недоступен или данные повреждены — пустой список */
   }
   return []
 }
 
-/** При первом запуске наполняем демо-чаевыми, чтобы статистика была не пустой */
-export function ensureTipsSeeded(): void {
+export function loadTips(): TipRecord[] {
+  const all = readAll()
+  // Самоочистка от легаси-демо-данных: убираем ТОЛЬКО записи, совпадающие с
+  // историческим демо-сидом (сумма + имя). Реальные чаевые остаются.
+  const real = all.filter(
+    (r) => !LEGACY_DEMO_TIPS.some((d) => d.amount === r.amount && d.name === r.name),
+  )
+  if (real.length !== all.length) {
+    try {
+      localStorage.setItem(TIPS_KEY, JSON.stringify(real))
+    } catch {
+      /* ignore */
+    }
+  }
+  // Флаг-ключ старого сида (ensureTipsSeeded в версиях до 15bdc90) — мусор,
+  // больше нигде не читается.
   try {
-    if (localStorage.getItem(TIPS_SEEDED_KEY)) return
-    localStorage.setItem(TIPS_KEY, JSON.stringify(SEED_TIPS))
-    localStorage.setItem(TIPS_SEEDED_KEY, '1')
+    localStorage.removeItem('gaze_tips_seeded')
   } catch {
     /* ignore */
   }
-}
-
-export function loadTips(): TipRecord[] {
-  // ВАЖНО: не сидируем демо-чаевые (1200₽) — иначе аналитика врёт новому
-  // пользователю. Только реальные записи.
-  return readAll()
+  return real
 }
 
 function inCurrentMonth(iso: string): boolean {

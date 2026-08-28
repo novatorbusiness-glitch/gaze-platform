@@ -40,6 +40,9 @@ create table if not exists procedures (
   master_id uuid references masters(id),
   service_type text,
   price decimal,
+  cost numeric not null default 0,
+  -- T20 — салонный клиент (true) / свой клиент (false); null у старых записей
+  is_salon boolean,
   notes text,
   photos text[],
   created_at timestamp default now()

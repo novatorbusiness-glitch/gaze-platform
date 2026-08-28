@@ -1,11 +1,13 @@
 import { useRef, useState } from 'react'
 import {
   ArrowLeft,
+  Archive,
   BellRing,
   Cake,
   Check,
   Copy,
   Heart,
+  Link2,
   Percent,
   Plus,
   Send,
@@ -21,8 +23,8 @@ import ErrorState from '../components/ErrorState'
 import SkeletonLoader from '../components/SkeletonLoader'
 import { useAsync } from '../hooks/useAsync'
 import { useCountUp } from '../hooks/useCountUp'
-import { fetchClientProfile, type Bonus } from '../lib/api'
-import { copyText, haptic } from '../lib/telegram'
+import { archiveClient, fetchClientProfile, friendlyError, type Bonus } from '../lib/api'
+import { copyText, haptic, clientShareLink } from '../lib/telegram'
 import { getSalonSettings } from '../lib/salon'
 import {
   buildTgChatUrl,
@@ -91,6 +93,7 @@ export default function ClientProfile({ clientId }: ClientProfileProps) {
   const goBack = useAppStore((s) => s.goBack)
   const openAddProcedure = useAppStore((s) => s.openAddProcedure)
   const navigate = useAppStore((s) => s.navigate)
+  const setClientsNotice = useAppStore((s) => s.setClientsNotice)
   // T16 — экран «Чаевые» (QR) для клиента
   const openTips = useAppStore((s) => s.openTips)
 
@@ -106,6 +109,9 @@ export default function ClientProfile({ clientId }: ClientProfileProps) {
   const [expandedNote, setExpandedNote] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
   const [attempt, setAttempt] = useState(0)
+  // Архив: шаг подтверждения + флаг «убираю»
+  const [archiveConfirm, setArchiveConfirm] = useState(false)
+  const [archiving, setArchiving] = useState(false)
 
   // T4 — шаблоны сообщений
   const [activeTemplate, setActiveTemplate] = useState<TemplateId | null>(null)
@@ -161,6 +167,15 @@ export default function ClientProfile({ clientId }: ClientProfileProps) {
     setTimeout(() => setCopied(false), 1600)
   }
 
+  /* Скопировать ссылку на карточку клиента (#client/<id>) — чтобы отправить
+   * в WhatsApp/Telegram. По ссылке открывается «Профиль клиента» (см. App.tsx). */
+  const onCopyClientLink = async () => {
+    if (!client) return
+    haptic('light')
+    await copyText(clientShareLink(client.id))
+    showToast('Ссылка скопирована')
+  }
+
   /* T4 — шаблоны сообщений. T14: отправка РЕАЛЬНАЯ (см. sendMessage) */
   const delivery = client ? parseClientLink(client.link) : null
 
@@ -182,6 +197,23 @@ export default function ClientProfile({ clientId }: ClientProfileProps) {
     setToast(msg)
     if (toastTimer.current !== undefined) window.clearTimeout(toastTimer.current)
     toastTimer.current = window.setTimeout(() => setToast(null), 2400)
+  }
+
+  /* «В архив»: archived=true → возврат к списку с сообщением (данные не удаляются) */
+  const onArchive = async () => {
+    if (!client) return
+    haptic('medium')
+    setArchiving(true)
+    try {
+      await archiveClient(client.id)
+      setClientsNotice('Клиент убран в архив')
+      navigate('clients')
+    } catch (err) {
+      showToast(friendlyError(err))
+      setArchiveConfirm(false)
+    } finally {
+      setArchiving(false)
+    }
   }
 
   /* T14 — «Отправить»: РУЧНАЯ отправка (клиенты не в боте — sendViaBot НЕ вызываем).
@@ -320,6 +352,10 @@ export default function ClientProfile({ clientId }: ClientProfileProps) {
                     : client.phone}
               </span>
             </button>
+            <button className={styles.copyLinkBtn} onClick={onCopyClientLink}>
+              <Link2 size={13} strokeWidth={1.75} />
+              Скопировать ссылку
+            </button>
           </div>
         </div>
 
@@ -349,6 +385,41 @@ export default function ClientProfile({ clientId }: ClientProfileProps) {
             <span className={styles.miniLabel}>средний чек</span>
           </div>
         </div>
+
+        {/* В архив — убрать клиента из списков (данные сохраняются, можно вернуть) */}
+        {!archiveConfirm ? (
+          <button
+            className={styles.archiveBtn}
+            onClick={() => {
+              haptic('light')
+              setArchiveConfirm(true)
+            }}
+          >
+            <Archive size={15} strokeWidth={1.75} />
+            В архив
+          </button>
+        ) : (
+          <div className={styles.archiveConfirm}>
+            <p className={styles.archiveConfirmText}>
+              Убрать <strong>{client.name}</strong> в архив? Данные сохранятся, клиента можно будет вернуть.
+            </p>
+            <div className={styles.archiveConfirmActions}>
+              <Button size="md" className={styles.archiveYes} onClick={onArchive} disabled={archiving}>
+                {archiving ? 'Убираю…' : 'Убрать в архив'}
+              </Button>
+              <Button
+                size="md"
+                variant="ghost"
+                onClick={() => {
+                  haptic('light')
+                  setArchiveConfirm(false)
+                }}
+              >
+                Отмена
+              </Button>
+            </div>
+          </div>
+        )}
       </Card>
 
       {/* История визитов — вертикальный таймлайн */}

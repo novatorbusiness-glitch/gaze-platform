@@ -71,6 +71,33 @@ export function masterIncome(price: number): number {
 }
 
 /**
+ * T20 — тип клиента процедуры: салонный (процент мастера) или свой (100%).
+ * Указывается при каждой записи процедуры (поле is_salon), вместо глобального
+ * режима салона для всех клиентов.
+ */
+export type ClientType = 'salon' | 'own'
+
+/**
+ * T20 — доля мастера от чека для конкретной процедуры, %.
+ * Явный флаг процедуры (is_salon) приоритетнее; у старых процедур без флага
+ * наследуется глобальный режим салона (чтобы история не «пересчиталась»).
+ */
+export function masterShare(p: { is_salon?: boolean }): number {
+  const s = getSalonSettings()
+  const isSalon = p.is_salon ?? s.enabled
+  return isSalon ? s.percent : 100
+}
+
+/**
+ * T20 — доход мастера с конкретной процедуры:
+ * салонный клиент → чек × percent/100, свой клиент → весь чек.
+ */
+export function procedureMasterIncome(p: { price: number; is_salon?: boolean }): number {
+  const share = masterShare(p)
+  return share >= 100 ? p.price : Math.round((p.price * share) / 100)
+}
+
+/**
  * Вычитаются ли материалы из дохода мастера.
  * «салон» + материалы салона (costType='salon') → НЕ вычитаются.
  */

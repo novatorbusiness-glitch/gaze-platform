@@ -195,8 +195,8 @@ export default function Tips() {
           Открыть страницу оплаты {canOpenPay ? `· ${formatMoney(finalAmount)}` : ''}
         </Button>
         <p className={styles.hint}>
-          В демо-режиме кнопка открывает страницу оплаты внутри приложения — «Отправить» запишет чаевые в
-          счётчик (localStorage <span className={styles.mono}>gaze_tips</span>).
+          Клиентка открывает страницу оплаты, нажимает «Отправить» — чаевые сразу попадут в твою аналитику
+          (раздел «Чаевые»).
         </p>
       </section>
     </div>

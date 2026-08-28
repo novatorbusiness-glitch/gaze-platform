@@ -88,6 +88,9 @@ interface AppState {
   /** Фильтр, который должен примениться при следующем открытии экрана Клиенты
       (например, «Посмотреть список» из карточки-рекомендации в Аналитике) */
   pendingClientsFilter: ClientFilter | null
+  /** Разовое сообщение для экрана Клиенты (напр. «Клиент убран в архив»):
+      ставится перед переходом, показывается тостом и сбрасывается */
+  clientsNotice: string | null
 
   /* T10 — академия: навигация курсы → уроки + прогресс мастера */
   selectedCourseId: string | null
@@ -135,6 +138,8 @@ interface AppState {
   openClientsWithFilter: (filter: ClientFilter) => void
   /** Сбросить отложенный фильтр после применения */
   consumeClientsFilter: () => void
+  /** Поставить/сбросить разовое сообщение для экрана Клиенты (тост) */
+  setClientsNotice: (msg: string | null) => void
   /** Открыть курс академии (T10) */
   openCourse: (courseId: string) => void
   /** Открыть урок внутри курса (T10) */
@@ -161,6 +166,7 @@ export const useAppStore = create<AppState>((set) => ({
   selectedClientId: null,
   direction: 'forward',
   pendingClientsFilter: null,
+  clientsNotice: null,
   selectedCourseId: null,
   selectedLessonId: null,
   completedLessons: loadProgress(),
@@ -228,6 +234,8 @@ export const useAppStore = create<AppState>((set) => ({
     set({ screen: 'clients', pendingClientsFilter: filter, direction: 'forward' }),
 
   consumeClientsFilter: () => set({ pendingClientsFilter: null }),
+
+  setClientsNotice: (msg) => set({ clientsNotice: msg }),
 
   openCourse: (courseId) =>
     set({ screen: 'course', selectedCourseId: courseId, selectedLessonId: null, direction: 'forward' }),

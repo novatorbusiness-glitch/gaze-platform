@@ -87,6 +87,55 @@
   margin-top: -10px;
 }
 
+/* T20 — переключатель «Свой клиент / Салонный клиент» */
+.segmented {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.segBtn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 12px 10px;
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  border-radius: 12px;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--app-text);
+  cursor: pointer;
+  box-shadow: var(--app-shadow);
+  transition: border-color 0.15s ease-out, background 0.15s ease-out, transform 0.1s ease-out;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.segBtn:active {
+  transform: scale(0.97);
+}
+
+.segBtn:disabled {
+  opacity: 0.6;
+}
+
+.segBtn.segActive {
+  border-color: var(--app-accent);
+  background: color-mix(in srgb, var(--app-accent) 10%, var(--app-surface));
+}
+
+.segSub {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--app-text-3);
+}
+
+.segActive .segSub {
+  color: var(--app-accent);
+}
+
 .errorBox {
   border: 1px dashed var(--app-border);
   padding: 14px 16px;

@@ -33,11 +33,27 @@ export default function App() {
   const screen = useAppStore((s) => s.screen)
   const direction = useAppStore((s) => s.direction)
   const initMaster = useMasterStore((s) => s.init)
+  const openClient = useAppStore((s) => s.openClient)
 
   // Определяем мастера по telegram_id (этап 2) при старте
   useEffect(() => {
     initMaster()
   }, [initMaster])
+
+  // Deep-link на карточку клиента: ссылка вида <URL мини-аппа>#client/<id>
+  // (кнопка «Скопировать ссылку» в ClientProfile) — при загрузке или изменении
+  // хэша сразу открываем «Профиль клиента» с выбранным клиентом.
+  useEffect(() => {
+    const applyHash = () => {
+      const m = window.location.hash.match(/^#client\/(.+)$/)
+      if (!m) return
+      const clientId = decodeURIComponent(m[1])
+      if (clientId) openClient(clientId)
+    }
+    applyHash()
+    window.addEventListener('hashchange', applyHash)
+    return () => window.removeEventListener('hashchange', applyHash)
+  }, [openClient])
 
   const isClientProfile = screen === 'clientProfile'
   const isAddProcedure = screen === 'addProcedure'

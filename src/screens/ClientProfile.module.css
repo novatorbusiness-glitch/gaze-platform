@@ -76,6 +76,18 @@
   padding: 2px 0;
 }
 
+/* «Скопировать ссылку» — действие под телефоном в карточке клиента */
+.copyLinkBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--app-cta);
+  font-size: 13px;
+  font-weight: 600;
+  -webkit-tap-highlight-color: transparent;
+  padding: 2px 0;
+}
+
 .statusRow {
   display: flex;
   align-items: center;
@@ -539,3 +551,65 @@
 .actionBtn {
   flex: 1;
 }
+
+/* «В архив» — внизу карточки клиента: спокойная светлая кнопка (архив ≠ удаление) */
+.archiveBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: var(--radius-btn);
+  border: 1px dashed var(--app-border-strong, #d8d0c8);
+  background: var(--app-bg);
+  color: var(--app-text-2);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 600;
+  transition:
+    border-color 0.15s ease-out,
+    color 0.15s ease-out,
+    background 0.15s ease-out;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.archiveBtn:active {
+  border-color: var(--app-cta);
+  color: var(--app-cta);
+}
+
+/* Шаг подтверждения — карточка-вкладыш с пояснением и двумя кнопками */
+.archiveConfirm {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: var(--app-bg);
+  border: 1px solid var(--app-border);
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+
+.archiveConfirmText {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--app-text-2);
+}
+
+.archiveConfirmText strong {
+  color: var(--app-text);
+  font-weight: 600;
+}
+
+.archiveConfirmActions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+/* Подтверждение — мягкий «опасный» акцент в светлой гамме GAZE */
+.archiveYes {
+  background: #e7c6b8;
+  color: #8a4a33;
+}
+

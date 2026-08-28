@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react'
-import { Plus, Search } from 'lucide-react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { Check, Plus, Search } from 'lucide-react'
 import Badge from '../components/Badge'
 import Button from '../components/Button'
 import Card from '../components/Card'
@@ -26,6 +26,9 @@ export default function Clients() {
   const openClient = useAppStore((s) => s.openClient)
   const pendingClientsFilter = useAppStore((s) => s.pendingClientsFilter)
   const consumeClientsFilter = useAppStore((s) => s.consumeClientsFilter)
+  // Разовое сообщение после действий (например «Клиент убран в архив»)
+  const clientsNotice = useAppStore((s) => s.clientsNotice)
+  const setClientsNotice = useAppStore((s) => s.setClientsNotice)
 
   const master = useMasterStore((s) => s.master)
   const masterStatus = useMasterStore((s) => s.status)
@@ -39,6 +42,23 @@ export default function Clients() {
   const [query, setQuery] = useState('')
   const [debounced, setDebounced] = useState('')
   const [filter, setFilter] = useState<ClientFilter>('all')
+  const noticeTimer = useRef<number | undefined>(undefined)
+
+  // Тоcт-сообщение (например после «В архив»): показываем и авто-сбрасываем
+  useEffect(() => {
+    if (clientsNotice) {
+      if (noticeTimer.current !== undefined) window.clearTimeout(noticeTimer.current)
+      noticeTimer.current = window.setTimeout(() => setClientsNotice(null), 2400)
+    }
+  }, [clientsNotice, setClientsNotice])
+
+  // При уходе с экрана сбрасываем таймер и сообщение
+  useEffect(() => {
+    return () => {
+      if (noticeTimer.current !== undefined) window.clearTimeout(noticeTimer.current)
+      setClientsNotice(null)
+    }
+  }, [setClientsNotice])
 
   // Внешний фильтр (например, «Посмотреть список» из карточки-рекомендации в Аналитике)
   useEffect(() => {
@@ -218,6 +238,14 @@ export default function Clients() {
       >
         <Plus size={26} strokeWidth={2} />
       </button>
+
+      {/* Тоcт после действий (например «Клиент убран в архив») */}
+      {clientsNotice && (
+        <div className={styles.notice} role="status">
+          <Check size={16} strokeWidth={2.5} />
+          <span>{clientsNotice}</span>
+        </div>
+      )}
     </div>
   )
 }

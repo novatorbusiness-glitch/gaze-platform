@@ -408,7 +408,7 @@
   font-weight: 700;
 }
 
-/* ---- T16 — Чаевые через QR: демо-счётчик из localStorage gaze_tips ---- */
+/* ---- T16 — Чаевые через QR: реальные чаевые мастера ---- */
 .tipsCard {
   display: flex;
   flex-direction: column;

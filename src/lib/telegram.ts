@@ -238,6 +238,14 @@ export async function copyText(text: string): Promise<void> {
   }
 }
 
+/** Ссылка на карточку клиента: <текущий URL мини-аппа>#client/<id>.
+ *  Открытие такой ссылки обрабатывается в App.tsx (hash-роутинг) —
+ *  при загрузке/изменении хэша экран «Профиль клиента» открывается сразу. */
+export function clientShareLink(clientId: string): string {
+  const base = window.location.origin + window.location.pathname
+  return `${base}#client/${encodeURIComponent(clientId)}`
+}
+
 /* ------------------------------------------------------------------ */
 /* Оплата тарифа GAZE: deep-link в бота (Telegram Stars)               */
 /* ------------------------------------------------------------------ */
@@ -269,6 +277,37 @@ export function subscriptionPayUrl(plan: GazePlan = 'premium'): string {
  */
 export function openSubscriptionPayment(plan: GazePlan = 'premium'): void {
   const url = subscriptionPayUrl(plan)
+  try {
+    const sdk = WebApp as unknown as { openTelegramLink?: (u: string) => void }
+    if (typeof sdk.openTelegramLink === 'function') {
+      sdk.openTelegramLink(url)
+      return
+    }
+  } catch {
+    /* SDK недоступен — fallback ниже */
+  }
+  try {
+    window.open(url, '_blank')
+  } catch {
+    window.location.href = url
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* AI-маркетолог: генерация перенесена В БОТА (deep-link start=ai_marketer) */
+/* ------------------------------------------------------------------ */
+
+/** Ссылка на AI-маркетолога в боте: t.me/<bot>?start=ai_marketer */
+export function aiMarketerBotUrl(): string {
+  return `https://t.me/${botUsername()}?start=ai_marketer`
+}
+
+/**
+ * Открыть AI-маркетолога в боте. В Telegram WebView используем
+ * WebApp.openTelegramLink (чат открывается поверх мини-аппа), вне Telegram — window.open.
+ */
+export function openAiMarketerBot(): void {
+  const url = aiMarketerBotUrl()
   try {
     const sdk = WebApp as unknown as { openTelegramLink?: (u: string) => void }
     if (typeof sdk.openTelegramLink === 'function') {

@@ -15,6 +15,7 @@
  */
 import type { Procedure } from './mock'
 import type { AnalyticsPeriodData, DailyBar, TopService, Trend } from './dev-data'
+import { procedureMasterIncome } from './salon'
 
 type PeriodId = AnalyticsPeriodData['id']
 
@@ -202,6 +203,20 @@ function topServices(procedures: Procedure[]): TopService[] {
     .map(([name, sum]) => ({ name, sum, share: income > 0 ? Math.round((sum / income) * 100) : 0 }))
     .sort((a, b) => b.sum - a.sum)
     .slice(0, 5)
+}
+
+/**
+ * T20 — доход мастера за период, посчитанный ПО КАЖДОЙ процедуре:
+ * салонный клиент → чек × percent/100, свой клиент → весь чек.
+ * У старых процедур без флага is_salon наследуется глобальный режим салона.
+ */
+export function masterIncomeFor(procedures: Procedure[], periodId: PeriodId): number {
+  const def = periodDefs(new Date()).find((d) => d.id === periodId)
+  if (!def) return 0
+  return inRange(procedures, def.from, def.to).reduce(
+    (sum, p) => sum + procedureMasterIncome(p),
+    0,
+  )
 }
 
 /**

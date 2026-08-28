@@ -106,6 +106,8 @@ export interface ClientRow {
   total_visits: number | null
   total_spent: number | string | null
   bonus_points: number | null
+  /** Архив: клиент убран из списков, но данные не удалены (можно вернуть) */
+  archived?: boolean | null
   created_at: string | null
 }
 
@@ -116,6 +118,8 @@ export interface ProcedureRow {
   service_type: string | null
   price: number | string | null
   cost: number | string | null
+  /** T20 — салонный клиент (true) / свой клиент (false); null у старых записей */
+  is_salon?: boolean | null
   notes: string | null
   photos: string[] | null
   created_at: string

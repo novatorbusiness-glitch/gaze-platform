@@ -8,10 +8,10 @@ import SkeletonLoader from '../components/SkeletonLoader'
 import { useAsync } from '../hooks/useAsync'
 import { addProcedure, fetchClients, friendlyError, type NewProcedureInput } from '../lib/api'
 import { markOnboardingStep } from '../lib/onboarding'
-import { getSalonSettings } from '../lib/salon'
+import { getSalonSettings, type ClientType } from '../lib/salon'
 import { serviceSuggestions } from '../lib/specialty'
 import { haptic, hapticSuccess } from '../lib/telegram'
-import { formatMoney } from '../lib/utils'
+import { cx, formatMoney } from '../lib/utils'
 import { useAppStore } from '../store/useAppStore'
 import { useMasterStore } from '../store/useMasterStore'
 import styles from './AddProcedure.module.css'
@@ -39,6 +39,10 @@ export default function AddProcedure() {
   const [price, setPrice] = useState('')
   const [cost, setCost] = useState('')
   const [notes, setNotes] = useState('')
+  // T20 — тип клиента при записи: «свой» (доход 100%) или «салонный» (% мастера).
+  // По умолчанию наследует глобальный режим салона (чтобы ничего не «переключилось»
+  // без ведома мастера), но его можно изменить для конкретной процедуры.
+  const [clientType, setClientType] = useState<ClientType>(() => (getSalonSettings().enabled ? 'salon' : 'own'))
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [saved, setSaved] = useState(false)
@@ -81,6 +85,8 @@ export default function AddProcedure() {
         service_type: serviceType.trim(),
         price: priceValue,
         cost: cost.trim() === '' ? undefined : costValue,
+        // T20 — тип клиента фиксируется прямо в записи процедуры
+        is_salon: clientType === 'salon',
         notes: notes.trim() || undefined,
       }
       await addProcedure(input)
@@ -154,7 +160,7 @@ export default function AddProcedure() {
               {!clientId && <option value="">Выбери клиента…</option>}
               {clients.map((c) => (
                 <option key={c.id} value={c.id}>
-                  {c.name} · {c.phone}
+                  {c.name}
                 </option>
               ))}
             </select>
@@ -165,6 +171,37 @@ export default function AddProcedure() {
               Записываем визит для <strong>{client.name}</strong>
             </p>
           )}
+
+          {/* T20 — тип клиента: салонный (процент мастера) или свой (100%) */}
+          <label className={styles.field}>
+            <span className={styles.label}>Тип клиента</span>
+            <div className={styles.segmented}>
+              <button
+                type="button"
+                className={cx(styles.segBtn, clientType === 'own' && styles.segActive)}
+                onClick={() => {
+                  haptic('light')
+                  setClientType('own')
+                }}
+                disabled={submitting}
+              >
+                Свой клиент
+                <span className={styles.segSub}>доход 100%</span>
+              </button>
+              <button
+                type="button"
+                className={cx(styles.segBtn, clientType === 'salon' && styles.segActive)}
+                onClick={() => {
+                  haptic('light')
+                  setClientType('salon')
+                }}
+                disabled={submitting}
+              >
+                Салонный клиент
+                <span className={styles.segSub}>доход {salon.percent}%</span>
+              </button>
+            </div>
+          </label>
 
           {/* Услуга */}
           <Input
@@ -207,11 +244,11 @@ export default function AddProcedure() {
             placeholder="300"
           />
 
-          {/* T19 — Твой доход с учётом режима салона */}
+          {/* T20 — Твой доход с учётом типа клиента (салонный → %, свой → 100%) */}
           {priceValue > 0 && (
             <Card className={styles.incomeBox}>
               <p className={styles.incomeText}>
-                {salon.enabled ? (
+                {clientType === 'salon' ? (
                   <>
                     Твой доход: <b>{formatMoney(Math.round((priceValue * salon.percent) / 100))}</b>{' '}
                     <span className={styles.incomeSub}>
@@ -221,6 +258,7 @@ export default function AddProcedure() {
                 ) : (
                   <>
                     Твой доход: <b>{formatMoney(priceValue)}</b>
+                    <span className={styles.incomeSub}>(свой клиент — вся сумма)</span>
                   </>
                 )}
               </p>

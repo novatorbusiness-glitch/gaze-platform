@@ -4,11 +4,14 @@
 -- ПРИМЕНЕНИЕ: Supabase Dashboard → SQL Editor → вставить весь файл → Run
 -- Идемпотентно: можно запускать повторно без ошибок.
 --
--- ЧТО ЧИНИТ (диагностировано по живой БД, 2026-08-27):
+-- ЧТО ЧИНИТ (диагностировано по живой БД, 2026-08-27/28):
 --   1) procedures.cost — колонки НЕТ в живой БД, а фронт её шлёт при каждой
 --      записи процедуры → INSERT падает с PGRST204 «Could not find the 'cost'
 --      column» → процедуры НЕ сохраняются → Аналитика и Путь роста видят
 --      пустые/неверные цифры, мастера думают, что платформа «зависла».
+--   1b) clients.link / clients.description — колонок нет, фронт (T15) шлёт их
+--      при addClient → PGRST204 «Could not find the 'description' column of
+--      'clients'» → запись клиентов НЕ сохранялась (у Ильи, tg 319756543).
 --   2) RLS-фикс (supabase-rls-fix.sql) применён НЕ полностью: политики
 --      «masters select own» из t7 стоят и работают, но «masters select anon»
 --      (USING true) отсутствует. Ниже добавляем её (безопасно, идемпотентно) +
@@ -19,6 +22,18 @@
 -- ---------- 1) procedures.cost: колонка себестоимости ----------
 -- Число, не NULL: существующие строки получают 0, новые — значение из формы.
 ALTER TABLE procedures ADD COLUMN IF NOT EXISTS cost numeric NOT NULL DEFAULT 0;
+
+-- ---------- 1b) clients.link / clients.description: колонки T15 ----------
+-- Фронт (addClient) шлёт link и description с версии T15, а в таблице их не
+-- было → INSERT падал с PGRST204 «Could not find the 'description' column of
+-- 'clients'» → запись клиента у Ильи (tg 319756543) не сохранялась.
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS link text;
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS description text;
+
+-- ---------- 1c) clients.archived: «в архив» (убрать из списков, данные целы) ----------
+-- Фронт (fetchClients/fetchDashboard) фильтрует archived=false; кнопка «В архив»
+-- в карточке клиента ставит archived=true. NOT NULL DEFAULT false — идемпотентно.
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS archived boolean NOT NULL DEFAULT false;
 
 -- ---------- 2) RLS: masters читаются всеми (нужно подзапросам
 --            clients/procedures/bonuses), чувствительные колонки скрыты -----

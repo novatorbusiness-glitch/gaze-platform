@@ -164,3 +164,36 @@
   text-align: center;
   padding: 20px;
 }
+
+/* Тоcт-сообщение (после действий: «Клиент убран в архив») — по центру снизу */
+.notice {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: calc(96px + env(safe-area-inset-bottom));
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: calc(100vw - 48px);
+  background: var(--app-cta);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 12px 18px;
+  border-radius: var(--radius-pill);
+  box-shadow: 0 10px 30px rgba(107, 94, 83, 0.3);
+  z-index: 90;
+  pointer-events: none;
+  animation: notice-in 0.22s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes notice-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 14px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}

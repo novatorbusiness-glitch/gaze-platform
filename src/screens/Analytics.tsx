@@ -8,7 +8,7 @@ import SkeletonLoader from '../components/SkeletonLoader'
 import { useAsync } from '../hooks/useAsync'
 import { useCountUp } from '../hooks/useCountUp'
 import { fetchDashboard } from '../lib/api'
-import { buildAnalyticsPeriods } from '../lib/analytics'
+import { buildAnalyticsPeriods, masterIncomeFor } from '../lib/analytics'
 import {
   demoAnalyticsPeriods,
   demoClients,
@@ -152,11 +152,15 @@ export default function Analytics() {
   // T17 — все расходы = материалы из процедур + прочие расходы (аренда/реклама…)
   const totalCost = period.cost + otherExpenses
 
-  // T19 — режим салона: «твой доход» = доход × % мастера (sum(price×%) ≡ %×sum(price))
+  // T20 — «твой доход» считается ПО КАЖДОЙ процедуре: салонный клиент → %,
+  // свой клиент → 100%. Демо-периоды (фиксированные цифры без флагов) считаем
+  // по глобальному режиму салона, как раньше.
   const salon = getSalonSettings()
-  const masterIncomeValue = salon.enabled
-    ? Math.round((period.income * salon.percent) / 100)
-    : period.income
+  const masterIncomeValue = isDemo
+    ? salon.enabled
+      ? Math.round((period.income * salon.percent) / 100)
+      : period.income
+    : masterIncomeFor(procedures, periodId)
 
   const totalProfit = masterIncomeValue - totalCost
 
@@ -164,7 +168,8 @@ export default function Analytics() {
   const unitMargin = masterIncomeValue > 0 ? Math.round((totalProfit / masterIncomeValue) * 100) : 0
   const unitPerClient = period.clients > 0 ? Math.round(totalProfit / period.clients) : 0
 
-  // T16 — чаевые через QR: статистика из localStorage gaze_tips (демо-счётчик)
+  // T16 — чаевые через QR: статистика из localStorage gaze_tips (реальные записи,
+  // без демо-счётчика). Блок на экране показываем, только если чаевые есть.
   const tips = useMemo(() => getTipsStats(), [])
   const tipsAnimated = useCountUp(tips.monthSum)
 
@@ -255,7 +260,7 @@ export default function Analytics() {
       {/* Метрики — 2×2 grid */}
       <div className={styles.metrics}>
         <MetricTile
-          label={salon.enabled ? 'Твой доход' : 'Доход'}
+          label="Твой доход"
           value={masterIncomeValue}
           unit="₽"
           trend={period.trends.income}
@@ -281,7 +286,7 @@ export default function Analytics() {
         <h2 className={styles.sectionTitle}>Юнит-экономика</h2>
         <div className={styles.unitTable}>
           <div className={styles.unitRow}>
-            <span className={styles.unitLabel}>{salon.enabled ? 'Твой доход (с учётом % салона)' : 'Доход'}</span>
+            <span className={styles.unitLabel}>Твой доход (с учётом типа клиентов)</span>
             <span className={styles.unitValue}>{formatMoney(masterIncomeValue)}</span>
           </div>
           <div className={styles.unitRow}>
@@ -324,28 +329,29 @@ export default function Analytics() {
         </Button>
       </Card>
 
-      {/* T16 — Чаевые через QR: демо-счётчик из localStorage gaze_tips */}
-      <Card className={styles.tipsCard}>
-        <div className={styles.tipsHead}>
-          <h2 className={styles.sectionTitle}>
-            <span className={styles.tipsHeadIcon}>💛</span> Чаевые
-          </h2>
-          <Badge variant="demo">ДЕМО</Badge>
-        </div>
-        <div className={styles.tipsValueRow}>
-          <span className={styles.tipsPlus}>+</span>
-          <span className={styles.tipsValue}>{formatMoney(tipsAnimated)}</span>
-          <span className={styles.tipsPeriod}>за месяц</span>
-        </div>
-        <div className={styles.tipsMeta}>
-          <span className={styles.tipsMetaItem}>{tips.monthCount} чаевых за месяц</span>
-          <span className={styles.tipsMetaItem}>всего {formatMoney(tips.totalSum)}</span>
-        </div>
-        <p className={styles.tipsHint}>
-          Показывай QR после визита — в карточке клиента есть кнопка «Чаевые». Счётчик живёт в localStorage
-          (<span className={styles.tipsMono}>gaze_tips</span>).
-        </p>
-      </Card>
+      {/* T16 — Чаевые через QR: только реальные чаевые, без демо-цифр.
+          Пока у мастера нет ни одной записи — блок скрыт. */}
+      {tips.records.length > 0 && (
+        <Card className={styles.tipsCard}>
+          <div className={styles.tipsHead}>
+            <h2 className={styles.sectionTitle}>
+              <span className={styles.tipsHeadIcon}>💛</span> Чаевые
+            </h2>
+          </div>
+          <div className={styles.tipsValueRow}>
+            <span className={styles.tipsPlus}>+</span>
+            <span className={styles.tipsValue}>{formatMoney(tipsAnimated)}</span>
+            <span className={styles.tipsPeriod}>за месяц</span>
+          </div>
+          <div className={styles.tipsMeta}>
+            <span className={styles.tipsMetaItem}>{tips.monthCount} чаевых за месяц</span>
+            <span className={styles.tipsMetaItem}>всего {formatMoney(tips.totalSum)}</span>
+          </div>
+          <p className={styles.tipsHint}>
+            Чаевые попадают сюда, когда клиентка оплачивает QR после визита — кнопка «Чаевые» есть в карточке клиента.
+          </p>
+        </Card>
+      )}
 
       {/* График: Доход по дням (div-based bar chart) */}
       <Card className={styles.chartCard}>

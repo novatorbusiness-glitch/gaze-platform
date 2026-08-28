@@ -6,8 +6,8 @@
  * аренду/рекламу, закупил инструменты — это отдельная запись.
  *
  * Записи живут в localStorage под ключом `gaze_expenses` (массив
- * { id, category, amount, date, comment }). При первом запуске наполняем
- * демо-расходами, чтобы юнит-экономика выглядела живой.
+ * { id, category, amount, date, comment }). Никакого демо-сидирования: новый
+ * мастер видит 0 расходов, пока сам не внесёт первую запись.
  *
  * В юнит-экономике аналитики расходы учитываются так:
  *   расходы = расходы на материалы (из процедур) + отдельные расходы (gaze_expenses)
@@ -43,48 +43,46 @@ export interface ExpenseRecord {
 }
 
 const EXPENSES_KEY = 'gaze_expenses'
-const EXPENSES_SEEDED_KEY = 'gaze_expenses_seeded'
 
-/** Дата YYYY-MM-DD в текущем месяце (день 1–28, безопасно для UTC) */
-function dateInCurrentMonth(day: number): string {
-  const now = new Date()
-  const m = String(now.getMonth() + 1).padStart(2, '0')
-  const d = String(Math.min(Math.max(day, 1), 28)).padStart(2, '0')
-  return `${now.getFullYear()}-${m}-${d}`
-}
-
-/** Демо-расходы за месяц: аренда 12 000 + материалы 8 000 + реклама 5 000 = 25 000 ₽ */
-const SEED_EXPENSES: ExpenseRecord[] = [
-  { id: 'demo-e-1', category: 'Аренда', amount: 12000, date: dateInCurrentMonth(1), comment: 'Аренда студии за месяц' },
-  { id: 'demo-e-2', category: 'Материалы', amount: 8000, date: dateInCurrentMonth(5), comment: 'Краски, сыворотки, расходники' },
-  { id: 'demo-e-3', category: 'Реклама', amount: 5000, date: dateInCurrentMonth(9), comment: 'Авито + Telegram-канал' },
-]
+/** Префикс id легаси-демо-расходов (сидировались в старых версиях: demo-e-1..3) */
+const LEGACY_DEMO_ID_PREFIX = 'demo-e-'
 
 function readAll(): ExpenseRecord[] {
   try {
     const raw = localStorage.getItem(EXPENSES_KEY)
-    if (raw) return JSON.parse(raw) as ExpenseRecord[]
+    if (raw) {
+      const parsed = JSON.parse(raw)
+      // Краевой случай: повреждённые/не-массивные данные не должны валить
+      // экран (ранее любой мусор под gaze_expenses приводил к белой странице)
+      if (Array.isArray(parsed)) return parsed as ExpenseRecord[]
+    }
   } catch {
-    /* localStorage недоступен — пустой список */
+    /* localStorage недоступен или данные повреждены — пустой список */
   }
   return []
 }
 
-/** При первом запуске наполняем демо-расходами, чтобы экран и юнит-экономика были живыми */
-export function ensureExpensesSeeded(): void {
+export function loadExpenses(): ExpenseRecord[] {
+  const all = readAll()
+  // Самоочистка от легаси-демо-данных: старые версии сидировали демо-расходы
+  // (аренда 12к + материалы 8к + реклама 5к = 25 000₽, ids demo-e-*).
+  // Убираем ТОЛЬКО их — реальные записи мастера (ids exp-*) не трогаем.
+  const real = all.filter((e) => !e.id.startsWith(LEGACY_DEMO_ID_PREFIX))
+  if (real.length !== all.length) {
+    try {
+      localStorage.setItem(EXPENSES_KEY, JSON.stringify(real))
+    } catch {
+      /* ignore */
+    }
+  }
+  // Флаг-ключ старого сида (ставился ensureExpensesSeeded в версиях до 15bdc90) —
+  // больше нигде не читается, убираем мусор для чистой перезаписи.
   try {
-    if (localStorage.getItem(EXPENSES_SEEDED_KEY)) return
-    localStorage.setItem(EXPENSES_KEY, JSON.stringify(SEED_EXPENSES))
-    localStorage.setItem(EXPENSES_SEEDED_KEY, '1')
+    localStorage.removeItem('gaze_expenses_seeded')
   } catch {
     /* ignore */
   }
-}
-
-export function loadExpenses(): ExpenseRecord[] {
-  // ВАЖНО: не сидируем демо-расходы — иначе «прочие расходы» 25к попадают
-  // в аналитику как реальные и отпугивают пользователя. Только реальные записи.
-  return readAll()
+  return real
 }
 
 /** Дата YYYY-MM-DD сегодня (локальное время) */
