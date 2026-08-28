@@ -5,7 +5,6 @@ import Badge from '../components/Badge'
 import Button from '../components/Button'
 import Card from '../components/Card'
 import { Input } from '../components/Input'
-import { demoReferral } from '../lib/dev-data'
 import { getDisplayName, readProfileName, saveProfileName } from '../lib/name'
 import {
   DEFAULT_SPECIALTY,
@@ -13,7 +12,7 @@ import {
   saveSpecialty,
   SPECIALTY_OPTIONS,
 } from '../lib/specialty'
-import { copyText, haptic, hapticSuccess, openSubscriptionPayment } from '../lib/telegram'
+import { botUsername, copyText, haptic, hapticSuccess, openSubscriptionPayment } from '../lib/telegram'
 import { cx, formatDateLong, formatMoney } from '../lib/utils'
 import { getSalonSettings, setSalonSettings, type SalonSettings } from '../lib/salon'
 import { useAppStore } from '../store/useAppStore'
@@ -153,17 +152,28 @@ function SubscriptionCard({ onManage }: { onManage: () => void }) {
 
 function ReferralCard() {
   const navigate = useAppStore((s) => s.navigate)
+  const master = useMasterStore((s) => s.master)
+  const isDemo = useMasterStore((s) => s.isDemo)
   const [copiedCode, setCopiedCode] = useState(false)
   const [copiedLink, setCopiedLink] = useState(false)
 
+  // Реальный реферальный код мастера (masters.referral_code). В демо-режиме
+  // (браузер вне Telegram) реальных данных нет → пусто, без выдуманных цифр.
+  const referralCode = !isDemo ? (master?.referral_code ?? '') : ''
+  const referralLink = referralCode
+    ? `https://t.me/${botUsername()}?start=ref_${referralCode}`
+    : ''
+
   const onCopyCode = async () => {
-    await copyText(demoReferral.code)
+    if (!referralCode) return
+    await copyText(referralCode)
     setCopiedCode(true)
     setTimeout(() => setCopiedCode(false), 1600)
   }
 
   const onCopyLink = async () => {
-    await copyText(demoReferral.link)
+    if (!referralLink) return
+    await copyText(referralLink)
     setCopiedLink(true)
     setTimeout(() => setCopiedLink(false), 1600)
   }
@@ -172,33 +182,33 @@ function ReferralCard() {
     <Card className={styles.refCard}>
       <div className={styles.refHead}>
         <span className={styles.refTitle}>Реферальная программа</span>
-        <Badge variant="cta">До {demoReferral.rate}%</Badge>
+        <Badge variant="cta">+14 дней к курсу</Badge>
       </div>
 
       {/* Код — JetBrains Mono, крупно, с кнопкой копирования */}
       <div className={styles.refCodeRow}>
-        <span className={styles.refCode}>{demoReferral.code}</span>
+        <span className={styles.refCode}>{referralCode || '—'}</span>
         <button className={styles.refCopyBtn} aria-label="Скопировать код" onClick={onCopyCode}>
           <Copy size={15} strokeWidth={1.75} />
           {copiedCode ? 'Готово' : ''}
         </button>
       </div>
 
-      {/* Статистика: приглашено / заработано / ставка */}
+      {/* Статистика: приглашено / заработано / бонус — реальные нули, без демо-цифр */}
       <div className={styles.refStats}>
         <div className={styles.refStat}>
-          <span className={styles.refStatValue}>{demoReferral.invited}</span>
+          <span className={styles.refStatValue}>0</span>
           <span className={styles.refStatLabel}>мастеров приглашено</span>
         </div>
         <div className={styles.refDivider} />
         <div className={styles.refStat}>
-          <span className={styles.refStatValue}>{formatMoney(demoReferral.earned)}</span>
+          <span className={styles.refStatValue}>{formatMoney(0)}</span>
           <span className={styles.refStatLabel}>заработано</span>
         </div>
         <div className={styles.refDivider} />
         <div className={styles.refStat}>
-          <span className={styles.refStatValue}>до {demoReferral.rate}%</span>
-          <span className={styles.refStatLabel}>с каждой оплаты</span>
+          <span className={styles.refStatValue}>+14 дней</span>
+          <span className={styles.refStatLabel}>за каждого мастера</span>
         </div>
       </div>
 
@@ -206,7 +216,7 @@ function ReferralCard() {
         <ExternalLink size={15} strokeWidth={2} />
         {copiedLink ? 'Ссылка скопирована ✓' : 'Скопировать ссылку'}
       </Button>
-      <span className={styles.refLink}>{demoReferral.link}</span>
+      <span className={styles.refLink}>{referralLink || '—'}</span>
       {/* T6 — полный экран приглашения: QR-код, шаринг, шаги и история */}
       <Button
         variant="ghost"

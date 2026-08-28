@@ -1,33 +1,51 @@
 import { useEffect, useRef, useState } from 'react'
-import { ArrowLeft, Check, Copy, ExternalLink, Gift, Share2, Users } from 'lucide-react'
+import { ArrowLeft, Copy, ExternalLink, Gift, Share2 } from 'lucide-react'
 import QRCode from 'qrcode'
 import Badge from '../components/Badge'
 import Button from '../components/Button'
 import Card from '../components/Card'
-import { demoReferral } from '../lib/dev-data'
-import { copyText, haptic } from '../lib/telegram'
-import { cx, formatMoney } from '../lib/utils'
+import { botUsername, copyText, haptic } from '../lib/telegram'
+import { formatMoney } from '../lib/utils'
 import { useAppStore } from '../store/useAppStore'
+import { useMasterStore } from '../store/useMasterStore'
 import styles from './Invite.module.css'
 
 /* ------------------------------------------------------------------ */
 /* T6 — ЭКРАН «ПРИГЛАСИТЬ»: QR-код, шаринг, бонусы, история            */
 /* ------------------------------------------------------------------ */
 
+/**
+ * Реальная механика реферальной программы (совпадает с ботом, TXT["refer_text"]):
+ * за каждого приглашённого мастера — +14 дней к доступу курса (25% от месяца).
+ * Демо-цифр (invited/earned/history) здесь больше нет — статистика честно по нулям,
+ * пока нет реального бэкенда рефералов.
+ */
+const REFERRAL_BONUS = '+14 дней к курсу'
+const REFERRAL_RATE = 25
+
 export default function Invite() {
   const goBack = useAppStore((s) => s.goBack)
+  const master = useMasterStore((s) => s.master)
+  const isDemo = useMasterStore((s) => s.isDemo)
+
+  // Реальный реферальный код мастера (из Supabase masters.referral_code).
+  // В демо-режиме (браузер вне Telegram) реальных данных нет → пусто, без выдуманных цифр.
+  const referralCode = !isDemo ? (master?.referral_code ?? '') : ''
+  const referralLink = referralCode
+    ? `https://t.me/${botUsername()}?start=ref_${referralCode}`
+    : ''
 
   const [copiedCode, setCopiedCode] = useState(false)
   const [copiedLink, setCopiedLink] = useState(false)
   const [shared, setShared] = useState(false)
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
-  // Генерируем QR-код из реферальной ссылки
+  // Генерируем QR-код из реферальной ссылки (ведёт на форму доступа к курсу «До 200к»)
   useEffect(() => {
-    if (!canvasRef.current) return
+    if (!canvasRef.current || !referralLink) return
     QRCode.toCanvas(
       canvasRef.current,
-      demoReferral.link,
+      referralLink,
       {
         width: 180,
         margin: 1,
@@ -38,26 +56,29 @@ export default function Invite() {
         if (err) return
       },
     )
-  }, [])
+  }, [referralLink])
 
   const onCopyCode = async () => {
-    await copyText(demoReferral.code)
+    if (!referralCode) return
+    await copyText(referralCode)
     setCopiedCode(true)
     setTimeout(() => setCopiedCode(false), 1600)
   }
 
   const onCopyLink = async () => {
-    await copyText(demoReferral.link)
+    if (!referralLink) return
+    await copyText(referralLink)
     setCopiedLink(true)
     setTimeout(() => setCopiedLink(false), 1600)
   }
 
   const onShare = async () => {
+    if (!referralLink) return
     haptic('medium')
     const shareData = {
-      title: 'GAZE Platform',
-      text: 'Привет! Я пользуюсь GAZE — платформой для мастеров бьюти-сферы. Попробуй по моей ссылке:',
-      url: demoReferral.link,
+      title: 'GAZE — Курс «До 200к»',
+      text: 'Привет! Прохожу курс «До 200к» в GAZE — за 6 месяцев с 50–60к до 200к ₽/мес. Попробуй по моей ссылке:',
+      url: referralLink,
     }
     try {
       if (navigator.share) {
@@ -66,7 +87,7 @@ export default function Invite() {
         setTimeout(() => setShared(false), 2000)
       } else {
         // Fallback: копируем ссылку
-        await copyText(demoReferral.link)
+        await copyText(referralLink)
         setShared(true)
         setTimeout(() => setShared(false), 2000)
       }
@@ -74,8 +95,6 @@ export default function Invite() {
       /* пользователь отменил — тихо */
     }
   }
-
-  const activeCount = demoReferral.history.filter((h) => h.status === 'active').length
 
   return (
     <div className={styles.screen}>
@@ -99,27 +118,26 @@ export default function Invite() {
         <div className={styles.heroIcon}>
           <Gift size={24} strokeWidth={2} />
         </div>
-        <h1 className={styles.heroTitle}>Дари месяц — получай месяц</h1>
+        <h1 className={styles.heroTitle}>Пригласи коллегу — получи +14 дней к курсу</h1>
         <p className={styles.heroText}>
           Пригласи коллегу-мастера в GAZE. Когда он оформит доступ к курсу — ты получишь{' '}
-          <strong>{demoReferral.bonusPerInvite}</strong>. Бонус суммируется, до{' '}
-          {demoReferral.maxBonus}.
+          <strong>{REFERRAL_BONUS}</strong> (25% от месяца).
         </p>
         <div className={styles.heroBadges}>
-          <Badge variant="cta">до {demoReferral.rate}%</Badge>
-          <Badge variant="accent">{demoReferral.bonusPerInvite}</Badge>
+          <Badge variant="cta">{REFERRAL_BONUS}</Badge>
+          <Badge variant="accent">{REFERRAL_RATE}% от месяца</Badge>
         </div>
       </Card>
 
       {/* QR-код */}
       <Card className={styles.qrCard}>
         <canvas ref={canvasRef} className={styles.qrCanvas} />
-        <span className={styles.qrHint}>Наведите камеру — откроется GAZE</span>
+        <span className={styles.qrHint}>Наведите камеру — откроется курс «До 200к»</span>
       </Card>
 
       {/* Реферальный код */}
       <div className={styles.codeRow}>
-        <span className={styles.code}>{demoReferral.code}</span>
+        <span className={styles.code}>{referralCode || '—'}</span>
         <button className={styles.copyBtn} aria-label="Скопировать код" onClick={onCopyCode}>
           <Copy size={15} strokeWidth={1.75} />
           {copiedCode ? 'Готово' : 'Копировать'}
@@ -136,20 +154,20 @@ export default function Invite() {
         {copiedLink ? 'Ссылка скопирована ✓' : 'Скопировать ссылку'}
       </Button>
 
-      {/* Статистика: приглашено / заработано / активных */}
+      {/* Статистика: приглашено / заработано / активных — реальные нули, без демо-цифр */}
       <div className={styles.statsRow}>
         <div className={styles.stat}>
-          <span className={styles.statValue}>{demoReferral.invited}</span>
+          <span className={styles.statValue}>0</span>
           <span className={styles.statLabel}>приглашено</span>
         </div>
         <div className={styles.statDivider} />
         <div className={styles.stat}>
-          <span className={styles.statValue}>{activeCount}</span>
+          <span className={styles.statValue}>0</span>
           <span className={styles.statLabel}>активных</span>
         </div>
         <div className={styles.statDivider} />
         <div className={styles.stat}>
-          <span className={styles.statValue}>{formatMoney(demoReferral.earned)}</span>
+          <span className={styles.statValue}>{formatMoney(0)}</span>
           <span className={styles.statLabel}>заработано</span>
         </div>
       </div>
@@ -171,7 +189,7 @@ export default function Invite() {
           <div className={styles.stepBody}>
             <span className={styles.stepTitle}>Он оформит доступ к курсу</span>
             <span className={styles.stepText}>
-              Друг регистрируется в GAZE по твоей ссылке и активирует тариф.
+              Друг регистрируется в GAZE по твоей ссылке и активирует доступ к курсу «До 200к».
             </span>
           </div>
         </Card>
@@ -180,48 +198,15 @@ export default function Invite() {
           <div className={styles.stepBody}>
             <span className={styles.stepTitle}>Получаешь бонус</span>
             <span className={styles.stepText}>
-              {demoReferral.bonusPerInvite} + {demoReferral.rate}% от его оплаты.
-              Бонус суммируется, до {demoReferral.maxBonus}.
+              За каждого приглашённого мастера — {REFERRAL_BONUS} ({REFERRAL_RATE}% от месяца).
             </span>
           </div>
         </Card>
       </div>
 
-      {/* История приглашений */}
-      {demoReferral.history.length > 0 && (
-        <>
-          <h2 className={styles.sectionTitle}>История приглашений</h2>
-          <Card className={styles.historyCard}>
-            {demoReferral.history.map((invite, i) => (
-              <div
-                key={i}
-                className={cx(styles.historyRow, i > 0 && styles.historyRowBorder)}
-              >
-                <span className={styles.historyAvatar}>
-                  <Users size={14} strokeWidth={2} />
-                </span>
-                <div className={styles.historyInfo}>
-                  <span className={styles.historyName}>{invite.name}</span>
-                  <span className={styles.historyDate}>{invite.date}</span>
-                </div>
-                {invite.status === 'active' ? (
-                  <Badge variant="success">
-                    <Check size={10} strokeWidth={3} />
-                    Активна
-                  </Badge>
-                ) : (
-                  <Badge variant="accent">Ожидает</Badge>
-                )}
-              </div>
-            ))}
-          </Card>
-        </>
-      )}
-
-      {/* Демо-подсказка */}
+      {/* Подсказка: бонус начисляется после оформления доступа к курсу */}
       <p className={styles.hint}>
-        В демо-режиме бонусы начисляются автоматически. В реальной версии — после
-        оплаты приглашённого мастера.
+        Бонус начисляется, когда приглашённый мастер оформит доступ к курсу «До 200к».
       </p>
     </div>
   )
