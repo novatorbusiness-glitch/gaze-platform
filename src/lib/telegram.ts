@@ -303,23 +303,47 @@ export function aiMarketerBotUrl(): string {
 }
 
 /**
- * Открыть AI-маркетолога в боте. В Telegram WebView используем
- * WebApp.openTelegramLink (чат открывается поверх мини-аппа), вне Telegram — window.open.
+ * Открыть AI-маркетолога в боте с передачей payload start=ai_marketer.
+ *
+ * G-FIX (deep-link): WebApp.openTelegramLink на ТОТ ЖЕ бот НЕ передаёт start-пакет —
+ * мини-апп просто закрывается и возвращается в чат, бот отвечает обычным /start
+ * (подтверждено владельцем). Поэтому вместо официального метода отдаём полную
+ * t.me-ссылку так, чтобы Telegram перехватил её и обработал payload:
+ *
+ *   1) window.open(url, '_blank') — в ряде клиентов (iOS, десктоп) Telegram
+ *      перехватывает t.me-ссылку и доставляет start. Если попап заблокирован
+ *      (вернул null / бросил исключение, в т.ч. Android по докам) — дальше.
+ *   2) window.location.href = url — навигация WebView по t.me-ссылке; Telegram
+ *      перехватывает её на уровне WebView (shouldOverrideUrlLoading / navigation
+ *      delegate) и открывает чат, обрабатывая start=ai_marketer.
+ *   3) WebApp.openTelegramLink(url) — последний фолбэк (официальный API; на том же
+ *      боте payload может не дойти, но чат хотя бы откроется).
  */
 export function openAiMarketerBot(): void {
   const url = aiMarketerBotUrl()
+
+  // 1) window.open — пробуем первым (задача: Telegram перехватывает полную ссылку)
+  let opened = false
+  try {
+    opened = !!window.open(url, '_blank', 'noopener,noreferrer')
+  } catch {
+    opened = false
+  }
+  if (opened) return
+
+  // 2) location.href — навигация WebView, перехват t.me на уровне клиента
+  try {
+    window.location.href = url
+    return
+  } catch {
+    /* переходим к официальному SDK-фолбэку */
+  }
+
+  // 3) официальный SDK-метод — хуже (payload может не дойти), но чат откроется
   try {
     const sdk = WebApp as unknown as { openTelegramLink?: (u: string) => void }
-    if (typeof sdk.openTelegramLink === 'function') {
-      sdk.openTelegramLink(url)
-      return
-    }
+    if (typeof sdk.openTelegramLink === 'function') sdk.openTelegramLink(url)
   } catch {
-    /* SDK недоступен — fallback ниже */
-  }
-  try {
-    window.open(url, '_blank')
-  } catch {
-    window.location.href = url
+    /* ничего не вышло — в чате пользователь увидит кнопку «AI-маркетолог» */
   }
 }
