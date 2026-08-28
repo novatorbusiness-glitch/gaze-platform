@@ -65,18 +65,35 @@ function writeNotifications(next: NotificationSettings): void {
 }
 
 /* ------------------------------------------------------------------ */
-/* Карточка подписки: статус, дата окончания, тариф, прогресс-бар дней */
+/* Карточка подписки: статус, дата окончания, тариф, остаток дней      */
 /* ------------------------------------------------------------------ */
+
+/**
+ * Сколько дней осталось до конца подписки (округление вверх, 0 если нет/просрочена).
+ * Всего «из N» не показываем: период у мастеров разный (30/365 дней),
+ * а даты начала подписки в сторе нет — хардкод «из 30» давал «365 из 30 дней».
+ */
+function subscriptionDaysLeft(end: string): number {
+  if (!end) return 0
+  return Math.max(0, Math.ceil((new Date(end + 'T00:00:00').getTime() - Date.now()) / 86400000))
+}
+
+/** Русская плюрализация: 1 день / 2 дня / 5 дней */
+function pluralDays(n: number): string {
+  const abs = Math.abs(n) % 100
+  const last = abs % 10
+  if (abs > 10 && abs < 20) return 'дней'
+  if (last > 1 && last < 5) return 'дня'
+  if (last === 1) return 'день'
+  return 'дней'
+}
 
 function SubscriptionCard({ onManage }: { onManage: () => void }) {
   const plan = useAppStore((s) => s.plan)
   const subscriptionEnd = useAppStore((s) => s.subscriptionEnd)
   const navigate = useAppStore((s) => s.navigate)
   const isPremium = plan === 'premium'
-  const daysLeft = subscriptionEnd
-    ? Math.max(0, Math.ceil((new Date(subscriptionEnd + 'T00:00:00').getTime() - Date.now()) / 86400000))
-    : 0
-  const progress = subscriptionEnd ? Math.min(100, Math.round((daysLeft / 30) * 100)) : 0
+  const daysLeft = subscriptionEnd ? subscriptionDaysLeft(subscriptionEnd) : 0
 
   return (
     <Card className={styles.subCard}>
@@ -103,13 +120,10 @@ function SubscriptionCard({ onManage }: { onManage: () => void }) {
         </span>
       </div>
 
-      {/* Прогресс-бар дней оплаченного периода (30 дней) */}
+      {/* Сколько дней осталось до конца подписки (без «из N»: период разный — 30/365 дней) */}
       <div className={styles.subProgress}>
-        <div className={styles.subProgressTrack}>
-          <div className={styles.subProgressFill} style={{ width: `${progress}%` }} />
-        </div>
         <span className={styles.subProgressText}>
-          {isPremium ? `осталось ${daysLeft} из 30 дней` : 'подписка не оплачена'}
+          {isPremium ? `осталось ${daysLeft} ${pluralDays(daysLeft)}` : 'подписка не оплачена'}
         </span>
       </div>
 
@@ -313,6 +327,7 @@ export default function Profile() {
   const plan = useAppStore((s) => s.plan)
   const subscriptionEnd = useAppStore((s) => s.subscriptionEnd)
   const isPremium = plan === 'premium'
+  const subDaysLeft = isPremium && subscriptionEnd ? subscriptionDaysLeft(subscriptionEnd) : 0
 
   const fallbackName = getDisplayName(master)
   const [savedName, setSavedName] = useState(readProfileName)
@@ -707,7 +722,7 @@ export default function Profile() {
                 <span className={styles.subSheetLabel}>Осталось дней</span>
                 <span className={styles.subSheetValue}>
                   {isPremium && subscriptionEnd
-                    ? `${Math.max(0, Math.ceil((new Date(subscriptionEnd + 'T00:00:00').getTime() - Date.now()) / 86400000))} из 30`
+                    ? `${subDaysLeft} ${pluralDays(subDaysLeft)}`
                     : '—'}
                 </span>
               </div>
