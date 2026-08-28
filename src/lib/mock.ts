@@ -3,7 +3,7 @@
  * На этапе 2 данные придут из Supabase — интерфейсы останутся теми же.
  */
 
-export type SubscriptionStatus = 'trial' | 'active' | 'expired'
+export type SubscriptionStatus = 'trial' | 'active' | 'expired' | 'premium'
 
 export interface Master {
   id: string

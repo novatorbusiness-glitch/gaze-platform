@@ -104,7 +104,7 @@ interface AppState {
   communityMasterId: string | null
   /** G2 — Тариф: 'base' (тариф не активен) или 'premium' (активен, 1 500 ₽/мес). Производный от реальной подписки. */
   plan: Plan
-  /** Реальная подписка из Supabase (masters.subscription_status: new/trial/active/trial_expired/expired) */
+  /** Реальная подписка из Supabase (masters.subscription_status: new/trial/active/premium/trial_expired/expired) */
   subscriptionStatus: string
   /** Дата окончания подписки (ISO), '' если нет */
   subscriptionEnd: string
@@ -145,8 +145,11 @@ interface AppState {
   saveAssignment: (courseId: string, lessonId: string, data: Partial<AssignmentState>) => void
   /**
    * Применить реальную подписку мастера (из Supabase). plan становится
-   * производным: subscription_status='active' (и подписка не истекла) →
-   * 'premium' (полный доступ, 1 500 ₽/мес), иначе 'base' (пейволл).
+   * производным: subscription_status в ('active','premium','paid') (и подписка
+   * не истекла) → 'premium' (полный доступ, 1 500 ₽/мес), иначе 'base' (пейволл).
+   * 'premium' — статус, который ставит бот при оплате (совпадает с
+   * subscriptions.status='premium'); раньше он не считался активным, из-за
+   * чего оплатившие мастера видели «подписка не оплачена».
    * Вызывается после resolveMaster (в т.ч. после оплаты — force-обновлением).
    */
   applySubscription: (status: string, end: string) => void
@@ -179,10 +182,18 @@ export const useAppStore = create<AppState>((set) => ({
 
   openGrowth: () => set({ screen: 'growth', direction: 'forward' }),
 
-  /** Реальная подписка: 'active' и не истекла → план 'premium' (полный доступ, 1 500 ₽/мес). */
+  /**
+   * Реальная подписка: 'active' | 'premium' | 'paid' и НЕ истекла → план 'premium'
+   * (полный доступ, 1 500 ₽/мес). 'premium' — статус из БД, который ставит бот
+   * при оплате (совпадает с subscriptions.status); раньше учитывался только
+   * 'active', поэтому оплатившие мастера видели «подписка не оплачена».
+   * Без subscription_end активный статус считается премиумом (как было раньше).
+   */
   applySubscription: (status, end) => {
     let plan: Plan = 'base'
-    if (status === 'active') {
+    // Статусы, при которых подписка считается оплаченной/активной
+    const activeStatuses = ['active', 'premium', 'paid']
+    if (activeStatuses.includes(status)) {
       const expired = end && new Date(end + 'T00:00:00').getTime() < Date.now()
       if (!expired) plan = 'premium'
     }
