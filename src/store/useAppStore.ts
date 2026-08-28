@@ -115,13 +115,15 @@ interface AppState {
   pathOrigin: 'knowledge' | 'dashboard'
   /** G1c — Сертификат: достигнутый уровень, на который выдан сертификат */
   certificateLevel: number
+  /** G1c — Откуда открыт сертификат: 'path' (из «Пути роста») или 'course' (из курса) */
+  certificateOrigin: 'path' | 'course'
 
   navigate: (screen: Screen) => void
   openClient: (clientId: string) => void
   /** G1b — Открыть экран «Путь роста» (карта 6 уровней) */
   openPath: (origin?: 'knowledge' | 'dashboard') => void
   /** G1c — Открыть экран «Сертификат» (уровень = достигнутый уровень мастера) */
-  openCertificate: (level: number) => void
+  openCertificate: (level: number, origin?: 'path' | 'course') => void
   /** G3 — Открыть экран «3 рычага роста мастера» (стартовый блок обучения) */
   openGrowth: () => void
   /** G2 — Демо-переключение тарифа (без оплаты): сохраняет в localStorage */
@@ -178,13 +180,15 @@ export const useAppStore = create<AppState>((set) => ({
   subscriptionEnd: '',
   pathOrigin: 'knowledge',
   certificateLevel: 1,
+  certificateOrigin: 'path',
 
   navigate: (screen) => set({ screen, direction: 'forward' }),
 
   openPath: (origin = 'knowledge') =>
     set({ screen: 'path', pathOrigin: origin, direction: 'forward' }),
 
-  openCertificate: (level) => set({ screen: 'certificate', certificateLevel: level, direction: 'forward' }),
+  openCertificate: (level, origin = 'path') =>
+    set({ screen: 'certificate', certificateLevel: level, certificateOrigin: origin, direction: 'forward' }),
 
   openGrowth: () => set({ screen: 'growth', direction: 'forward' }),
 
@@ -313,8 +317,8 @@ export const useAppStore = create<AppState>((set) => ({
         return { screen: 'knowledge', direction: 'back' }
       }
       if (state.screen === 'certificate') {
-        // G1c — «Сертификат»: назад — в «Путь роста» (оттуда открывается)
-        return { screen: 'path', direction: 'back' }
+        // G1c — «Сертификат»: назад — туда, откуда открыт (Путь роста или курс)
+        return { screen: state.certificateOrigin, direction: 'back' }
       }
       if (state.screen === 'invite') {
         // T6 — «Пригласить»: назад — в профиль (оттуда открывается)

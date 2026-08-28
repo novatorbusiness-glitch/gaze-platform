@@ -112,6 +112,27 @@
   color: var(--app-text-2);
 }
 
+/* Оффер курса (напр. «До 200к · 6 месяцев · с 50–60к до 200к ₽/мес») */
+.coverOffer {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-self: flex-start;
+  align-items: center;
+  padding: 7px 13px;
+  border-radius: 100px;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--course-accent, #8a6d9a) 26%, #ffffff),
+    color-mix(in srgb, var(--course-accent, #8a6d9a) 14%, #ffffff)
+  );
+  border: 1px solid color-mix(in srgb, var(--course-accent, #8a6d9a) 38%, transparent);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  color: color-mix(in srgb, var(--course-accent, #8a6d9a) 80%, #2a2521);
+}
+
 .coverMeta {
   position: relative;
   z-index: 1;
@@ -322,4 +343,126 @@
   flex: none;
   color: var(--app-cta);
   opacity: 0.7;
+}
+
+/* ---------- Модули курса «До 200к» (месяцы 1–6) ---------- */
+
+.module {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.moduleHead {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--course-accent, #8a6d9a) 8%, var(--app-surface)),
+    var(--app-surface)
+  );
+  border: 1px solid var(--app-border);
+  box-shadow: var(--app-shadow);
+}
+
+.moduleEmoji {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  font-size: 20px;
+  line-height: 1;
+  background: rgba(224, 199, 192, 0.4);
+}
+
+.moduleHeadText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.moduleTitle {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--app-text);
+  margin: 0;
+}
+
+.moduleSub {
+  font-size: 12px;
+  color: var(--app-text-3);
+  margin: 0;
+}
+
+.moduleMeta {
+  flex: none;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--app-text-3);
+}
+
+/* ---------- Сертификат (100% прогресс курса) ---------- */
+
+.certificate {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 22px 18px;
+  border-radius: 20px;
+  background: linear-gradient(
+    160deg,
+    #fffdf7 0%,
+    color-mix(in srgb, var(--course-accent, #8a6d9a) 10%, #fffdf7) 100%
+  );
+  border: 1px solid color-mix(in srgb, var(--course-accent, #8a6d9a) 32%, transparent);
+  box-shadow: var(--app-shadow);
+  text-align: center;
+}
+
+.certificateIcon {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: rgba(201, 162, 75, 0.16);
+  color: #b58a4a;
+}
+
+.certificateText {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.certificateKicker {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--app-text-3);
+}
+
+.certificateTitle {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--app-text);
+  margin: 0;
+}
+
+.certificateDesc {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--app-text-2);
+  margin: 0;
+  max-width: 300px;
 }
