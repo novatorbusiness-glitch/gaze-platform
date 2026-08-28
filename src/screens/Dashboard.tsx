@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import { BookOpen, Check, Copy, MessageCircle, PenLine, Send, UserPlus } from 'lucide-react'
+import Avatar from '../components/Avatar'
 import Badge from '../components/Badge'
 import Button from '../components/Button'
 import Card from '../components/Card'
@@ -309,9 +310,22 @@ export default function Dashboard() {
     return (
       <div className={styles.screen}>
         <header className={styles.header}>
-          <h1 className={styles.title}>
-            {greeting()}, {displayName} 👋
-          </h1>
+          <div className={styles.headerTop}>
+            <h1 className={styles.title}>
+              {greeting()}, {displayName} 👋
+            </h1>
+            <button
+              className={styles.profileBtn}
+              onClick={() => {
+                haptic('light')
+                navigate('profile')
+              }}
+              aria-label="Личный кабинет"
+              title="Личный кабинет"
+            >
+              <Avatar name={displayName} size="sm" />
+            </button>
+          </div>
           <div className={styles.badgeRow}>
             <Badge>GAZE PLATFORM</Badge>
             {demoBadge}
@@ -343,9 +357,22 @@ export default function Dashboard() {
   return (
     <div className={styles.screen}>
       <header className={styles.header}>
-        <h1 className={styles.title}>
-          {greeting()}, {displayName} 👋
-        </h1>
+        <div className={styles.headerTop}>
+          <h1 className={styles.title}>
+            {greeting()}, {displayName} 👋
+          </h1>
+          <button
+            className={styles.profileBtn}
+            onClick={() => {
+              haptic('light')
+              navigate('profile')
+            }}
+            aria-label="Личный кабинет"
+            title="Личный кабинет"
+          >
+            <Avatar name={displayName} size="sm" />
+          </button>
+        </div>
         <div className={styles.badgeRow}>
           <Badge>GAZE PLATFORM</Badge>
           {demoBadge}

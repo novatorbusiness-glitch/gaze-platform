@@ -22,6 +22,34 @@
   color: var(--app-text);
 }
 
+/* Верхняя строка шапки: заголовок + личный кабинет (справа, виден сразу) */
+.headerTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+}
+
+/* Личный кабинет — круглая кнопка с аватаром в шапке */
+.profileBtn {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--app-border);
+  border-radius: 50%;
+  background: var(--app-surface);
+  padding: 3px;
+  box-shadow: var(--app-shadow);
+  transition: transform 0.15s ease-out;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.profileBtn:active {
+  transform: scale(0.94);
+}
+
 /* Метрики — горизонтальный скролл */
 .metrics {
   display: flex;
