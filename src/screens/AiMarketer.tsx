@@ -84,13 +84,13 @@ function OpenInBotCard() {
       <h2 className={styles.botCardTitle}>AI-маркетолог работает в Telegram-боте</h2>
       <p className={styles.botCardText}>
         Генерация перенесена прямо в чат с ботом GAZE — открываем, выбираем тип
-        (пост, сторис, оффер, контент-план, картинка), пишем тему и получаем готовые
-        тексты и картинки сразу в переписке.
+        (пост, сторис, оффер, контент-план), пишем тему и получаем готовые
+        тексты сразу в переписке.
       </p>
       <ul className={styles.botCardSteps}>
         <li>1️⃣ Жмёшь «Открыть в боте» — чат с @gaze_arch_bot</li>
         <li>2️⃣ Выбираешь тип контента и пишешь тему (услуга + боль)</li>
-        <li>3️⃣ Получаешь 4 готовых варианта — копируй и публикуй</li>
+        <li>3️⃣ Получаешь 3–4 готовых варианта — копируй и публикуй</li>
       </ul>
       <Button size="lg" fullWidth onClick={() => { haptic('medium'); openAiMarketerBot() }}>
         <Send size={16} strokeWidth={2} />
@@ -144,8 +144,7 @@ export default function AiMarketer() {
             <h1 className={styles.heroTitle}>AI-маркетолог</h1>
             <p className={styles.heroSub}>
               Готовые посты, сторис, офферы и контент-планы по формуле «Нейро-Воронки»:
-              крючок → боль → решение → оффер → CTA. И картинки для соцсетей.
-              Всё — прямо в Telegram-боте.
+              крючок → боль → решение → оффер → CTA. Всё — прямо в Telegram-боте.
             </p>
             <div className={styles.heroBadges}>
               <Badge variant="cta">

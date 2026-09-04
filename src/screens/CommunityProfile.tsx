@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ArrowLeft, Check, Crown, Heart, PenLine } from 'lucide-react'
+import { ArrowLeft, Check, Crown, Heart, PenLine, X } from 'lucide-react'
 import Avatar from '../components/Avatar'
 import Badge from '../components/Badge'
 import Button from '../components/Button'
@@ -146,7 +146,17 @@ export default function CommunityProfile() {
       {writeOpen && (
         <div className={styles.overlay} onClick={() => setWriteOpen(false)}>
           <div className={styles.sheet} onClick={(e) => e.stopPropagation()}>
-            <h3 className={styles.sheetTitle}>Новый пост</h3>
+            <div className={styles.sheetHeader}>
+              <h3 className={styles.sheetTitle}>Новый пост</h3>
+              {/* Явная кнопка закрытия: панель не должна «застревать» открытой */}
+              <button
+                className={styles.sheetClose}
+                aria-label="Закрыть"
+                onClick={() => setWriteOpen(false)}
+              >
+                <X size={18} strokeWidth={1.75} />
+              </button>
+            </div>
             <Textarea
               label="Текст поста"
               value={text}

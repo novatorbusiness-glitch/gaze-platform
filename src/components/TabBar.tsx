@@ -39,7 +39,13 @@ export default function TabBar() {
     screen === 'path' ||
     screen === 'premium' ||
     screen === 'aiMarketer' ||
-    screen === 'invite'
+    screen === 'invite' ||
+    // G3/G1c/обложки — оверлеи, открываемые из Академии/Профиля: таббар скрыт.
+    // Раньше эти экраны пропускали в hide-списке (баг): таббар «застревал» снизу,
+    // хотя App.tsx уже помечал их как app--no-tabbar (отступ 20px вместо 104px).
+    screen === 'growth' ||
+    screen === 'certificate' ||
+    screen === 'coverMaker'
   )
     return null
 

@@ -148,17 +148,7 @@ export default function Community() {
         </p>
       </Card>
 
-      {/* Челленджи */}
-      <h2 className={styles.sectionTitle}>
-        <Flame size={15} /> Челленджи
-      </h2>
-      <div className={styles.challengeList}>
-        {DEMO_CHALLENGES.map((c) => (
-          <ChallengeCard key={c.id} c={c} />
-        ))}
-      </div>
-
-      {/* Лента */}
+      {/* Лента — личный блог («Мой блог») и посты мастеров НАВЕРХУ, до челленджей */}
       <div className={styles.feedRow}>
         <h2 className={styles.sectionTitle}>Лента</h2>
         <button className={styles.myBlogBtn} onClick={() => openProfile('me')}>
@@ -168,6 +158,16 @@ export default function Community() {
       <div className={styles.feed}>
         {sorted.map((p) => (
           <PostCard key={p.id} post={p} onOpenProfile={openProfile} isPremium={isPremium} />
+        ))}
+      </div>
+
+      {/* Челленджи */}
+      <h2 className={styles.sectionTitle}>
+        <Flame size={15} /> Челленджи
+      </h2>
+      <div className={styles.challengeList}>
+        {DEMO_CHALLENGES.map((c) => (
+          <ChallengeCard key={c.id} c={c} />
         ))}
       </div>
     </div>

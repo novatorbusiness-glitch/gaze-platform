@@ -175,3 +175,24 @@
   color: var(--app-text);
   margin: 0;
 }
+
+.sheetHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.sheetClose {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: var(--surface-2, #f1eeea);
+  border-radius: 50%;
+  color: var(--app-text-2, #6b5e53);
+  cursor: pointer;
+  flex-shrink: 0;
+}
